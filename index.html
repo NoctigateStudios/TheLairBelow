@@ -179,12 +179,16 @@
     color: var(--gold);
     background: transparent;
     border: 1px solid var(--gold-dim);
-    padding: 0.9rem 2.5rem;
+    padding: 1.1rem 3rem;
     cursor: pointer;
     position: relative;
     transition: all 0.3s ease;
     opacity: 0;
     animation: fade-in 1s ease 2.5s forwards;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(201,168,76,0.2);
+    min-width: 200px;
+    z-index: 10;
   }
 
   .btn-primary::before {
@@ -1913,11 +1917,11 @@
     The stars have noticed. They always do.
   </p>
 
-  <button class="btn-primary" onclick="enterGame()">
+  <button class="btn-primary" onclick="enterGame()" ontouchend="enterGame()">
     DESCEND
   </button>
 
-  <p class="splash-warning">
+  <p class="splash-warning" style="pointer-events:none;">
     This chronicle records your passage through the world. GPS and planetary hours will shape your fate. Play responsibly. The lair remembers.
   </p>
 </div>
@@ -2563,7 +2567,10 @@
   // ══════════════════════════════════════════
   // INIT
   // ══════════════════════════════════════════
+  let _gameStarted = false;
   function enterGame() {
+    if (_gameStarted) return;
+    _gameStarted = true;
     try {
       document.getElementById('splash').classList.add('hidden');
       document.getElementById('app').style.display = 'flex';
