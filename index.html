@@ -3320,17 +3320,8 @@
   // SAVE / LOAD SYSTEM — GitHub Contents API
   // ══════════════════════════════════════════
 
-  // ┌─────────────────────────────────────────┐
-  // │  CONFIGURE THESE FOR YOUR REPO:         │
-  // │  1. Create a fine-grained PAT on GitHub │
-  // │     Permissions → Contents: Read+Write  │
-  // │     Scoped only to this repo            │
-  // │  2. Replace the values below            │
-  // └─────────────────────────────────────────┘
-  const GH_OWNER  = 'NoctigateStudios';
-  const GH_REPO   = 'TheLairBelow';
-  const GH_BRANCH = 'main';
-  const GH_TOKEN  = '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';
+  // Firebase Realtime Database — no token needed, no secret scanning
+  const FB_URL = 'https://lairbelow-default-rtdb.firebaseio.com';
 
   function getOrCreatePlayerId() {
     let id = localStorage.getItem('llair_player_id');
@@ -3374,37 +3365,21 @@
     return true;
   }
 
-  async function ghGetFile(path) {
-    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
-      headers: {
-        'Authorization': `Bearer ${GH_TOKEN}`,
-        'Accept': 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-      }
-    });
+  async function fbRead(playerId) {
+    const res = await fetch(`${FB_URL}/saves/${playerId}.json`);
     if (res.status === 404) return null;
-    if (!res.ok) throw new Error(`GitHub error ${res.status}`);
-    return res.json();
+    if (!res.ok) throw new Error(`Firebase error ${res.status}`);
+    const data = await res.json();
+    return data; // null if not found
   }
 
-  async function ghWriteFile(path, content, sha) {
-    const body = {
-      message: `Chronicle: ${getOrCreatePlayerId().slice(0,8)} @ ${new Date().toISOString()}`,
-      content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))),
-      branch: GH_BRANCH,
-    };
-    if (sha) body.sha = sha;
-    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
+  async function fbWrite(playerId, data) {
+    const res = await fetch(`${FB_URL}/saves/${playerId}.json`, {
       method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${GH_TOKEN}`,
-        'Accept': 'application/vnd.github+json',
-        'Content-Type': 'application/json',
-        'X-GitHub-Api-Version': '2022-11-28',
-      },
-      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error(`GitHub error ${res.status}`);
+    if (!res.ok) throw new Error(`Firebase error ${res.status}`);
     return res.json();
   }
 
@@ -3432,8 +3407,7 @@
     setSaveStatus('save-status', '', 'Inscribing your chronicle into the ether…');
     const id = getOrCreatePlayerId();
     try {
-      const existing = await ghGetFile(`saves/${id}.json`);
-      await ghWriteFile(`saves/${id}.json`, collectGameState(), existing?.sha);
+      await fbWrite(id, collectGameState());
       setSaveStatus('save-status', 'ok', '✓ Chronicle saved. The stars bear witness.');
       const tb = document.getElementById('topbar-save-btn');
       tb.classList.add('saved');
@@ -3448,9 +3422,8 @@
     setSaveStatus('save-status', '', 'Reaching into the ether…');
     const id = getOrCreatePlayerId();
     try {
-      const file = await ghGetFile(`saves/${id}.json`);
-      if (!file) { setSaveStatus('save-status', 'err', '✗ No chronicle found for your Seal.'); return; }
-      const json = JSON.parse(decodeURIComponent(escape(atob(file.content.replace(/\n/g,'')))));
+      const json = await fbRead(id);
+      if (!json) { setSaveStatus('save-status', 'err', '✗ No chronicle found for your Seal.'); return; }
       if (applyGameState(json)) {
         setSaveStatus('save-status', 'ok', `✓ Restored. Last saved: ${new Date(json.savedAt).toLocaleString()}`);
         toast('Your chronicle has been restored from the ether.');
@@ -3469,9 +3442,8 @@
     }
     setSaveStatus('restore-status', '', 'Searching the archive…');
     try {
-      const file = await ghGetFile(`saves/${input}.json`);
-      if (!file) { setSaveStatus('restore-status', 'err', '✗ No chronicle found for this Seal.'); return; }
-      const json = JSON.parse(decodeURIComponent(escape(atob(file.content.replace(/\n/g,'')))));
+      const json = await fbRead(input);
+      if (!json) { setSaveStatus('restore-status', 'err', '✗ No chronicle found for this Seal.'); return; }
       if (applyGameState(json)) {
         localStorage.setItem('llair_player_id', input);
         document.getElementById('save-id-display').textContent = input;
