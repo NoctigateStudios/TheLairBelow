@@ -1883,139 +1883,111 @@
   .topbar-save-btn.saving { color: var(--amber-bright); }
   .topbar-save-btn.saved  { color: var(--viridian-bright); }
 
-  /* ═══════════════════════════════════════
-     FORGE MODAL
-  ═══════════════════════════════════════ */
-  #forge-modal {
-    position: fixed; inset: 0; z-index: 500;
-    background: rgba(5,4,7,0.97);
-    display: none; flex-direction: column; overflow-y: auto;
-  }
-  #forge-modal.open { display: flex; }
+  /* IDENTITY MODAL */
+  #identity-modal { position:fixed;inset:0;z-index:1100;background:rgba(5,4,7,0.98);display:none;flex-direction:column;align-items:center;justify-content:center;padding:2rem; }
+  #identity-modal.open { display:flex; }
+  .identity-title { font-family:var(--ff-title);font-size:2rem;color:var(--gold);letter-spacing:2px;margin-bottom:0.5rem;text-align:center; }
+  .identity-sub { font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:2rem;text-align:center; }
+  .identity-field { width:100%;max-width:320px;margin-bottom:1rem; }
+  .identity-label { font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.4rem;display:block; }
+  .identity-input { width:100%;background:var(--deep);border:1px solid var(--border);color:var(--bone);font-family:var(--ff-heading);font-size:0.8rem;padding:0.8rem;outline:none; }
+  .identity-input:focus { border-color:var(--gold-dim); }
+  .identity-btn { font-family:var(--ff-heading);font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--gold-dim);padding:0.9rem 2.5rem;cursor:pointer;margin-top:1rem;transition:all 0.2s; }
+  .identity-btn:active { background:rgba(201,168,76,0.1); }
 
-  .forge-top {
-    background: linear-gradient(180deg, rgba(139,90,0,0.18) 0%, transparent 100%);
-    border-bottom: 1px solid rgba(212,137,10,0.3);
-    padding: 1rem; text-align: center;
-  }
-  .forge-title {
-    font-family: var(--ff-title); font-size: 2rem;
-    color: var(--amber-bright); letter-spacing: 2px;
-    text-shadow: 0 0 20px rgba(212,137,10,0.4); margin-bottom: 0.2rem;
-  }
-  .forge-subtitle {
-    font-family: var(--ff-heading); font-size: 0.5rem;
-    letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-secondary);
-  }
+  /* FORGE MODAL */
+  #forge-modal { position:fixed;inset:0;z-index:500;background:rgba(5,4,7,0.97);display:none;flex-direction:column;overflow-y:auto; }
+  #forge-modal.open { display:flex; }
+  .forge-top { background:linear-gradient(180deg,rgba(139,90,0,0.18) 0%,transparent 100%);border-bottom:1px solid rgba(212,137,10,0.3);padding:1rem;text-align:center; }
+  .forge-title { font-family:var(--ff-title);font-size:2rem;color:var(--amber-bright);letter-spacing:2px;text-shadow:0 0 20px rgba(212,137,10,0.4);margin-bottom:0.2rem; }
+  .forge-subtitle { font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-secondary); }
+  .forge-tabs { display:flex;border-bottom:1px solid var(--border);background:rgba(5,4,7,0.8);position:sticky;top:0;z-index:10; }
+  .forge-tab { flex:1;padding:0.6rem 0.2rem;font-family:var(--ff-heading);font-size:0.38rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-secondary);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s; }
+  .forge-tab.active { color:var(--amber-bright);border-bottom-color:var(--amber-bright); }
+  .forge-section { padding:1rem; }
+  .recipe-card { border:1px solid var(--border);padding:0.9rem;margin-bottom:0.7rem;background:rgba(255,255,255,0.01);position:relative;overflow:hidden; }
+  .recipe-card::before { content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--recipe-color,var(--amber-bright)); }
+  .recipe-header { display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;margin-bottom:0.5rem; }
+  .recipe-icon { font-size:1.4rem;flex-shrink:0; }
+  .recipe-info { flex:1; }
+  .recipe-name { font-family:var(--ff-heading);font-size:0.7rem;letter-spacing:0.06em;color:var(--bone);margin-bottom:0.15rem; }
+  .recipe-type { font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-secondary); }
+  .recipe-desc { font-family:var(--ff-body);font-style:italic;font-size:0.78rem;color:var(--mist);line-height:1.6;margin-bottom:0.7rem; }
+  .recipe-costs { display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.7rem; }
+  .recipe-cost-pill { font-family:var(--ff-heading);font-size:0.45rem;letter-spacing:0.06em;padding:0.2rem 0.5rem;border:1px solid var(--border);color:var(--text-secondary); }
+  .recipe-cost-pill.affordable { color:var(--viridian-bright);border-color:rgba(45,122,95,0.4); }
+  .recipe-cost-pill.unaffordable { color:var(--crimson-bright);border-color:rgba(196,48,48,0.3); }
+  .recipe-craft-btn { font-family:var(--ff-heading);font-size:0.55rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.5rem 1.2rem;border:1px solid var(--amber-bright);background:transparent;color:var(--amber-bright);cursor:pointer;transition:all 0.2s; }
+  .recipe-craft-btn:active { background:rgba(212,137,10,0.15); }
+  .recipe-craft-btn:disabled { opacity:0.35;cursor:default;border-color:var(--border);color:var(--text-secondary); }
+  .inventory-grid { display:grid;grid-template-columns:1fr 1fr;gap:0.6rem; }
+  .inv-item { border:1px solid var(--border);padding:0.8rem 0.7rem;background:rgba(255,255,255,0.01);position:relative; }
+  .inv-item-icon { font-size:1.3rem;margin-bottom:0.3rem;display:block; }
+  .inv-item-name { font-family:var(--ff-heading);font-size:0.6rem;letter-spacing:0.06em;color:var(--bone);margin-bottom:0.15rem; }
+  .inv-item-type { font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.3rem; }
+  .inv-item-effect { font-family:var(--ff-body);font-style:italic;font-size:0.65rem;color:var(--viridian-bright);line-height:1.4; }
+  .inv-item-qty { position:absolute;top:0.4rem;right:0.5rem;font-family:var(--ff-heading);font-size:0.55rem;color:var(--amber-bright); }
+  .inv-empty { grid-column:1/-1;text-align:center;padding:2rem 0;font-family:var(--ff-body);font-style:italic;font-size:0.85rem;color:var(--text-secondary); }
+  .forge-close { margin:0 1rem 1rem;font-family:var(--ff-heading);font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;padding:0.8rem;border:1px solid rgba(139,90,0,0.3);background:transparent;color:var(--text-secondary);cursor:pointer;text-align:center;width:calc(100% - 2rem); }
 
-  .forge-tabs {
-    display: flex; border-bottom: 1px solid var(--border);
-    background: rgba(5,4,7,0.8); position: sticky; top: 0; z-index: 10;
-  }
-  .forge-tab {
-    flex: 1; padding: 0.6rem 0.3rem;
-    font-family: var(--ff-heading); font-size: 0.42rem;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--text-secondary); background: none; border: none;
-    cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s;
-  }
-  .forge-tab.active { color: var(--amber-bright); border-bottom-color: var(--amber-bright); }
+  /* PLAYER PROFILE MODAL */
+  #player-modal { position:fixed;inset:0;z-index:600;background:rgba(5,4,7,0.7);display:none;align-items:flex-end;justify-content:center; }
+  #player-modal.open { display:flex; }
+  .player-modal-inner { background:var(--abyss);border:1px solid var(--border-bright);border-bottom:none;width:100%;max-width:430px;max-height:85vh;overflow-y:auto;padding:1.2rem 1.2rem 2rem;animation:slide-up 0.3s cubic-bezier(0.16,1,0.3,1); }
+  .player-modal-inner::-webkit-scrollbar { width:3px; }
+  .player-modal-inner::-webkit-scrollbar-thumb { background:var(--stone); }
+  .pm-header { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem; }
+  .pm-identity { flex:1; }
+  .pm-name { font-family:var(--ff-heading);font-size:1rem;letter-spacing:0.08em;color:var(--bone); }
+  .pm-coven { font-family:var(--ff-body);font-style:italic;font-size:0.8rem;color:var(--gold);margin-top:0.15rem; }
+  .pm-close { font-size:1rem;color:var(--text-secondary);background:none;border:none;cursor:pointer;padding:0.2rem 0.5rem; }
+  .pm-section { margin-bottom:1rem; }
+  .pm-section-title { font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-secondary);border-bottom:1px solid var(--border);padding-bottom:0.3rem;margin-bottom:0.6rem; }
+  .pm-acolyte { display:flex;gap:0.6rem;align-items:center;border:1px solid var(--border);padding:0.6rem;margin-bottom:0.4rem;background:rgba(255,255,255,0.01); }
+  .pm-acolyte-available { border-color:rgba(45,122,95,0.4);background:rgba(45,122,95,0.04); }
+  .pm-acolyte-avatar { font-size:1.2rem;width:32px;text-align:center;flex-shrink:0; }
+  .pm-acolyte-info { flex:1; }
+  .pm-acolyte-name { font-family:var(--ff-heading);font-size:0.62rem;letter-spacing:0.06em;color:var(--bone); }
+  .pm-acolyte-class { font-family:var(--ff-body);font-style:italic;font-size:0.65rem;color:var(--gold); }
+  .pm-acolyte-badge { font-family:var(--ff-heading);font-size:0.38rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.2rem 0.4rem;border:1px solid var(--viridian-bright);color:var(--viridian-bright); }
+  .pm-res-row { display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.6rem; }
+  .pm-res-pill { font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.06em;padding:0.2rem 0.5rem;border:1px solid var(--border);color:var(--text-secondary); }
+  .pm-action-row { display:flex;gap:0.5rem;margin-top:0.8rem; }
+  .pm-btn { flex:1;font-family:var(--ff-heading);font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.6rem;border:1px solid var(--border);background:transparent;color:var(--text-primary);cursor:pointer;transition:all 0.2s; }
+  .pm-btn.primary { border-color:var(--gold-dim);color:var(--gold); }
+  .pm-btn.primary:active { background:rgba(201,168,76,0.1); }
+  .pm-btn:active { background:rgba(255,255,255,0.04); }
 
-  .forge-section { padding: 1rem; }
+  /* EXCHANGE MODAL */
+  #exchange-modal { position:fixed;inset:0;z-index:700;background:rgba(5,4,7,0.97);display:none;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem; }
+  #exchange-modal.open { display:flex; }
+  .exchange-title { font-family:var(--ff-title);font-size:1.6rem;color:var(--gold);letter-spacing:2px;margin-bottom:0.3rem;text-align:center; }
+  .exchange-sub { font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:1.5rem;text-align:center; }
+  .exchange-cols { display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;width:100%;max-width:380px;margin-bottom:1rem; }
+  .exchange-col { border:1px solid var(--border);padding:0.8rem; }
+  .exchange-col-title { font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.6rem; }
+  .exchange-res-row { display:flex;align-items:center;gap:0.4rem;margin-bottom:0.4rem; }
+  .exchange-res-label { font-family:var(--ff-heading);font-size:0.55rem;color:var(--bone);flex:1; }
+  .exchange-input { width:60px;background:var(--void);border:1px solid var(--border);color:var(--bone);font-family:var(--ff-heading);font-size:0.6rem;padding:0.3rem 0.4rem;text-align:right;outline:none; }
+  .exchange-submit { font-family:var(--ff-heading);font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;padding:0.8rem 2rem;border:1px solid var(--gold-dim);background:transparent;color:var(--gold);cursor:pointer;margin-bottom:0.5rem; }
+  .exchange-cancel { font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.12em;text-transform:uppercase;background:none;border:none;color:var(--text-secondary);cursor:pointer;padding:0.4rem; }
 
-  .recipe-card {
-    border: 1px solid var(--border); padding: 0.9rem;
-    margin-bottom: 0.7rem; background: rgba(255,255,255,0.01);
-    position: relative; overflow: hidden;
-  }
-  .recipe-card::before {
-    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-    width: 3px; background: var(--recipe-color, var(--amber-bright));
-  }
-  .recipe-card.craftable { border-color: rgba(212,137,10,0.3); }
-  .recipe-card.locked-recipe { opacity: 0.45; }
+  /* INCOMING EXCHANGE NOTIFICATION */
+  .exchange-toast { background:var(--shadow);border:1px solid var(--gold-dim);padding:0.9rem 1rem;margin-bottom:0.5rem;font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--bone);display:flex;flex-direction:column;gap:0.5rem;animation:toast-in 0.3s ease; }
+  .exchange-toast-title { font-family:var(--ff-heading);font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold); }
+  .exchange-toast-btns { display:flex;gap:0.5rem; }
+  .exchange-toast-btn { font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.35rem 0.8rem;border:1px solid var(--border);background:transparent;color:var(--text-primary);cursor:pointer; }
+  .exchange-toast-btn.accept { border-color:var(--viridian-bright);color:var(--viridian-bright); }
+  .exchange-toast-btn.decline { border-color:var(--crimson-bright);color:var(--crimson-bright); }
 
-  .recipe-header {
-    display: flex; justify-content: space-between;
-    align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;
-  }
-  .recipe-icon { font-size: 1.4rem; flex-shrink: 0; }
-  .recipe-info { flex: 1; }
-  .recipe-name {
-    font-family: var(--ff-heading); font-size: 0.7rem;
-    letter-spacing: 0.06em; color: var(--bone); margin-bottom: 0.15rem;
-  }
-  .recipe-type {
-    font-family: var(--ff-heading); font-size: 0.42rem;
-    letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary);
-  }
-  .recipe-desc {
-    font-family: var(--ff-body); font-style: italic;
-    font-size: 0.78rem; color: var(--mist); line-height: 1.6; margin-bottom: 0.7rem;
-  }
-  .recipe-costs {
-    display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.7rem;
-  }
-  .recipe-cost-pill {
-    font-family: var(--ff-heading); font-size: 0.48rem;
-    letter-spacing: 0.06em; padding: 0.2rem 0.5rem;
-    border: 1px solid var(--border); color: var(--text-secondary);
-  }
-  .recipe-cost-pill.affordable { color: var(--viridian-bright); border-color: rgba(45,122,95,0.4); }
-  .recipe-cost-pill.unaffordable { color: var(--crimson-bright); border-color: rgba(196,48,48,0.3); }
+  /* NEARBY PLAYER MARKER */
+  .llair-player-other { width:16px;height:16px;border-radius:50%;background:#7b4fcf;border:2px solid rgba(123,79,207,0.6);box-shadow:0 0 12px rgba(123,79,207,0.7);animation:pulse-ring 2.5s ease-in-out infinite;cursor:pointer; }
 
-  .recipe-craft-btn {
-    font-family: var(--ff-heading); font-size: 0.55rem;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    padding: 0.5rem 1.2rem; border: 1px solid var(--amber-bright);
-    background: transparent; color: var(--amber-bright); cursor: pointer;
-    transition: all 0.2s;
-  }
-  .recipe-craft-btn:active { background: rgba(212,137,10,0.15); }
-  .recipe-craft-btn:disabled { opacity: 0.35; cursor: default; border-color: var(--border); color: var(--text-secondary); }
-
-  /* Inventory */
-  .inventory-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;
-  }
-  .inv-item {
-    border: 1px solid var(--border); padding: 0.8rem 0.7rem;
-    background: rgba(255,255,255,0.01); position: relative;
-  }
-  .inv-item-icon { font-size: 1.3rem; margin-bottom: 0.3rem; display: block; }
-  .inv-item-name {
-    font-family: var(--ff-heading); font-size: 0.6rem;
-    letter-spacing: 0.06em; color: var(--bone); margin-bottom: 0.15rem;
-  }
-  .inv-item-type {
-    font-family: var(--ff-heading); font-size: 0.4rem;
-    letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary);
-    margin-bottom: 0.3rem;
-  }
-  .inv-item-effect {
-    font-family: var(--ff-body); font-style: italic;
-    font-size: 0.65rem; color: var(--viridian-bright); line-height: 1.4;
-  }
-  .inv-item-qty {
-    position: absolute; top: 0.4rem; right: 0.5rem;
-    font-family: var(--ff-heading); font-size: 0.55rem;
-    color: var(--amber-bright);
-  }
-  .inv-empty {
-    grid-column: 1 / -1; text-align: center; padding: 2rem 0;
-    font-family: var(--ff-body); font-style: italic;
-    font-size: 0.85rem; color: var(--text-secondary);
-  }
-
-  .forge-close {
-    margin: 0 1rem 1rem; font-family: var(--ff-heading);
-    font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase;
-    padding: 0.8rem; border: 1px solid rgba(139,90,0,0.3);
-    background: transparent; color: var(--text-secondary);
-    cursor: pointer; text-align: center; width: calc(100% - 2rem);
-  }
+  /* AVAILABLE ACOLYTE TOGGLE */
+  .acolyte-avail-toggle { font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.2rem 0.5rem;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;transition:all 0.2s;margin-top:0.3rem; }
+  .acolyte-avail-toggle.active { border-color:var(--viridian-bright);color:var(--viridian-bright);background:rgba(45,122,95,0.08); }
 </style>
-
+</style>
 </head>
 <body>
 
@@ -2356,6 +2328,7 @@
             <span class="state-tag affliction" data-codex="affliction">Paranoid</span>
             <span class="state-tag quirk" data-codex="affliction">Masochistic</span>
           </div>
+          <button class="acolyte-avail-toggle" id="avail-maurus" onclick="toggleAcolyteAvailable('maurus',this)">Share with Coven: Off</button>
         </div>
       </div>
 
@@ -2369,6 +2342,7 @@
             <span class="state-tag virtue">Courageous</span>
             <span class="state-tag quirk">Ink-Stained</span>
           </div>
+          <button class="acolyte-avail-toggle" id="avail-irene" onclick="toggleAcolyteAvailable('irene',this)">Share with Coven: Off</button>
         </div>
       </div>
 
@@ -2394,7 +2368,7 @@
           <div class="building-name" data-codex="scriptorium">The Scriptorium</div>
           <p class="building-desc">Research grimoires. Unlock new skills and esoteric knowledge.</p>
         </div>
-        <div class="building-card" onclick="openForge()">
+        <div class="building-card" onclick="openForge()" style="cursor:pointer">
           <span class="building-level">Lv. 1</span>
           <span class="building-icon">⚗</span>
           <div class="building-name" data-codex="alchemical-forge">Alchemical Forge</div>
@@ -2607,25 +2581,6 @@
   <button class="save-close" onclick="closeSaveModal()">✕ Return to the Lair</button>
 </div>
 
-<!-- FORGE MODAL -->
-<div id="forge-modal">
-  <div class="forge-top">
-    <div class="forge-title">Alchemical Forge</div>
-    <div class="forge-subtitle">Transmute essence into instrument</div>
-  </div>
-
-  <div class="forge-tabs">
-    <button class="forge-tab active" onclick="switchForgeTab('weapons',this)">⚔ Weapons</button>
-    <button class="forge-tab" onclick="switchForgeTab('armour',this)">🛡 Armour</button>
-    <button class="forge-tab" onclick="switchForgeTab('consumables',this)">⚗ Consumables</button>
-    <button class="forge-tab" onclick="switchForgeTab('sigils',this)">✦ Sigils</button>
-    <button class="forge-tab" onclick="switchForgeTab('inventory',this)">📦 Inventory</button>
-  </div>
-
-  <div class="forge-section" id="forge-content"></div>
-  <button class="forge-close" onclick="closeForge()">⚊ LEAVE THE FORGE ⚊</button>
-</div>
-
 <!-- COMBAT MODAL -->
 <div id="combat-modal">
   <div class="combat-top">
@@ -2703,6 +2658,70 @@
   <button class="combat-close" onclick="closeCombat()">⚊ RETREAT FROM THE PASSAGE ⚊</button>
 </div>
 
+<!-- IDENTITY MODAL -->
+<div id="identity-modal">
+  <div class="identity-title">Name Your Soul</div>
+  <p class="identity-sub">Your name and coven will be visible to nearby seekers</p>
+  <div class="identity-field">
+    <label class="identity-label">Your Name</label>
+    <input class="identity-input" id="identity-name" type="text" placeholder="The Archivist" maxlength="24" autocomplete="off">
+  </div>
+  <div class="identity-field">
+    <label class="identity-label">Your Coven</label>
+    <input class="identity-input" id="identity-coven" type="text" placeholder="The Order of the Veiled Star" maxlength="36" autocomplete="off">
+  </div>
+  <button class="identity-btn" onclick="saveIdentity()">Enter the Lair</button>
+</div>
+
+<!-- FORGE MODAL -->
+<div id="forge-modal">
+  <div class="forge-top">
+    <div class="forge-title">Alchemical Forge</div>
+    <div class="forge-subtitle">Transmute essence into instrument</div>
+  </div>
+  <div class="forge-tabs">
+    <button class="forge-tab active" onclick="switchForgeTab('weapons',this)">⚔ Weapons</button>
+    <button class="forge-tab" onclick="switchForgeTab('armour',this)">🛡 Armour</button>
+    <button class="forge-tab" onclick="switchForgeTab('consumables',this)">⚗ Consum.</button>
+    <button class="forge-tab" onclick="switchForgeTab('sigils',this)">✦ Sigils</button>
+    <button class="forge-tab" onclick="switchForgeTab('inventory',this)">📦 Inv.</button>
+  </div>
+  <div class="forge-section" id="forge-content"></div>
+  <button class="forge-close" onclick="closeForge()">⚊ LEAVE THE FORGE ⚊</button>
+</div>
+
+<!-- PLAYER PROFILE MODAL -->
+<div id="player-modal">
+  <div class="player-modal-inner">
+    <div class="pm-header">
+      <div class="pm-identity">
+        <div class="pm-name" id="pm-name"></div>
+        <div class="pm-coven" id="pm-coven"></div>
+      </div>
+      <button class="pm-close" onclick="closePlayerModal()">✕</button>
+    </div>
+    <div id="pm-body"></div>
+  </div>
+</div>
+
+<!-- EXCHANGE MODAL -->
+<div id="exchange-modal">
+  <div class="exchange-title">Propose Exchange</div>
+  <div class="exchange-sub" id="exchange-sub">with another seeker</div>
+  <div class="exchange-cols">
+    <div class="exchange-col">
+      <div class="exchange-col-title">You Offer</div>
+      <div id="offer-inputs"></div>
+    </div>
+    <div class="exchange-col">
+      <div class="exchange-col-title">You Request</div>
+      <div id="request-inputs"></div>
+    </div>
+  </div>
+  <button class="exchange-submit" onclick="submitExchange()">⟺ Send Proposal</button>
+  <button class="exchange-cancel" onclick="closeExchangeModal()">Cancel</button>
+</div>
+
 <!-- TOASTS -->
 <div id="toasts"></div>
 
@@ -2723,6 +2742,12 @@
     setTimeout(() => toast('The lair stirs. The stars take notice. You descend.'), 800);
     setTimeout(() => { initCodex(); attachLongPress(); }, 600);
     startAutoSave();
+    // Identity check
+    playerName = localStorage.getItem('llair_name') || '';
+    playerCoven = localStorage.getItem('llair_coven') || '';
+    if (!playerName) {
+      setTimeout(() => document.getElementById('identity-modal').classList.add('open'), 1800);
+    }
   }
 
   // ══════════════════════════════════════════
@@ -2823,6 +2848,7 @@
 
     toast('The city map unfolds. Your position is marked. The missions pulse.');
     startPlanetaryHourEngine(lat, lng);
+    startPresenceEngine();
   }
 
   function initLocation() {
@@ -3504,6 +3530,7 @@
       lair: { buildings: { scriptorium:2, forge:1, dormitorium:1, altar:2 } },
       research: { active:'chaldean-vol3', progress:65, queue:['doctrine-of-signatures'] },
       inventory: { ...inventory },
+      availableAcolytes: { ...availableAcolytes },
     };
   }
 
@@ -3515,8 +3542,13 @@
         el.textContent = Math.floor(values[i]);
       });
     }
-    if (state.inventory) {
-      inventory = { ...state.inventory };
+    if (state.inventory) inventory = { ...state.inventory };
+    if (state.availableAcolytes) {
+      availableAcolytes = { ...state.availableAcolytes };
+      Object.entries(availableAcolytes).forEach(([id, on]) => {
+        const btn = document.getElementById('avail-' + id);
+        if (btn) { btn.textContent = 'Share with Coven: ' + (on ? 'On' : 'Off'); btn.classList.toggle('active', on); }
+      });
     }
     return true;
   }
@@ -3628,105 +3660,84 @@
   }
 
   // ══════════════════════════════════════════
+  // IDENTITY SYSTEM
+  // ══════════════════════════════════════════
+  let playerName = '';
+  let playerCoven = '';
+
+  function checkIdentity() {
+    playerName = localStorage.getItem('llair_name') || '';
+    playerCoven = localStorage.getItem('llair_coven') || '';
+    if (!playerName) {
+      document.getElementById('identity-modal').classList.add('open');
+      return false;
+    }
+    return true;
+  }
+
+  function saveIdentity() {
+    const n = document.getElementById('identity-name').value.trim();
+    const c = document.getElementById('identity-coven').value.trim();
+    if (!n) { toast('You must name yourself before descending.'); return; }
+    playerName = n;
+    playerCoven = c || 'The Unsanctified';
+    localStorage.setItem('llair_name', playerName);
+    localStorage.setItem('llair_coven', playerCoven);
+    document.getElementById('identity-modal').classList.remove('open');
+    toast('Welcome, ' + playerName + ' of ' + playerCoven + '.');
+    publishPresence();
+  }
+
+  // ══════════════════════════════════════════
   // FORGE SYSTEM
   // ══════════════════════════════════════════
-
-  // Inventory: { itemKey: quantity }
   let inventory = {};
 
   const RECIPES = [
-    // WEAPONS
-    {
-      key: 'solar-brand', cat: 'weapons', icon: '🔥',
-      name: 'Solar Brand',
-      type: 'Weapon — One-handed',
-      desc: 'A blade inscribed with Solar sigils. Deals +4 Holy damage and ignites Blighted enemies on hit.',
-      effect: '+4 Holy damage · Ignite on Blight',
-      costs: [{ res: 0, symbol: '☉', name: 'Solar', amount: 300 }, { res: 3, symbol: '♂', name: 'Martial', amount: 150 }],
-      color: '#c9a84c',
-    },
-    {
-      key: 'mercurial-stiletto', cat: 'weapons', icon: '🗡',
-      name: 'Mercurial Stiletto',
-      type: 'Weapon — Finesse',
-      desc: 'A slim blade treated with Mercurial essence. Grants +15% critical hit chance and bypasses 30% armour.',
-      effect: '+15% Crit · 30% Armour Pierce',
-      costs: [{ res: 6, symbol: '☿', name: 'Mercurial', amount: 250 }, { res: 3, symbol: '♂', name: 'Martial', amount: 100 }],
-      color: '#4a7a8b',
-    },
-    // ARMOUR
-    {
-      key: 'lunar-veil', cat: 'armour', icon: '🌙',
-      name: 'Lunar Veil',
-      type: 'Armour — Cloak',
-      desc: 'Woven from moonlit thread and sealed with Lunar essence. Reduces incoming Stress by 20% and grants +10 Dodge.',
-      effect: '−20% Stress taken · +10 Dodge',
-      costs: [{ res: 1, symbol: '☽', name: 'Lunar', amount: 280 }, { res: 5, symbol: '♀', name: 'Venusian', amount: 120 }],
-      color: '#8b8ba0',
-    },
-    {
-      key: 'saturn-plate', cat: 'armour', icon: '🛡',
-      name: 'Saturnine Plate',
-      type: 'Armour — Heavy',
-      desc: 'Dense iron inscribed with Saturn\'s binding seals. Grants +8 HP and 40% Blight resistance.',
-      effect: '+8 Max HP · 40% Blight Resist',
-      costs: [{ res: 4, symbol: '♄', name: 'Saturnine', amount: 200 }, { res: 3, symbol: '♂', name: 'Martial', amount: 180 }],
-      color: '#8b7355',
-    },
-    // CONSUMABLES
-    {
-      key: 'blight-antidote', cat: 'consumables', icon: '💊',
-      name: 'Blight Antidote',
-      type: 'Consumable — Combat',
-      desc: 'A vial of Jovian essence purified through Venus. Instantly clears all Blight stacks from one character.',
-      effect: 'Clears all Blight · Single target',
-      costs: [{ res: 2, symbol: '♃', name: 'Jovian', amount: 120 }, { res: 5, symbol: '♀', name: 'Venusian', amount: 80 }],
-      color: '#6b4c8b',
-    },
-    {
-      key: 'stress-tonic', cat: 'consumables', icon: '🍶',
-      name: 'Venusian Stress Tonic',
-      type: 'Consumable — Rest',
-      desc: 'A calming draught brewed under Venus. Reduces one Acolyte\'s Stress by 30 when consumed outside combat.',
-      effect: '−30 Stress · Single Acolyte',
-      costs: [{ res: 5, symbol: '♀', name: 'Venusian', amount: 200 }, { res: 1, symbol: '☽', name: 'Lunar', amount: 100 }],
-      color: '#5c8b5c',
-    },
-    // SIGIL TOKENS
-    {
-      key: 'jupiter-seal', cat: 'sigils', icon: '✦',
-      name: 'Seal of Jupiter',
-      type: 'Sigil Token — Passive',
-      desc: 'A carved token that resonates with Jovian expansion. Equipped bearer gains +10% to all resource income.',
-      effect: '+10% All Resource Income',
-      costs: [{ res: 2, symbol: '♃', name: 'Jovian', amount: 300 }, { res: 0, symbol: '☉', name: 'Solar', amount: 150 }],
-      color: '#6b4c8b',
-    },
-    {
-      key: 'mercury-cipher', cat: 'sigils', icon: '⬡',
-      name: 'Mercury\'s Cipher',
-      type: 'Sigil Token — Passive',
-      desc: 'An inscribed disc that accelerates thought. Equipped bearer decodes Glyphs instantly and boosts research by 25%.',
-      effect: 'Instant Glyph Decode · +25% Research',
-      costs: [{ res: 6, symbol: '☿', name: 'Mercurial', amount: 250 }, { res: 4, symbol: '♄', name: 'Saturnine', amount: 100 }],
-      color: '#4a7a8b',
-    },
+    { key:'solar-brand', cat:'weapons', icon:'🔥', name:'Solar Brand', type:'Weapon — One-handed',
+      desc:'A blade inscribed with Solar sigils. Deals +4 Holy damage and ignites Blighted enemies on hit.',
+      effect:'+4 Holy damage · Ignite on Blight', color:'#c9a84c',
+      costs:[{res:0,symbol:'☉',name:'Solar',amount:300},{res:3,symbol:'♂',name:'Martial',amount:150}] },
+    { key:'merc-stiletto', cat:'weapons', icon:'🗡', name:'Mercurial Stiletto', type:'Weapon — Finesse',
+      desc:'A slim blade treated with Mercurial essence. Grants +15% critical hit chance and bypasses 30% armour.',
+      effect:'+15% Crit · 30% Armour Pierce', color:'#4a7a8b',
+      costs:[{res:6,symbol:'☿',name:'Mercurial',amount:250},{res:3,symbol:'♂',name:'Martial',amount:100}] },
+    { key:'lunar-veil', cat:'armour', icon:'🌙', name:'Lunar Veil', type:'Armour — Cloak',
+      desc:'Woven from moonlit thread and Lunar essence. Reduces incoming Stress by 20% and grants +10 Dodge.',
+      effect:'−20% Stress taken · +10 Dodge', color:'#8b8ba0',
+      costs:[{res:1,symbol:'☽',name:'Lunar',amount:280},{res:5,symbol:'♀',name:'Venusian',amount:120}] },
+    { key:'saturn-plate', cat:'armour', icon:'🛡', name:'Saturnine Plate', type:'Armour — Heavy',
+      desc:'Dense iron inscribed with Saturn's binding seals. Grants +8 HP and 40% Blight resistance.',
+      effect:'+8 Max HP · 40% Blight Resist', color:'#8b7355',
+      costs:[{res:4,symbol:'♄',name:'Saturnine',amount:200},{res:3,symbol:'♂',name:'Martial',amount:180}] },
+    { key:'blight-antidote', cat:'consumables', icon:'💊', name:'Blight Antidote', type:'Consumable — Combat',
+      desc:'A vial of Jovian essence purified through Venus. Instantly clears all Blight stacks from one character.',
+      effect:'Clears all Blight · Single target', color:'#6b4c8b',
+      costs:[{res:2,symbol:'♃',name:'Jovian',amount:120},{res:5,symbol:'♀',name:'Venusian',amount:80}] },
+    { key:'stress-tonic', cat:'consumables', icon:'🍶', name:'Venusian Stress Tonic', type:'Consumable — Rest',
+      desc:'A calming draught brewed under Venus. Reduces one Acolyte's Stress by 30 when consumed outside combat.',
+      effect:'−30 Stress · Single Acolyte', color:'#5c8b5c',
+      costs:[{res:5,symbol:'♀',name:'Venusian',amount:200},{res:1,symbol:'☽',name:'Lunar',amount:100}] },
+    { key:'jupiter-seal', cat:'sigils', icon:'✦', name:'Seal of Jupiter', type:'Sigil Token — Passive',
+      desc:'A carved token that resonates with Jovian expansion. Equipped bearer gains +10% to all resource income.',
+      effect:'+10% All Resource Income', color:'#6b4c8b',
+      costs:[{res:2,symbol:'♃',name:'Jovian',amount:300},{res:0,symbol:'☉',name:'Solar',amount:150}] },
+    { key:'mercury-cipher', cat:'sigils', icon:'⬡', name:"Mercury's Cipher", type:'Sigil Token — Passive',
+      desc:'An inscribed disc that accelerates thought. Equipped bearer decodes Glyphs instantly and boosts research by 25%.',
+      effect:'Instant Glyph Decode · +25% Research', color:'#4a7a8b',
+      costs:[{res:6,symbol:'☿',name:'Mercurial',amount:250},{res:4,symbol:'♄',name:'Saturnine',amount:100}] },
   ];
 
   let currentForgeTab = 'weapons';
 
   function openForge() {
     document.getElementById('forge-modal').classList.add('open');
+    document.querySelectorAll('.forge-tab').forEach((t,i) => t.classList.toggle('active', i===0));
+    currentForgeTab = 'weapons';
     renderForgeTab('weapons');
-    // reset tab highlight
-    document.querySelectorAll('.forge-tab').forEach((t,i) => {
-      t.classList.toggle('active', i === 0);
-    });
   }
 
-  function closeForge() {
-    document.getElementById('forge-modal').classList.remove('open');
-  }
+  function closeForge() { document.getElementById('forge-modal').classList.remove('open'); }
 
   function switchForgeTab(tab, btn) {
     currentForgeTab = tab;
@@ -3735,83 +3746,377 @@
     renderForgeTab(tab);
   }
 
-  function canAfford(costs) {
-    return costs.every(c => values[c.res] >= c.amount);
-  }
+  function canAfford(costs) { return costs.every(c => values[c.res] >= c.amount); }
 
   function renderForgeTab(tab) {
     const el = document.getElementById('forge-content');
-
-    if (tab === 'inventory') {
-      renderInventory(el);
-      return;
-    }
-
+    if (tab === 'inventory') { renderInventory(el); return; }
     const recipes = RECIPES.filter(r => r.cat === tab);
-    if (!recipes.length) { el.innerHTML = '<p style="color:var(--text-secondary);font-style:italic;padding:1rem 0;">No recipes in this category yet.</p>'; return; }
-
     el.innerHTML = recipes.map(r => {
       const affordable = canAfford(r.costs);
       const qty = inventory[r.key] || 0;
       const costsHtml = r.costs.map(c => {
         const has = values[c.res] >= c.amount;
-        return `<span class="recipe-cost-pill ${has ? 'affordable' : 'unaffordable'}">${c.symbol} ${c.amount} ${c.name} (${Math.floor(values[c.res])} held)</span>`;
+        return `<span class="recipe-cost-pill ${has?'affordable':'unaffordable'}">${c.symbol} ${c.amount} ${c.name} (${Math.floor(values[c.res])} held)</span>`;
       }).join('');
-      return `
-        <div class="recipe-card ${affordable ? 'craftable' : ''}" style="--recipe-color:${r.color}">
-          <div class="recipe-header">
-            <span class="recipe-icon">${r.icon}</span>
-            <div class="recipe-info">
-              <div class="recipe-name">${r.name}</div>
-              <div class="recipe-type">${r.type}</div>
-            </div>
-            ${qty > 0 ? `<span style="font-family:var(--ff-heading);font-size:0.55rem;color:var(--amber-bright);">×${qty} owned</span>` : ''}
-          </div>
-          <p class="recipe-desc">${r.desc}</p>
-          <div class="recipe-costs">${costsHtml}</div>
-          <button class="recipe-craft-btn" ${affordable ? '' : 'disabled'} onclick="craftItem('${r.key}')">
-            ${affordable ? '⚗ Craft' : '✗ Insufficient Essence'}
-          </button>
-        </div>`;
+      return `<div class="recipe-card ${affordable?'craftable':''}" style="--recipe-color:${r.color}">
+        <div class="recipe-header">
+          <span class="recipe-icon">${r.icon}</span>
+          <div class="recipe-info"><div class="recipe-name">${r.name}</div><div class="recipe-type">${r.type}</div></div>
+          ${qty > 0 ? `<span style="font-family:var(--ff-heading);font-size:0.55rem;color:var(--amber-bright);">×${qty} owned</span>` : ''}
+        </div>
+        <p class="recipe-desc">${r.desc}</p>
+        <div class="recipe-costs">${costsHtml}</div>
+        <button class="recipe-craft-btn" ${affordable?'':'disabled'} onclick="craftItem('${r.key}')">
+          ${affordable ? '⚗ Craft' : '✗ Insufficient Essence'}
+        </button>
+      </div>`;
     }).join('');
   }
 
   function craftItem(key) {
     const r = RECIPES.find(x => x.key === key);
-    if (!r) return;
-    if (!canAfford(r.costs)) { toast('Insufficient essence to craft this item.'); return; }
-    // Deduct costs
+    if (!r || !canAfford(r.costs)) { toast('Insufficient essence.'); return; }
     r.costs.forEach(c => { values[c.res] -= c.amount; });
-    // Add to inventory
     inventory[key] = (inventory[key] || 0) + 1;
-    toast(`✦ ${r.name} forged. The essence takes form.`);
+    toast('✦ ' + r.name + ' forged. The essence takes form.');
     renderForgeTab(currentForgeTab);
-    // Update resource display
-    document.querySelectorAll('.resource-pill .res-value').forEach((el, i) => {
-      el.textContent = Math.floor(values[i]);
-    });
+    document.querySelectorAll('.resource-pill .res-value').forEach((el,i) => { el.textContent = Math.floor(values[i]); });
+    publishProfile();
   }
 
   function renderInventory(el) {
     const items = Object.entries(inventory).filter(([,qty]) => qty > 0);
     if (!items.length) {
-      el.innerHTML = `<div class="inventory-grid"><div class="inv-empty">The forge has produced nothing yet.<br>Craft items from the recipe tabs above.</div></div>`;
-      return;
+      el.innerHTML = '<div class="inventory-grid"><div class="inv-empty">The forge has produced nothing yet.</div></div>'; return;
     }
-    const html = items.map(([key, qty]) => {
+    el.innerHTML = '<div class="inventory-grid">' + items.map(([key,qty]) => {
       const r = RECIPES.find(x => x.key === key);
       if (!r) return '';
-      return `
-        <div class="inv-item">
-          <span class="inv-item-qty">×${qty}</span>
-          <span class="inv-item-icon">${r.icon}</span>
-          <div class="inv-item-name">${r.name}</div>
-          <div class="inv-item-type">${r.type}</div>
-          <div class="inv-item-effect">${r.effect}</div>
-        </div>`;
-    }).join('');
-    el.innerHTML = `<div class="inventory-grid">${html}</div>`;
+      return `<div class="inv-item"><span class="inv-item-qty">×${qty}</span><span class="inv-item-icon">${r.icon}</span><div class="inv-item-name">${r.name}</div><div class="inv-item-type">${r.type}</div><div class="inv-item-effect">${r.effect}</div></div>`;
+    }).join('') + '</div>';
   }
+
+  // ══════════════════════════════════════════
+  // MULTIPLAYER — PRESENCE & PROXIMITY
+  // ══════════════════════════════════════════
+  const NEARBY_RADIUS_M = 100;
+  const RES_SYMBOLS = ['☉','☽','♃','♂','♄','♀','☿'];
+  const RES_NAMES   = ['Solar','Lunar','Jovian','Martial','Saturnine','Venusian','Mercurial'];
+
+  let availableAcolytes = {}; // { 'maurus': true/false, 'irene': true/false }
+  let nearbyPlayers = {};     // { uuid: playerData }
+  let otherPlayerMarkers = {};
+  let currentExchangeTarget = null;
+  let presenceInterval = null;
+
+  function haversineM(lat1, lng1, lat2, lng2) {
+    const R = 6371000, r = Math.PI/180;
+    const dLat = (lat2-lat1)*r, dLng = (lng2-lng1)*r;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*r)*Math.cos(lat2*r)*Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  async function publishPresence() {
+    if (!playerName) return;
+    const id = getOrCreatePlayerId();
+    const data = {
+      name: playerName, coven: playerCoven,
+      lat: playerLat, lng: playerLng,
+      lastSeen: Date.now(),
+    };
+    try {
+      await fetch(`${FB_URL}/players/${id}/presence.json`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+      });
+    } catch(e) {}
+  }
+
+  async function publishProfile() {
+    if (!playerName) return;
+    const id = getOrCreatePlayerId();
+    const profile = {
+      resources: RES_NAMES.map((n,i) => ({ name:n, symbol:RES_SYMBOLS[i], value:Math.floor(values[i]) })),
+      acolytes: [
+        { id:'maurus', name:'Brother Maurus', cls:'Flagellant · Lv.4', stress:85, available: !!availableAcolytes.maurus },
+        { id:'irene',  name:'Sister Irene Voss', cls:'Plague Scribe · Lv.3', stress:30, available: !!availableAcolytes.irene },
+      ],
+      inventory: Object.entries(inventory).filter(([,q])=>q>0).map(([k,q])=>{
+        const r=RECIPES.find(x=>x.key===k); return r?{name:r.name,icon:r.icon,qty:q}:null;
+      }).filter(Boolean),
+      lair: { scriptorium:2, forge:1, dormitorium:1, altar:2 },
+    };
+    try {
+      await fetch(`${FB_URL}/players/${id}/profile.json`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(profile)
+      });
+    } catch(e) {}
+  }
+
+  async function scanNearbyPlayers() {
+    if (!playerName || !map) return;
+    const myId = getOrCreatePlayerId();
+    try {
+      const res = await fetch(`${FB_URL}/players.json`);
+      if (!res.ok) return;
+      const all = await res.json();
+      if (!all) return;
+      const now = Date.now();
+      nearbyPlayers = {};
+
+      // Remove stale other-player markers
+      Object.keys(otherPlayerMarkers).forEach(id => {
+        if (!all[id] || id === myId) { otherPlayerMarkers[id]?.remove(); delete otherPlayerMarkers[id]; }
+      });
+
+      Object.entries(all).forEach(([id, data]) => {
+        if (id === myId) return;
+        const p = data.presence;
+        if (!p || now - p.lastSeen > 5 * 60 * 1000) return; // stale > 5min
+        const dist = haversineM(playerLat, playerLng, p.lat, p.lng);
+        if (dist > NEARBY_RADIUS_M) {
+          // Remove marker if moved away
+          if (otherPlayerMarkers[id]) { otherPlayerMarkers[id].remove(); delete otherPlayerMarkers[id]; }
+          return;
+        }
+        nearbyPlayers[id] = { ...p, profile: data.profile || null, id };
+
+        // Add/update map marker
+        const icon = L.divIcon({ className:'', html:'<div class="llair-player-other"></div>', iconSize:[16,16], iconAnchor:[8,8] });
+        if (otherPlayerMarkers[id]) {
+          otherPlayerMarkers[id].setLatLng([p.lat, p.lng]);
+        } else {
+          otherPlayerMarkers[id] = L.marker([p.lat,p.lng],{icon,zIndexOffset:900}).addTo(map);
+          otherPlayerMarkers[id].on('click', () => openPlayerModal(id));
+          toast('✦ ' + p.name + ' of ' + p.coven + ' is nearby.');
+        }
+      });
+    } catch(e) {}
+  }
+
+  function startPresenceEngine() {
+    publishPresence();
+    publishProfile();
+    if (!presenceInterval) {
+      presenceInterval = setInterval(() => { publishPresence(); scanNearbyPlayers(); }, 30000);
+      setTimeout(() => scanNearbyPlayers(), 3000);
+    }
+  }
+
+  function toggleAcolyteAvailable(id, btn) {
+    availableAcolytes[id] = !availableAcolytes[id];
+    const on = availableAcolytes[id];
+    btn.textContent = 'Share with Coven: ' + (on ? 'On' : 'Off');
+    btn.classList.toggle('active', on);
+    publishProfile();
+    toast(on ? '✦ Acolyte available to nearby coven members for 1 hour.' : 'Acolyte sharing disabled.');
+  }
+
+  // ══════════════════════════════════════════
+  // PLAYER PROFILE MODAL
+  // ══════════════════════════════════════════
+  function openPlayerModal(id) {
+    const p = nearbyPlayers[id];
+    if (!p) return;
+    document.getElementById('pm-name').textContent = p.name;
+    document.getElementById('pm-coven').textContent = 'Coven of ' + p.coven;
+    const profile = p.profile;
+    let html = '';
+
+    // Resources
+    if (profile?.resources) {
+      html += '<div class="pm-section"><div class="pm-section-title">Essence Reserves</div><div class="pm-res-row">';
+      profile.resources.forEach(r => {
+        html += `<span class="pm-res-pill">${r.symbol} ${r.value} ${r.name}</span>`;
+      });
+      html += '</div></div>';
+    }
+
+    // Acolytes
+    if (profile?.acolytes) {
+      html += '<div class="pm-section"><div class="pm-section-title">Acolytes</div>';
+      profile.acolytes.forEach(a => {
+        const avail = a.available;
+        html += `<div class="pm-acolyte ${avail?'pm-acolyte-available':''}">
+          <div class="pm-acolyte-avatar">🜃</div>
+          <div class="pm-acolyte-info">
+            <div class="pm-acolyte-name">${a.name}</div>
+            <div class="pm-acolyte-class">${a.cls} · Stress ${a.stress}%</div>
+          </div>
+          ${avail ? '<span class="pm-acolyte-badge">Available</span>' : ''}
+        </div>`;
+      });
+      html += '</div>';
+    }
+
+    // Inventory
+    if (profile?.inventory?.length) {
+      html += '<div class="pm-section"><div class="pm-section-title">Forge Inventory</div><div class="pm-res-row">';
+      profile.inventory.forEach(it => {
+        html += `<span class="pm-res-pill">${it.icon} ${it.name} ×${it.qty}</span>`;
+      });
+      html += '</div></div>';
+    }
+
+    // Lair
+    if (profile?.lair) {
+      html += `<div class="pm-section"><div class="pm-section-title">Lair Status</div><div class="pm-res-row">
+        <span class="pm-res-pill">🕯 Scriptorium Lv.${profile.lair.scriptorium}</span>
+        <span class="pm-res-pill">⚗ Forge Lv.${profile.lair.forge}</span>
+        <span class="pm-res-pill">🛏 Dormitorium Lv.${profile.lair.dormitorium}</span>
+        <span class="pm-res-pill">🗿 Altar Lv.${profile.lair.altar}</span>
+      </div></div>`;
+    }
+
+    // Actions
+    html += `<div class="pm-action-row">
+      <button class="pm-btn primary" onclick="openExchangeModal('${id}')">⟺ Propose Exchange</button>
+    </div>`;
+
+    document.getElementById('pm-body').innerHTML = html;
+    document.getElementById('player-modal').classList.add('open');
+  }
+
+  function closePlayerModal() { document.getElementById('player-modal').classList.remove('open'); }
+
+  // ══════════════════════════════════════════
+  // EXCHANGE SYSTEM
+  // ══════════════════════════════════════════
+  function openExchangeModal(targetId) {
+    currentExchangeTarget = targetId;
+    const p = nearbyPlayers[targetId];
+    document.getElementById('exchange-sub').textContent = 'with ' + (p?.name || 'unknown seeker');
+    closePlayerModal();
+
+    const symRows = RES_SYMBOLS.map((s,i) => `
+      <div class="exchange-res-row">
+        <span class="exchange-res-label">${s} ${RES_NAMES[i]}</span>
+        <input class="exchange-input" type="number" min="0" max="${Math.floor(values[i])}" value="0" data-res="${i}" data-side="offer">
+      </div>`).join('');
+    const reqRows = RES_SYMBOLS.map((s,i) => `
+      <div class="exchange-res-row">
+        <span class="exchange-res-label">${s} ${RES_NAMES[i]}</span>
+        <input class="exchange-input" type="number" min="0" value="0" data-res="${i}" data-side="request">
+      </div>`).join('');
+
+    document.getElementById('offer-inputs').innerHTML = symRows;
+    document.getElementById('request-inputs').innerHTML = reqRows;
+    document.getElementById('exchange-modal').classList.add('open');
+  }
+
+  function closeExchangeModal() {
+    document.getElementById('exchange-modal').classList.remove('open');
+    currentExchangeTarget = null;
+  }
+
+  async function submitExchange() {
+    if (!currentExchangeTarget) return;
+    const myId = getOrCreatePlayerId();
+    const offer = {}, request = {};
+    document.querySelectorAll('.exchange-input[data-side="offer"]').forEach(inp => {
+      const v = parseInt(inp.value)||0;
+      if (v > 0) offer[inp.dataset.res] = v;
+    });
+    document.querySelectorAll('.exchange-input[data-side="request"]').forEach(inp => {
+      const v = parseInt(inp.value)||0;
+      if (v > 0) request[inp.dataset.res] = v;
+    });
+    if (!Object.keys(offer).length && !Object.keys(request).length) {
+      toast('Specify at least one essence to offer or request.'); return;
+    }
+    // Validate offer amounts
+    for (const [res, amt] of Object.entries(offer)) {
+      if (values[parseInt(res)] < amt) { toast('You do not have enough ' + RES_NAMES[parseInt(res)] + ' to offer.'); return; }
+    }
+    const exchangeData = {
+      from: myId, fromName: playerName, fromCoven: playerCoven,
+      to: currentExchangeTarget,
+      offer, request,
+      status: 'pending',
+      created: Date.now(),
+      expires: Date.now() + 10 * 60 * 1000,
+    };
+    const exchId = myId.slice(0,8) + '-' + Date.now();
+    try {
+      await fetch(`${FB_URL}/exchanges/${exchId}.json`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(exchangeData)
+      });
+      toast('✦ Exchange proposal sent. Awaiting their response.');
+      closeExchangeModal();
+    } catch(e) { toast('✗ Failed to send proposal: ' + e.message); }
+  }
+
+  async function pollIncomingExchanges() {
+    const myId = getOrCreatePlayerId();
+    try {
+      const res = await fetch(`${FB_URL}/exchanges.json`);
+      if (!res.ok) return;
+      const all = await res.json();
+      if (!all) return;
+      const now = Date.now();
+      Object.entries(all).forEach(([exchId, ex]) => {
+        if (ex.to !== myId || ex.status !== 'pending' || ex.expires < now) return;
+        // Check if already shown
+        if (document.getElementById('exch-' + exchId)) return;
+        showExchangeNotification(exchId, ex);
+      });
+    } catch(e) {}
+  }
+
+  function showExchangeNotification(exchId, ex) {
+    const offerText = Object.entries(ex.offer||{}).map(([r,a]) => RES_SYMBOLS[r]+' '+a+' '+RES_NAMES[r]).join(', ') || 'nothing';
+    const reqText  = Object.entries(ex.request||{}).map(([r,a]) => RES_SYMBOLS[r]+' '+a+' '+RES_NAMES[r]).join(', ') || 'nothing';
+    const container = document.getElementById('toasts');
+    const el = document.createElement('div');
+    el.className = 'exchange-toast';
+    el.id = 'exch-' + exchId;
+    el.innerHTML = `
+      <div class="exchange-toast-title">⟺ Exchange from ${ex.fromName}</div>
+      <div>Offers: <em>${offerText}</em><br>Requests: <em>${reqText}</em></div>
+      <div class="exchange-toast-btns">
+        <button class="exchange-toast-btn accept" onclick="acceptExchange('${exchId}', ${JSON.stringify(ex).replace(/"/g,'&quot;')})">Accept</button>
+        <button class="exchange-toast-btn decline" onclick="declineExchange('${exchId}')">Decline</button>
+      </div>`;
+    container.appendChild(el);
+  }
+
+  async function acceptExchange(exchId, ex) {
+    const myId = getOrCreatePlayerId();
+    // Validate I can give what they request
+    for (const [res, amt] of Object.entries(ex.request||{})) {
+      if (values[parseInt(res)] < amt) { toast('You do not have enough ' + RES_NAMES[parseInt(res)] + ' to complete this exchange.'); return; }
+    }
+    // Apply: I give request, I receive offer
+    for (const [res, amt] of Object.entries(ex.request||{})) values[parseInt(res)] -= amt;
+    for (const [res, amt] of Object.entries(ex.offer||{}))   values[parseInt(res)] += amt;
+    document.querySelectorAll('.resource-pill .res-value').forEach((el,i) => { el.textContent = Math.floor(values[i]); });
+    // Write accepted result
+    try {
+      await fetch(`${FB_URL}/exchanges/${exchId}.json`, {
+        method: 'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({...ex, status:'accepted', acceptedAt: Date.now()})
+      });
+    } catch(e) {}
+    document.getElementById('exch-' + exchId)?.remove();
+    toast('✦ Exchange accepted. Essences transferred.');
+    publishProfile();
+  }
+
+  async function declineExchange(exchId) {
+    try {
+      const res = await fetch(`${FB_URL}/exchanges/${exchId}.json`);
+      const ex = await res.json();
+      await fetch(`${FB_URL}/exchanges/${exchId}.json`, {
+        method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({...ex, status:'declined'})
+      });
+    } catch(e) {}
+    document.getElementById('exch-' + exchId)?.remove();
+    toast('Exchange declined.');
+  }
+
+  // Poll incoming exchanges every 20s
+  setInterval(pollIncomingExchanges, 20000);
 </script>
 </body>
 </html>
