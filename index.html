@@ -2555,15 +2555,6 @@
 <div id="toasts"></div>
 
 <script>
-  // Global error catcher — shows errors visibly on mobile
-  window.onerror = function(msg, src, line, col, err) {
-    const div = document.createElement('div');
-    div.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#8b1a1a;color:#fff;font-family:monospace;font-size:11px;padding:0.8rem;z-index:99999;word-break:break-all;';
-    div.textContent = `JS ERROR: ${msg} (line ${line})`;
-    document.body.appendChild(div);
-    setTimeout(() => div.remove(), 8000);
-  };
-
   // ══════════════════════════════════════════
   // INIT
   // ══════════════════════════════════════════
@@ -2571,20 +2562,15 @@
   function enterGame() {
     if (_gameStarted) return;
     _gameStarted = true;
-    try {
-      document.getElementById('splash').classList.add('hidden');
-      document.getElementById('app').style.display = 'flex';
-      document.getElementById('app').style.flexDirection = 'column';
-      startPlanetaryHourEngine(46.1713, 9.8694);
-      startResourceTick();
-      initLocation();
-      setTimeout(() => toast('The lair stirs. The stars take notice. You descend.'), 800);
-      setTimeout(() => { initCodex(); attachLongPress(); }, 600);
-      startAutoSave();
-    } catch(e) {
-      // Show error visibly on mobile where we have no console
-      document.getElementById('splash').innerHTML += `<div style="position:fixed;bottom:0;left:0;right:0;background:#8b1a1a;color:#fff;font-family:monospace;font-size:12px;padding:1rem;z-index:9999;word-break:break-all;">ERROR: ${e.message}<br>${e.stack}</div>`;
-    }
+    document.getElementById('splash').classList.add('hidden');
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('app').style.flexDirection = 'column';
+    startPlanetaryHourEngine(46.1713, 9.8694);
+    startResourceTick();
+    initLocation();
+    setTimeout(() => toast('The lair stirs. The stars take notice. You descend.'), 800);
+    setTimeout(() => { initCodex(); attachLongPress(); }, 600);
+    startAutoSave();
   }
 
   // ══════════════════════════════════════════
@@ -3344,7 +3330,7 @@
   const GH_OWNER  = 'NoctigateStudios';
   const GH_REPO   = 'TheLairBelow';
   const GH_BRANCH = 'main';
-  const GH_TOKEN  = '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';
+  const GH_TOKEN  = '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';
 
   function getOrCreatePlayerId() {
     let id = localStorage.getItem('llair_player_id');
@@ -3443,10 +3429,6 @@
   }
 
   async function saveGame() {
-    if (GH_TOKEN === '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') {
-      setSaveStatus('save-status', 'err', '✗ Configure your GitHub token first (see code).');
-      return;
-    }
     setSaveStatus('save-status', '', 'Inscribing your chronicle into the ether…');
     const id = getOrCreatePlayerId();
     try {
@@ -3463,10 +3445,6 @@
   }
 
   async function loadGame() {
-    if (GH_TOKEN === 'YOUR_FINE_GRAINED_PAT') {
-      setSaveStatus('save-status', 'err', '✗ Configure your GitHub token first.');
-      return;
-    }
     setSaveStatus('save-status', '', 'Reaching into the ether…');
     const id = getOrCreatePlayerId();
     try {
@@ -3488,9 +3466,6 @@
     const input = document.getElementById('restore-input').value.trim();
     if (!input || input.length < 10) {
       setSaveStatus('restore-status', 'err', '✗ Paste a valid Save ID.'); return;
-    }
-    if (GH_TOKEN === 'YOUR_FINE_GRAINED_PAT') {
-      setSaveStatus('restore-status', 'err', '✗ Configure your GitHub token first.'); return;
     }
     setSaveStatus('restore-status', '', 'Searching the archive…');
     try {
@@ -3518,7 +3493,7 @@
 
   function startAutoSave() {
     setInterval(() => {
-      if (GH_TOKEN === 'YOUR_FINE_GRAINED_PAT') return;
+
       const tb = document.getElementById('topbar-save-btn');
       tb.classList.add('saving');
       saveGame().finally(() => setTimeout(() => tb.classList.remove('saving'), 1500));
