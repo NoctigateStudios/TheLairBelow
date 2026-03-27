@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lair Presence Test</title>
+<style>
+  body { background:#050407; color:#c4b5d4; font-family:monospace; padding:1rem; font-size:14px; }
+  h2 { color:#c9a84c; margin-bottom:1rem; }
+  button { background:#1a1326; border:1px solid #c9a84c; color:#c9a84c; padding:0.6rem 1rem; margin:0.3rem; cursor:pointer; font-size:14px; border-radius:4px; }
+  .box { background:#100c1a; border:1px solid #2e2440; padding:0.8rem; margin:0.5rem 0; border-radius:4px; word-break:break-all; }
+  .ok { color:#2d7a5f; } .err { color:#c43030; } .info { color:#8b8ba0; }
+</style>
+</head>
+<body>
+<h2>⬡ Lair Presence Test</h2>
+
+<div class="box">
+  <div><b>Your ID:</b> <span id="my-id">...</span></div>
+  <div><b>Your Name:</b> <span id="my-name">...</span></div>
+  <div><b>Your Coven:</b> <span id="my-coven">...</span></div>
+</div>
+
+<button onclick="writePresence()">📡 Write My Presence</button>
+<button onclick="readAll()">👁 Read All Players</button>
+<button onclick="clearAndReset()">🗑 Reset My ID</button>
+
+<div id="output"></div>
+
+<script>
+const FB = 'https://lairbelow-default-rtdb.firebaseio.com';
+
+function getOrCreateId() {
+  let id = localStorage.getItem('llair_player_id');
+  if (!id) {
+    id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random()*16|0;
+      return (c==='x'?r:(r&0x3|0x8)).toString(16);
+    });
+    localStorage.setItem('llair_player_id', id);
+  }
+  return id;
+}
+
+function log(msg, cls) {
+  const el = document.createElement('div');
+  el.className = 'box ' + (cls||'');
+  el.textContent = msg;
+  document.getElementById('output').prepend(el);
+}
+
+function init() {
+  const id = getOrCreateId();
+  const name = localStorage.getItem('llair_name') || '(not set)';
+  const coven = localStorage.getItem('llair_coven') || '(not set)';
+  document.getElementById('my-id').textContent = id;
+  document.getElementById('my-name').textContent = name;
+  document.getElementById('my-coven').textContent = coven;
+}
+
+async function writePresence() {
+  const id = getOrCreateId();
+  const name = localStorage.getItem('llair_name') || 'Test Player';
+  const data = { name, coven: localStorage.getItem('llair_coven')||'Test Coven', lat: 0, lng: 0, lastSeen: Date.now() };
+  log('Writing presence for ' + id.slice(0,8) + '...');
+  try {
+    const res = await fetch(`${FB}/players/${id}/presence.json`, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    log('✓ Write OK: ' + JSON.stringify(json), 'ok');
+  } catch(e) {
+    log('✗ Write FAILED: ' + e.message, 'err');
+  }
+}
+
+async function readAll() {
+  log('Reading all players from Firebase...');
+  try {
+    const res = await fetch(`${FB}/players.json`);
+    const all = await res.json();
+    if (!all) { log('No players found in Firebase', 'err'); return; }
+    const ids = Object.keys(all);
+    log('Total players in Firebase: ' + ids.length, 'ok');
+    ids.forEach(id => {
+      const p = all[id]?.presence;
+      if (!p) { log(id.slice(0,8) + ': no presence data', 'info'); return; }
+      const age = Math.round((Date.now() - p.lastSeen) / 1000);
+      log(id.slice(0,8) + ' | ' + p.name + ' | ' + p.coven + ' | ' + age + 's ago', 'ok');
+    });
+  } catch(e) {
+    log('✗ Read FAILED: ' + e.message, 'err');
+  }
+}
+
+function clearAndReset() {
+  localStorage.removeItem('llair_player_id');
+  init();
+  log('ID cleared. Refresh to get new ID.', 'info');
+}
+
+init();
+</script>
+</body>
+</html>
