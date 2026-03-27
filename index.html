@@ -2551,19 +2551,33 @@
 <div id="toasts"></div>
 
 <script>
+  // Global error catcher — shows errors visibly on mobile
+  window.onerror = function(msg, src, line, col, err) {
+    const div = document.createElement('div');
+    div.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#8b1a1a;color:#fff;font-family:monospace;font-size:11px;padding:0.8rem;z-index:99999;word-break:break-all;';
+    div.textContent = `JS ERROR: ${msg} (line ${line})`;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 8000);
+  };
+
   // ══════════════════════════════════════════
   // INIT
   // ══════════════════════════════════════════
   function enterGame() {
-    document.getElementById('splash').classList.add('hidden');
-    document.getElementById('app').style.display = 'flex';
-    document.getElementById('app').style.flexDirection = 'column';
-    startPlanetaryHourEngine(46.1713, 9.8694);
-    startResourceTick();
-    initLocation();
-    setTimeout(() => toast('The lair stirs. The stars take notice. You descend.'), 800);
-    setTimeout(() => { initCodex(); attachLongPress(); }, 600);
-    startAutoSave();
+    try {
+      document.getElementById('splash').classList.add('hidden');
+      document.getElementById('app').style.display = 'flex';
+      document.getElementById('app').style.flexDirection = 'column';
+      startPlanetaryHourEngine(46.1713, 9.8694);
+      startResourceTick();
+      initLocation();
+      setTimeout(() => toast('The lair stirs. The stars take notice. You descend.'), 800);
+      setTimeout(() => { initCodex(); attachLongPress(); }, 600);
+      startAutoSave();
+    } catch(e) {
+      // Show error visibly on mobile where we have no console
+      document.getElementById('splash').innerHTML += `<div style="position:fixed;bottom:0;left:0;right:0;background:#8b1a1a;color:#fff;font-family:monospace;font-size:12px;padding:1rem;z-index:9999;word-break:break-all;">ERROR: ${e.message}<br>${e.stack}</div>`;
+    }
   }
 
   // ══════════════════════════════════════════
