@@ -2039,6 +2039,7 @@
     <span class="topbar-title">The Lair Below</span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
+      <button class="topbar-save-btn" onclick="debugPresence()" title="Debug presence" style="font-size:0.6rem;letter-spacing:0.05em;">⬡</button>
       <div class="topbar-location">
         <div class="location-dot"></div>
         <span id="location-text">Locating...</span>
@@ -3858,6 +3859,26 @@
         method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(profile)
       });
     } catch(e) {}
+  }
+
+  async function debugPresence() {
+    const myId = getOrCreatePlayerId();
+    toast('My ID: ' + myId.slice(0,8) + ' | Lat: ' + playerLat.toFixed(4) + ' Lng: ' + playerLng.toFixed(4));
+    try {
+      const res = await fetch(`${FB_URL}/players.json`);
+      const all = await res.json();
+      if (!all) { toast('No players in Firebase at all'); return; }
+      const ids = Object.keys(all);
+      toast('Players in Firebase: ' + ids.length + ' total');
+      ids.forEach(id => {
+        const p = all[id]?.presence;
+        if (!p) return;
+        const age = Math.round((Date.now() - p.lastSeen) / 1000);
+        const dist = id === myId ? 0 : Math.round(haversineM(playerLat, playerLng, p.lat, p.lng));
+        const me = id === myId ? ' (ME)' : '';
+        toast(p.name + me + ' | ' + dist + 'm away | ' + age + 's ago | ' + p.lat.toFixed(3) + ',' + p.lng.toFixed(3));
+      });
+    } catch(e) { toast('Firebase error: ' + e.message); }
   }
 
   async function scanNearbyPlayers() {
