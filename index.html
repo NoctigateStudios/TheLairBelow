@@ -2745,20 +2745,24 @@
   function enterGame() {
     if (_gameStarted) return;
     _gameStarted = true;
-    document.getElementById('splash').classList.add('hidden');
-    document.getElementById('app').style.display = 'flex';
-    document.getElementById('app').style.flexDirection = 'column';
-    startPlanetaryHourEngine(46.1713, 9.8694);
-    startResourceTick();
-    initLocation();
-    setTimeout(() => toast('The lair stirs. The stars take notice. You descend.'), 800);
-    setTimeout(() => { initCodex(); attachLongPress(); }, 600);
-    startAutoSave();
-    // Identity check
-    playerName = localStorage.getItem('llair_name') || '';
-    playerCoven = localStorage.getItem('llair_coven') || '';
-    if (!playerName) {
-      setTimeout(() => document.getElementById('identity-modal').classList.add('open'), 1800);
+    try {
+      document.getElementById('splash').classList.add('hidden');
+      document.getElementById('app').style.display = 'flex';
+      document.getElementById('app').style.flexDirection = 'column';
+      startPlanetaryHourEngine(46.1713, 9.8694);
+      startResourceTick();
+      initLocation();
+      setTimeout(() => toast('The lair stirs. The stars take notice. You descend.'), 800);
+      setTimeout(() => { try { initCodex(); attachLongPress(); } catch(e) { console.error('init error:',e); } }, 600);
+      startAutoSave();
+      playerName = localStorage.getItem('llair_name') || '';
+      playerCoven = localStorage.getItem('llair_coven') || '';
+      if (!playerName) {
+        setTimeout(() => document.getElementById('identity-modal').classList.add('open'), 1800);
+      }
+    } catch(e) {
+      console.error('enterGame error:', e);
+      alert('Error starting game: ' + e.message);
     }
   }
 
