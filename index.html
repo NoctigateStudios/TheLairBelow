@@ -2582,7 +2582,7 @@
   let playerLng = 9.1900;
 
   const missions = [
-    { type: 'combat',  title: 'The Writhing Threshold',   desc: 'Something has nested in the third sub-level. The seals weaken from inside.',   dlat:  0.0018, dlng:  0.0025, action: showCombat },
+    { type: 'combat',  title: 'The Writhing Threshold',   desc: 'Something has nested in the third sub-level. The seals weaken from inside.',   dlat:  0.0018, dlng:  0.0025, action: () => showCombat() },
     { type: 'story',   title: 'The Coin Bearer',           desc: 'Serena Falch waits at the market corner, pressing a strange sigil into strangers\' palms.', dlat: -0.0022, dlng: -0.0015, action: () => toast('You must go there in person to trigger this event.') },
     { type: 'gather',  title: 'Lunar Confluence',          desc: 'Lunar essence pools here during the Moon\'s planetary hour. Stand here then.',  dlat:  0.0010, dlng: -0.0030, action: () => toast('Return here during the Moon\'s hour for massive Lunar gain.') },
     { type: 'recruit', title: 'Potential Acolyte',         desc: 'A figure lingers near the old fountain, marked by something unseen.',          dlat: -0.0005, dlng:  0.0035, action: () => toast('Approach in person to begin the recruitment encounter.') },
@@ -3320,10 +3320,10 @@
   // │     Scoped only to this repo            │
   // │  2. Replace the values below            │
   // └─────────────────────────────────────────┘
-  const GH_OWNER  = 'NoctiggateStudios';
-  const GH_REPO   = 'ThelairBelow';
+  const GH_OWNER  = 'YOUR_GITHUB_USERNAME';
+  const GH_REPO   = 'lair-below';
   const GH_BRANCH = 'main';
-  const GH_TOKEN  = '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;
+  const GH_TOKEN  = 'YOUR_FINE_GRAINED_PAT';
 
   function getOrCreatePlayerId() {
     let id = localStorage.getItem('llair_player_id');
