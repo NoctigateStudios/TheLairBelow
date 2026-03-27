@@ -2730,6 +2730,18 @@
   // INIT
   // ══════════════════════════════════════════
   let _gameStarted = false;
+
+  // Global state — declared early so all functions can access them
+  let playerName = '';
+  let playerCoven = '';
+  let inventory = {};
+  let availableAcolytes = {};
+  let nearbyPlayers = {};
+  let otherPlayerMarkers = {};
+  let currentExchangeTarget = null;
+  let presenceInterval = null;
+  let currentForgeTab = 'weapons';
+
   function enterGame() {
     if (_gameStarted) return;
     _gameStarted = true;
@@ -3662,9 +3674,6 @@
   // ══════════════════════════════════════════
   // IDENTITY SYSTEM
   // ══════════════════════════════════════════
-  let playerName = '';
-  let playerCoven = '';
-
   function checkIdentity() {
     playerName = localStorage.getItem('llair_name') || '';
     playerCoven = localStorage.getItem('llair_coven') || '';
@@ -3691,8 +3700,6 @@
   // ══════════════════════════════════════════
   // FORGE SYSTEM
   // ══════════════════════════════════════════
-  let inventory = {};
-
   const RECIPES = [
     { key:'solar-brand', cat:'weapons', icon:'🔥', name:'Solar Brand', type:'Weapon — One-handed',
       desc:'A blade inscribed with Solar sigils. Deals +4 Holy damage and ignites Blighted enemies on hit.',
@@ -3727,8 +3734,6 @@
       effect:'Instant Glyph Decode · +25% Research', color:'#4a7a8b',
       costs:[{res:6,symbol:'☿',name:'Mercurial',amount:250},{res:4,symbol:'♄',name:'Saturnine',amount:100}] },
   ];
-
-  let currentForgeTab = 'weapons';
 
   function openForge() {
     document.getElementById('forge-modal').classList.add('open');
@@ -3804,11 +3809,6 @@
   const RES_SYMBOLS = ['☉','☽','♃','♂','♄','♀','☿'];
   const RES_NAMES   = ['Solar','Lunar','Jovian','Martial','Saturnine','Venusian','Mercurial'];
 
-  let availableAcolytes = {}; // { 'maurus': true/false, 'irene': true/false }
-  let nearbyPlayers = {};     // { uuid: playerData }
-  let otherPlayerMarkers = {};
-  let currentExchangeTarget = null;
-  let presenceInterval = null;
 
   function haversineM(lat1, lng1, lat2, lng2) {
     const R = 6371000, r = Math.PI/180;
