@@ -1260,7 +1260,7 @@
     position: fixed;
     inset: 0;
     z-index: 500;
-    background: rgba(5,4,7,0.97);
+    background: #050407;
     display: none;
     flex-direction: column;
     overflow-y: auto;
@@ -1804,7 +1804,7 @@
   ═══════════════════════════════════════ */
   #save-modal {
     position: fixed; inset: 0; z-index: 700;
-    background: rgba(5,4,7,0.97);
+    background: #050407;
     display: none; flex-direction: column;
     align-items: center; justify-content: center;
     padding: 2rem;
@@ -1884,7 +1884,7 @@
   .topbar-save-btn.saved  { color: var(--viridian-bright); }
 
   /* IDENTITY MODAL */
-  #identity-modal { position:fixed;inset:0;z-index:1100;background:rgba(5,4,7,0.98);display:none;flex-direction:column;align-items:center;justify-content:center;padding:2rem; }
+  #identity-modal { position:fixed;inset:0;z-index:1100;background:#050407;display:none;flex-direction:column;align-items:center;justify-content:center;padding:2rem; }
   #identity-modal.open { display:flex; }
   .identity-title { font-family:var(--ff-title);font-size:2rem;color:var(--gold);letter-spacing:2px;margin-bottom:0.5rem;text-align:center; }
   .identity-sub { font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:2rem;text-align:center; }
@@ -1896,7 +1896,7 @@
   .identity-btn:active { background:rgba(201,168,76,0.1); }
 
   /* FORGE MODAL */
-  #forge-modal { position:fixed;inset:0;z-index:500;background:rgba(5,4,7,0.97);display:none;flex-direction:column;overflow-y:auto; }
+  #forge-modal { position:fixed;inset:0;z-index:500;background:#050407;display:none;flex-direction:column;overflow-y:auto; }
   #forge-modal.open { display:flex; }
   .forge-top { background:linear-gradient(180deg,rgba(139,90,0,0.18) 0%,transparent 100%);border-bottom:1px solid rgba(212,137,10,0.3);padding:1rem;text-align:center; }
   .forge-title { font-family:var(--ff-title);font-size:2rem;color:var(--amber-bright);letter-spacing:2px;text-shadow:0 0 20px rgba(212,137,10,0.4);margin-bottom:0.2rem; }
@@ -1959,7 +1959,7 @@
   .pm-btn:active { background:rgba(255,255,255,0.04); }
 
   /* EXCHANGE MODAL */
-  #exchange-modal { position:fixed;inset:0;z-index:700;background:rgba(5,4,7,0.97);display:none;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem; }
+  #exchange-modal { position:fixed;inset:0;z-index:700;background:#050407;display:none;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem; }
   #exchange-modal.open { display:flex; }
   .exchange-title { font-family:var(--ff-title);font-size:1.6rem;color:var(--gold);letter-spacing:2px;margin-bottom:0.3rem;text-align:center; }
   .exchange-sub { font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:1.5rem;text-align:center; }
@@ -2041,7 +2041,7 @@
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
         <div class="location-dot"></div>
-        <span id="location-text">Locating...</span>
+        <span id="location-text" onclick="retryLocation()" style="cursor:pointer;text-decoration:underline dotted;" title="Tap to request location">Locating...</span>
       </div>
     </div>
   </div>
@@ -2726,10 +2726,6 @@
 <div id="toasts"></div>
 
 <script>
-  window.onerror = function(msg, src, line, col, err) {
-    document.body.innerHTML += '<div style="position:fixed;top:0;left:0;right:0;background:red;color:white;padding:1rem;z-index:99999;font-size:14px;font-family:monospace;">' + msg + ' (line ' + line + ')</div>';
-    return false;
-  };
   // ══════════════════════════════════════════
   // INIT
   // ══════════════════════════════════════════
@@ -2869,6 +2865,38 @@
     toast('The city map unfolds. Your position is marked. The missions pulse.');
     startPlanetaryHourEngine(lat, lng);
     startPresenceEngine();
+  }
+
+  function retryLocation() {
+    if (!navigator.geolocation) {
+      toast('Geolocation is not supported by your browser.');
+      return;
+    }
+    document.getElementById('location-text').textContent = 'Requesting...';
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const { latitude, longitude } = pos.coords;
+        document.getElementById('location-text').textContent =
+          latitude.toFixed(4) + '°N ' + longitude.toFixed(4) + '°E';
+        startPlanetaryHourEngine(latitude, longitude);
+        if (!map) {
+          initMap(latitude, longitude);
+        } else {
+          playerMarker.setLatLng([latitude, longitude]);
+          map.setView([latitude, longitude], 16);
+          phLat = latitude; phLng = longitude;
+        }
+        toast('Location acquired.');
+      },
+      err => {
+        const msg = err.code === 1
+          ? 'Location permission denied. Please enable it in browser settings.'
+          : 'Could not get location. Try again.';
+        document.getElementById('location-text').textContent = 'Allow location for full map';
+        toast(msg);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   }
 
   function initLocation() {
