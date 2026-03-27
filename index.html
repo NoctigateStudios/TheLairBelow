@@ -1882,7 +1882,140 @@
   .topbar-save-btn:active { color: var(--gold); }
   .topbar-save-btn.saving { color: var(--amber-bright); }
   .topbar-save-btn.saved  { color: var(--viridian-bright); }
+
+  /* ═══════════════════════════════════════
+     FORGE MODAL
+  ═══════════════════════════════════════ */
+  #forge-modal {
+    position: fixed; inset: 0; z-index: 500;
+    background: rgba(5,4,7,0.97);
+    display: none; flex-direction: column; overflow-y: auto;
+  }
+  #forge-modal.open { display: flex; }
+
+  .forge-top {
+    background: linear-gradient(180deg, rgba(139,90,0,0.18) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(212,137,10,0.3);
+    padding: 1rem; text-align: center;
+  }
+  .forge-title {
+    font-family: var(--ff-title); font-size: 2rem;
+    color: var(--amber-bright); letter-spacing: 2px;
+    text-shadow: 0 0 20px rgba(212,137,10,0.4); margin-bottom: 0.2rem;
+  }
+  .forge-subtitle {
+    font-family: var(--ff-heading); font-size: 0.5rem;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-secondary);
+  }
+
+  .forge-tabs {
+    display: flex; border-bottom: 1px solid var(--border);
+    background: rgba(5,4,7,0.8); position: sticky; top: 0; z-index: 10;
+  }
+  .forge-tab {
+    flex: 1; padding: 0.6rem 0.3rem;
+    font-family: var(--ff-heading); font-size: 0.42rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-secondary); background: none; border: none;
+    cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s;
+  }
+  .forge-tab.active { color: var(--amber-bright); border-bottom-color: var(--amber-bright); }
+
+  .forge-section { padding: 1rem; }
+
+  .recipe-card {
+    border: 1px solid var(--border); padding: 0.9rem;
+    margin-bottom: 0.7rem; background: rgba(255,255,255,0.01);
+    position: relative; overflow: hidden;
+  }
+  .recipe-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px; background: var(--recipe-color, var(--amber-bright));
+  }
+  .recipe-card.craftable { border-color: rgba(212,137,10,0.3); }
+  .recipe-card.locked-recipe { opacity: 0.45; }
+
+  .recipe-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;
+  }
+  .recipe-icon { font-size: 1.4rem; flex-shrink: 0; }
+  .recipe-info { flex: 1; }
+  .recipe-name {
+    font-family: var(--ff-heading); font-size: 0.7rem;
+    letter-spacing: 0.06em; color: var(--bone); margin-bottom: 0.15rem;
+  }
+  .recipe-type {
+    font-family: var(--ff-heading); font-size: 0.42rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary);
+  }
+  .recipe-desc {
+    font-family: var(--ff-body); font-style: italic;
+    font-size: 0.78rem; color: var(--mist); line-height: 1.6; margin-bottom: 0.7rem;
+  }
+  .recipe-costs {
+    display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.7rem;
+  }
+  .recipe-cost-pill {
+    font-family: var(--ff-heading); font-size: 0.48rem;
+    letter-spacing: 0.06em; padding: 0.2rem 0.5rem;
+    border: 1px solid var(--border); color: var(--text-secondary);
+  }
+  .recipe-cost-pill.affordable { color: var(--viridian-bright); border-color: rgba(45,122,95,0.4); }
+  .recipe-cost-pill.unaffordable { color: var(--crimson-bright); border-color: rgba(196,48,48,0.3); }
+
+  .recipe-craft-btn {
+    font-family: var(--ff-heading); font-size: 0.55rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 0.5rem 1.2rem; border: 1px solid var(--amber-bright);
+    background: transparent; color: var(--amber-bright); cursor: pointer;
+    transition: all 0.2s;
+  }
+  .recipe-craft-btn:active { background: rgba(212,137,10,0.15); }
+  .recipe-craft-btn:disabled { opacity: 0.35; cursor: default; border-color: var(--border); color: var(--text-secondary); }
+
+  /* Inventory */
+  .inventory-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;
+  }
+  .inv-item {
+    border: 1px solid var(--border); padding: 0.8rem 0.7rem;
+    background: rgba(255,255,255,0.01); position: relative;
+  }
+  .inv-item-icon { font-size: 1.3rem; margin-bottom: 0.3rem; display: block; }
+  .inv-item-name {
+    font-family: var(--ff-heading); font-size: 0.6rem;
+    letter-spacing: 0.06em; color: var(--bone); margin-bottom: 0.15rem;
+  }
+  .inv-item-type {
+    font-family: var(--ff-heading); font-size: 0.4rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+  }
+  .inv-item-effect {
+    font-family: var(--ff-body); font-style: italic;
+    font-size: 0.65rem; color: var(--viridian-bright); line-height: 1.4;
+  }
+  .inv-item-qty {
+    position: absolute; top: 0.4rem; right: 0.5rem;
+    font-family: var(--ff-heading); font-size: 0.55rem;
+    color: var(--amber-bright);
+  }
+  .inv-empty {
+    grid-column: 1 / -1; text-align: center; padding: 2rem 0;
+    font-family: var(--ff-body); font-style: italic;
+    font-size: 0.85rem; color: var(--text-secondary);
+  }
+
+  .forge-close {
+    margin: 0 1rem 1rem; font-family: var(--ff-heading);
+    font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 0.8rem; border: 1px solid rgba(139,90,0,0.3);
+    background: transparent; color: var(--text-secondary);
+    cursor: pointer; text-align: center; width: calc(100% - 2rem);
+  }
 </style>
+
 </head>
 <body>
 
@@ -2261,7 +2394,7 @@
           <div class="building-name" data-codex="scriptorium">The Scriptorium</div>
           <p class="building-desc">Research grimoires. Unlock new skills and esoteric knowledge.</p>
         </div>
-        <div class="building-card">
+        <div class="building-card" onclick="openForge()">
           <span class="building-level">Lv. 1</span>
           <span class="building-icon">⚗</span>
           <div class="building-name" data-codex="alchemical-forge">Alchemical Forge</div>
@@ -2472,6 +2605,25 @@
   </div>
 
   <button class="save-close" onclick="closeSaveModal()">✕ Return to the Lair</button>
+</div>
+
+<!-- FORGE MODAL -->
+<div id="forge-modal">
+  <div class="forge-top">
+    <div class="forge-title">Alchemical Forge</div>
+    <div class="forge-subtitle">Transmute essence into instrument</div>
+  </div>
+
+  <div class="forge-tabs">
+    <button class="forge-tab active" onclick="switchForgeTab('weapons',this)">⚔ Weapons</button>
+    <button class="forge-tab" onclick="switchForgeTab('armour',this)">🛡 Armour</button>
+    <button class="forge-tab" onclick="switchForgeTab('consumables',this)">⚗ Consumables</button>
+    <button class="forge-tab" onclick="switchForgeTab('sigils',this)">✦ Sigils</button>
+    <button class="forge-tab" onclick="switchForgeTab('inventory',this)">📦 Inventory</button>
+  </div>
+
+  <div class="forge-section" id="forge-content"></div>
+  <button class="forge-close" onclick="closeForge()">⚊ LEAVE THE FORGE ⚊</button>
 </div>
 
 <!-- COMBAT MODAL -->
@@ -3351,6 +3503,7 @@
       ],
       lair: { buildings: { scriptorium:2, forge:1, dormitorium:1, altar:2 } },
       research: { active:'chaldean-vol3', progress:65, queue:['doctrine-of-signatures'] },
+      inventory: { ...inventory },
     };
   }
 
@@ -3361,6 +3514,9 @@
       document.querySelectorAll('.resource-pill .res-value').forEach((el, i) => {
         el.textContent = Math.floor(values[i]);
       });
+    }
+    if (state.inventory) {
+      inventory = { ...state.inventory };
     }
     return true;
   }
@@ -3465,11 +3621,196 @@
 
   function startAutoSave() {
     setInterval(() => {
-
       const tb = document.getElementById('topbar-save-btn');
       tb.classList.add('saving');
       saveGame().finally(() => setTimeout(() => tb.classList.remove('saving'), 1500));
     }, 5 * 60 * 1000);
+  }
+
+  // ══════════════════════════════════════════
+  // FORGE SYSTEM
+  // ══════════════════════════════════════════
+
+  // Inventory: { itemKey: quantity }
+  let inventory = {};
+
+  const RECIPES = [
+    // WEAPONS
+    {
+      key: 'solar-brand', cat: 'weapons', icon: '🔥',
+      name: 'Solar Brand',
+      type: 'Weapon — One-handed',
+      desc: 'A blade inscribed with Solar sigils. Deals +4 Holy damage and ignites Blighted enemies on hit.',
+      effect: '+4 Holy damage · Ignite on Blight',
+      costs: [{ res: 0, symbol: '☉', name: 'Solar', amount: 300 }, { res: 3, symbol: '♂', name: 'Martial', amount: 150 }],
+      color: '#c9a84c',
+    },
+    {
+      key: 'mercurial-stiletto', cat: 'weapons', icon: '🗡',
+      name: 'Mercurial Stiletto',
+      type: 'Weapon — Finesse',
+      desc: 'A slim blade treated with Mercurial essence. Grants +15% critical hit chance and bypasses 30% armour.',
+      effect: '+15% Crit · 30% Armour Pierce',
+      costs: [{ res: 6, symbol: '☿', name: 'Mercurial', amount: 250 }, { res: 3, symbol: '♂', name: 'Martial', amount: 100 }],
+      color: '#4a7a8b',
+    },
+    // ARMOUR
+    {
+      key: 'lunar-veil', cat: 'armour', icon: '🌙',
+      name: 'Lunar Veil',
+      type: 'Armour — Cloak',
+      desc: 'Woven from moonlit thread and sealed with Lunar essence. Reduces incoming Stress by 20% and grants +10 Dodge.',
+      effect: '−20% Stress taken · +10 Dodge',
+      costs: [{ res: 1, symbol: '☽', name: 'Lunar', amount: 280 }, { res: 5, symbol: '♀', name: 'Venusian', amount: 120 }],
+      color: '#8b8ba0',
+    },
+    {
+      key: 'saturn-plate', cat: 'armour', icon: '🛡',
+      name: 'Saturnine Plate',
+      type: 'Armour — Heavy',
+      desc: 'Dense iron inscribed with Saturn\'s binding seals. Grants +8 HP and 40% Blight resistance.',
+      effect: '+8 Max HP · 40% Blight Resist',
+      costs: [{ res: 4, symbol: '♄', name: 'Saturnine', amount: 200 }, { res: 3, symbol: '♂', name: 'Martial', amount: 180 }],
+      color: '#8b7355',
+    },
+    // CONSUMABLES
+    {
+      key: 'blight-antidote', cat: 'consumables', icon: '💊',
+      name: 'Blight Antidote',
+      type: 'Consumable — Combat',
+      desc: 'A vial of Jovian essence purified through Venus. Instantly clears all Blight stacks from one character.',
+      effect: 'Clears all Blight · Single target',
+      costs: [{ res: 2, symbol: '♃', name: 'Jovian', amount: 120 }, { res: 5, symbol: '♀', name: 'Venusian', amount: 80 }],
+      color: '#6b4c8b',
+    },
+    {
+      key: 'stress-tonic', cat: 'consumables', icon: '🍶',
+      name: 'Venusian Stress Tonic',
+      type: 'Consumable — Rest',
+      desc: 'A calming draught brewed under Venus. Reduces one Acolyte\'s Stress by 30 when consumed outside combat.',
+      effect: '−30 Stress · Single Acolyte',
+      costs: [{ res: 5, symbol: '♀', name: 'Venusian', amount: 200 }, { res: 1, symbol: '☽', name: 'Lunar', amount: 100 }],
+      color: '#5c8b5c',
+    },
+    // SIGIL TOKENS
+    {
+      key: 'jupiter-seal', cat: 'sigils', icon: '✦',
+      name: 'Seal of Jupiter',
+      type: 'Sigil Token — Passive',
+      desc: 'A carved token that resonates with Jovian expansion. Equipped bearer gains +10% to all resource income.',
+      effect: '+10% All Resource Income',
+      costs: [{ res: 2, symbol: '♃', name: 'Jovian', amount: 300 }, { res: 0, symbol: '☉', name: 'Solar', amount: 150 }],
+      color: '#6b4c8b',
+    },
+    {
+      key: 'mercury-cipher', cat: 'sigils', icon: '⬡',
+      name: 'Mercury\'s Cipher',
+      type: 'Sigil Token — Passive',
+      desc: 'An inscribed disc that accelerates thought. Equipped bearer decodes Glyphs instantly and boosts research by 25%.',
+      effect: 'Instant Glyph Decode · +25% Research',
+      costs: [{ res: 6, symbol: '☿', name: 'Mercurial', amount: 250 }, { res: 4, symbol: '♄', name: 'Saturnine', amount: 100 }],
+      color: '#4a7a8b',
+    },
+  ];
+
+  let currentForgeTab = 'weapons';
+
+  function openForge() {
+    document.getElementById('forge-modal').classList.add('open');
+    renderForgeTab('weapons');
+    // reset tab highlight
+    document.querySelectorAll('.forge-tab').forEach((t,i) => {
+      t.classList.toggle('active', i === 0);
+    });
+  }
+
+  function closeForge() {
+    document.getElementById('forge-modal').classList.remove('open');
+  }
+
+  function switchForgeTab(tab, btn) {
+    currentForgeTab = tab;
+    document.querySelectorAll('.forge-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    renderForgeTab(tab);
+  }
+
+  function canAfford(costs) {
+    return costs.every(c => values[c.res] >= c.amount);
+  }
+
+  function renderForgeTab(tab) {
+    const el = document.getElementById('forge-content');
+
+    if (tab === 'inventory') {
+      renderInventory(el);
+      return;
+    }
+
+    const recipes = RECIPES.filter(r => r.cat === tab);
+    if (!recipes.length) { el.innerHTML = '<p style="color:var(--text-secondary);font-style:italic;padding:1rem 0;">No recipes in this category yet.</p>'; return; }
+
+    el.innerHTML = recipes.map(r => {
+      const affordable = canAfford(r.costs);
+      const qty = inventory[r.key] || 0;
+      const costsHtml = r.costs.map(c => {
+        const has = values[c.res] >= c.amount;
+        return `<span class="recipe-cost-pill ${has ? 'affordable' : 'unaffordable'}">${c.symbol} ${c.amount} ${c.name} (${Math.floor(values[c.res])} held)</span>`;
+      }).join('');
+      return `
+        <div class="recipe-card ${affordable ? 'craftable' : ''}" style="--recipe-color:${r.color}">
+          <div class="recipe-header">
+            <span class="recipe-icon">${r.icon}</span>
+            <div class="recipe-info">
+              <div class="recipe-name">${r.name}</div>
+              <div class="recipe-type">${r.type}</div>
+            </div>
+            ${qty > 0 ? `<span style="font-family:var(--ff-heading);font-size:0.55rem;color:var(--amber-bright);">×${qty} owned</span>` : ''}
+          </div>
+          <p class="recipe-desc">${r.desc}</p>
+          <div class="recipe-costs">${costsHtml}</div>
+          <button class="recipe-craft-btn" ${affordable ? '' : 'disabled'} onclick="craftItem('${r.key}')">
+            ${affordable ? '⚗ Craft' : '✗ Insufficient Essence'}
+          </button>
+        </div>`;
+    }).join('');
+  }
+
+  function craftItem(key) {
+    const r = RECIPES.find(x => x.key === key);
+    if (!r) return;
+    if (!canAfford(r.costs)) { toast('Insufficient essence to craft this item.'); return; }
+    // Deduct costs
+    r.costs.forEach(c => { values[c.res] -= c.amount; });
+    // Add to inventory
+    inventory[key] = (inventory[key] || 0) + 1;
+    toast(`✦ ${r.name} forged. The essence takes form.`);
+    renderForgeTab(currentForgeTab);
+    // Update resource display
+    document.querySelectorAll('.resource-pill .res-value').forEach((el, i) => {
+      el.textContent = Math.floor(values[i]);
+    });
+  }
+
+  function renderInventory(el) {
+    const items = Object.entries(inventory).filter(([,qty]) => qty > 0);
+    if (!items.length) {
+      el.innerHTML = `<div class="inventory-grid"><div class="inv-empty">The forge has produced nothing yet.<br>Craft items from the recipe tabs above.</div></div>`;
+      return;
+    }
+    const html = items.map(([key, qty]) => {
+      const r = RECIPES.find(x => x.key === key);
+      if (!r) return '';
+      return `
+        <div class="inv-item">
+          <span class="inv-item-qty">×${qty}</span>
+          <span class="inv-item-icon">${r.icon}</span>
+          <div class="inv-item-name">${r.name}</div>
+          <div class="inv-item-type">${r.type}</div>
+          <div class="inv-item-effect">${r.effect}</div>
+        </div>`;
+    }).join('');
+    el.innerHTML = `<div class="inventory-grid">${html}</div>`;
   }
 </script>
 </body>
