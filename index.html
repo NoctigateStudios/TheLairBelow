@@ -2128,6 +2128,11 @@
     <!-- JOURNAL PANEL -->
     <div id="panel-journal" class="tab-panel active">
 
+      <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);padding:0.5rem 0.8rem;margin-bottom:0.5rem;font-family:var(--ff-heading);font-size:0.45rem;letter-spacing:0.08em;color:var(--gold);display:flex;justify-content:space-between;align-items:center;">
+        <span id="debug-id-display">ID: loading...</span>
+        <span id="debug-name-display">Name: loading...</span>
+        <button onclick="debugPresence()" style="background:none;border:1px solid var(--gold-dim);color:var(--gold);font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.08em;padding:0.2rem 0.5rem;cursor:pointer;">⬡ SCAN</button>
+      </div>
       <div class="planet-hour-widget">
         <div class="ph-header">
           <span class="ph-title">⌛ <span data-codex="planetary-hour">Planetary Hour</span></span>
@@ -2757,6 +2762,13 @@
       startAutoSave();
       playerName = localStorage.getItem('llair_name') || '';
       playerCoven = localStorage.getItem('llair_coven') || '';
+      setTimeout(() => {
+        const id = getOrCreatePlayerId();
+        const dbId = document.getElementById('debug-id-display');
+        const dbName = document.getElementById('debug-name-display');
+        if (dbId) dbId.textContent = 'ID: ' + id.slice(0,8);
+        if (dbName) dbName.textContent = 'Name: ' + (playerName || 'not set');
+      }, 500);
       if (!playerName) {
         setTimeout(() => document.getElementById('identity-modal').classList.add('open'), 1800);
       }
@@ -3827,23 +3839,16 @@
     const id = getOrCreatePlayerId();
     const name = playerName || localStorage.getItem('llair_name') || 'Unknown Seeker';
     const coven = playerCoven || localStorage.getItem('llair_coven') || 'The Unsanctified';
-    const data = { name, coven, lat: playerLat, lng: playerLng, lastSeen: Date.now() };
-    const url = `${FB_URL}/players/${id}/presence.json`;
+    const data = {
+      name, coven,
+      lat: playerLat, lng: playerLng,
+      lastSeen: Date.now(),
+    };
     try {
-      const res = await fetch(url, {
+      await fetch(`${FB_URL}/players/${id}/presence.json`, {
         method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
       });
-      const json = await res.json();
-      if (json && json.name) {
-        console.log('Presence published OK:', id.slice(0,8), name);
-      } else {
-        console.warn('Presence write unexpected response:', JSON.stringify(json));
-        toast('Presence write issue: ' + JSON.stringify(json).slice(0,60));
-      }
-    } catch(e) {
-      console.error('publishPresence FAILED:', e);
-      toast('Presence error: ' + e.message);
-    }
+    } catch(e) { console.log('publishPresence error:', e); }
   }
 
   async function publishProfile() {
@@ -3868,6 +3873,7 @@
   }
 
   async function scanNearbyPlayers() {
+    if (!map) return;
     const myName = playerName || localStorage.getItem('llair_name') || '';
     const myId = getOrCreatePlayerId();
     try {
@@ -3886,10 +3892,14 @@
       Object.entries(all).forEach(([id, data]) => {
         if (id === myId) return;
         const p = data.presence;
-        if (!p) return; // show all players regardless of age for now
+        if (!p || now - p.lastSeen > 2 * 60 * 1000) return; // stale > 2min
         const dist = haversineM(playerLat, playerLng, p.lat, p.lng);
         console.log('Found player:', p.name, 'dist:', Math.round(dist) + 'm');
-        // Show ALL players on map regardless of distance for now
+        if (dist > NEARBY_RADIUS_M) {
+          // Remove marker if moved away
+          if (otherPlayerMarkers[id]) { otherPlayerMarkers[id].remove(); delete otherPlayerMarkers[id]; }
+          return;
+        }
         nearbyPlayers[id] = { ...p, profile: data.profile || null, id };
 
         // Add/update map marker
