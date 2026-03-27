@@ -23,6 +23,7 @@
 
 <button onclick="writePresence()">📡 Write My Presence</button>
 <button onclick="readAll()">👁 Read All Players</button>
+<button onclick="readMine()">🔍 Read My Entry</button>
 <button onclick="clearAndReset()">🗑 Reset My ID</button>
 
 <div id="output"></div>
@@ -77,22 +78,39 @@ async function writePresence() {
 }
 
 async function readAll() {
-  log('Reading all players from Firebase...');
+  log('Reading all players...');
   try {
-    const res = await fetch(`${FB}/players.json`);
+    const cb = '?cb=' + Date.now();
+    const res = await fetch(`${FB}/players.json${cb}`);
     const all = await res.json();
-    if (!all) { log('No players found in Firebase', 'err'); return; }
+    if (!all) { log('Firebase returned null — no data at /players', 'err'); return; }
     const ids = Object.keys(all);
-    log('Total players in Firebase: ' + ids.length, 'ok');
+    log('Total entries under /players: ' + ids.length, 'ok');
     ids.forEach(id => {
-      const p = all[id]?.presence;
-      if (!p) { log(id.slice(0,8) + ': no presence data', 'info'); return; }
+      const entry = all[id];
+      const keys = Object.keys(entry||{}).join(',');
+      log('Entry ' + id.slice(0,8) + ': keys=[' + keys + ']', 'info');
+      const p = entry?.presence;
+      if (!p) {
+        log('  no presence sub-key. Raw: ' + JSON.stringify(entry).slice(0,100), 'err');
+        return;
+      }
       const age = Math.round((Date.now() - p.lastSeen) / 1000);
-      log(id.slice(0,8) + ' | ' + p.name + ' | ' + p.coven + ' | ' + age + 's ago', 'ok');
+      log('  ' + p.name + ' | ' + p.coven + ' | ' + age + 's ago', 'ok');
     });
   } catch(e) {
-    log('✗ Read FAILED: ' + e.message, 'err');
+    log('READ FAILED: ' + e.message, 'err');
   }
+}
+
+async function readMine() {
+  const id = getOrCreateId();
+  log('Reading MY entry directly...');
+  try {
+    const res = await fetch(`${FB}/players/${id}.json?cb=` + Date.now());
+    const data = await res.json();
+    log('My data: ' + JSON.stringify(data), data ? 'ok' : 'err');
+  } catch(e) { log('FAILED: ' + e.message, 'err'); }
 }
 
 function clearAndReset() {
