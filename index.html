@@ -2090,7 +2090,7 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.23</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.24</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
@@ -3625,15 +3625,17 @@
   }
 
   function renderLairBuildings(playerBuildings) {
-    // Merge player building levels with world building definitions
-    // _worldBuildings is populated by loadBuildingsFromFirebase
     const grid = document.getElementById('lair-building-grid') || document.querySelector('#panel-lair .building-grid');
     if (!grid || !_worldBuildings) return;
+    // Player save uses 'forge' but world key is 'alchemical-forge' — normalise both ways
+    const nb = Object.assign({}, playerBuildings || {});
+    if (nb.forge && !nb['alchemical-forge'])       nb['alchemical-forge'] = nb.forge;
+    if (nb['alchemical-forge'] && !nb.forge)       nb.forge = nb['alchemical-forge'];
     grid.innerHTML = Object.entries(_worldBuildings).map(([key, b]) => {
-      const lvl    = playerBuildings[key] || 0;
+      const lvl    = nb[key] || 0;
       const maxLvl = b.maxLevel || 3;
       const locked = lvl === 0;
-      const isForge = key === 'forge' || key === 'alchemical-forge';
+      const isForge = key === 'alchemical-forge' || key === 'forge';
       return `<div class="building-card ${locked?'locked':''}" ${isForge&&!locked?'onclick="openForge()" style="cursor:pointer"':''}>
         <span class="building-level">${locked ? 'Locked' : 'Lv. '+lvl}</span>
         <span class="building-icon">${b.icon || '🏛'}</span>
@@ -3652,8 +3654,8 @@
       const d = await res.json();
       if (!d || d.error) return;
       _worldBuildings = d;
-      // Re-render lair if we have player building data
-      if (_lairData) renderLairBuildings(_lairData.buildings || {});
+      // Render with whatever lair data we have (may have arrived before this)
+      renderLairBuildings(_lairData?.buildings || {});
     } catch(e) {}
   }
 
