@@ -2090,7 +2090,7 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.20</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.21</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
@@ -2198,64 +2198,49 @@
         </div>
       </div>
 
-      <div class="journal-entry urgent">
-        <div class="entry-header">
-          <span class="entry-title">⚠ The Third Seal Trembles</span>
-          <span class="entry-time">4h ago</span>
+      <!-- Dynamic journal: DM events prepend here, seed entries shown until then -->
+      <div id="journal-feed"></div>
+      <div id="journal-seed">
+        <div class="journal-entry urgent">
+          <div class="entry-header">
+            <span class="entry-title">⚠ The Third Seal Trembles</span>
+            <span class="entry-time">On arrival</span>
+          </div>
+          <p class="entry-body">
+            The resonance in the Antechamber has grown unbearable. Something found a new passage behind the fresco of <em>the Weeping Eye</em>. The <span data-codex="stress">stress</span> in the halls is at breaking point.
+          </p>
+          <div class="entry-actions">
+            <button class="btn-action primary" onclick="showCombat()">Enter the Passage</button>
+            <button class="btn-action" onclick="toast('Maurus withdraws to the Dormitorium. His wounds will keep.')">Send to the Dormitorium</button>
+          </div>
         </div>
-        <p class="entry-body">
-          The resonance in the Antechamber has grown unbearable. Brother Maurus found a new passage behind the fresco of <em>the Weeping Eye</em> — but he refuses to speak of what he glimpsed within. His <span data-codex="stress">stress</span> is at breaking point.
-        </p>
-        <div class="entry-actions">
-          <button class="btn-action primary" onclick="showCombat()">Enter the Passage</button>
-          <button class="btn-action" onclick="toast('You send Maurus to rest in the Dormitorium.')">Rest Maurus</button>
+        <div class="journal-entry discovery">
+          <div class="entry-header">
+            <span class="entry-title">⬡ Glyph Sequence Decoded</span>
+            <span class="entry-time">Yesterday</span>
+          </div>
+          <p class="entry-body">
+            The Mercurial hour worked its gift: the spiral inscription on the eastern wall reveals itself as a <em>Chaldean <span data-codex="planetary-hour">planetary table</span></em>. Three <span data-codex="convergence-point">convergence points</span> emerge. They pulse during the <span data-codex="lunar">Moon's hour</span>.
+          </p>
+          <div class="entry-actions">
+            <button class="btn-action primary" onclick="switchTab('field')">Mark the Points</button>
+            <button class="btn-action" onclick="switchTab('arcana')">Study Further</button>
+          </div>
         </div>
-      </div>
-
-      <div class="journal-entry discovery">
-        <div class="entry-header">
-          <span class="entry-title">⬡ Glyph Sequence Decoded</span>
-          <span class="entry-time">Yesterday</span>
-        </div>
-        <p class="entry-body">
-          The Mercurial hour worked its gift: the spiral inscription on the eastern wall reveals itself as a <em>Chaldean <span data-codex="planetary-hour">planetary table</span></em>. Cross-referencing with the city's founding maps, three <span data-codex="convergence-point">convergence points</span> emerge above ground. They pulse during the <span data-codex="lunar">Moon\'s hour</span>.
-        </p>
-        <div class="entry-actions">
-          <button class="btn-action primary" onclick="switchTab('field')">Mark Convergences</button>
-          <button class="btn-action" onclick="switchTab('arcana')">Study Further</button>
-        </div>
-      </div>
-
-      <div class="journal-entry">
-        <div class="entry-header">
-          <span class="entry-title">✦ Acolyte Encountered</span>
-          <span class="entry-time">2 days ago</span>
-        </div>
-        <p class="entry-body">
-          Near the old market, a young woman named <em>Serena Falch</em> pressed a strange coin into your palm — the same sigil as the one above the lair's gate. She is waiting at the designated corner at dusk.
-        </p>
-        <div class="entry-actions">
-          <button class="btn-action primary" onclick="switchTab('field')">Go to Meeting</button>
-          <button class="btn-action" onclick="toast('You ignore the summons. The coin grows warm in your pocket.')">Ignore</button>
-        </div>
-      </div>
-
-      <div class="ornament">⋆ ✦ ⋆</div>
-
-      <div class="journal-entry">
-        <div class="entry-header">
-          <span class="entry-title">☽ Idle Report — Dawn</span>
-          <span class="entry-time">8h ago</span>
-        </div>
-        <p class="entry-body">
-          While you slept, the lair's mechanisms continued their slow accumulation. The <em><span data-codex="lunar">Lunar confluence</span></em> was favourable: +216 <span data-codex="lunar">Lunar essence</span> gathered. The <span data-codex="altar">Altar of Mercury</span> processed two unfinished inscriptions. Brother Orin completed his transcription of the Third <span data-codex="scriptorium">Grimoire</span>.
-        </p>
-        <div class="entry-actions">
-          <button class="btn-action" onclick="toast('Resources claimed.')">Claim</button>
+        <div class="ornament">⋆ ✦ ⋆</div>
+        <div class="journal-entry">
+          <div class="entry-header">
+            <span class="entry-title">☽ Idle Report — Dawn</span>
+            <span class="entry-time">8h ago</span>
+          </div>
+          <p class="entry-body">
+            While you were away, the lair's mechanisms continued their slow accumulation. The <em><span data-codex="lunar">Lunar confluence</span></em> was favourable. The <span data-codex="altar">Altar</span> processed two unfinished inscriptions.
+          </p>
+          <div class="entry-actions">
+            <button class="btn-action" onclick="toast('The essences settle into your reserves.')">Receive</button>
+          </div>
         </div>
       </div>
-
-    </div>
 
     <!-- FIELD PANEL -->
     <div id="panel-field" class="tab-panel">
@@ -2265,7 +2250,7 @@
         <div class="map-vignette"></div>
         <div class="map-loading" id="map-loading">
           <span class="map-loading-symbol">⛧</span>
-          <span class="map-loading-text">Divining Your Location...</span>
+          <span class="map-loading-text">The field takes shape…</span>
         </div>
       </div>
 
@@ -2282,44 +2267,9 @@
         <div class="section-label">Nearby Seekers</div>
         <div id="nearby-players-cards"></div>
       </div>
-      <div class="section-label">Active Missions</div>
-
-      <div class="mission-card" style="--mission-color:var(--crimson-bright)" onclick="showCombat()">
-        <div class="mission-header">
-          <span class="mission-title">The Writhing Threshold</span>
-          <span class="mission-badge combat">Combat</span>
-        </div>
-        <p class="mission-desc">Something has nested in the third sub-level. It breathes in rhythms that match no known creature. The seals are weakening from inside.</p>
-        <div class="mission-meta">
-          <span>⚠ Danger IV</span>
-          <span>⏱ 15 min</span>
-          <span>📍 340m away</span>
-        </div>
-      </div>
-
-      <div class="mission-card" style="--mission-color:var(--indigo-bright)" onclick="toast('You must go to the market in person to trigger this event.')">
-        <div class="mission-header">
-          <span class="mission-title">The Coin Bearer</span>
-          <span class="mission-badge story">Story</span>
-        </div>
-        <p class="mission-desc">Serena Falch carries a sigil she does not understand. She found it beneath the flagstones outside the old covered market. She wants answers. Perhaps you have some.</p>
-        <div class="mission-meta">
-          <span>⭐ Story</span>
-          <span>⏱ Dusk only</span>
-          <span>📍 1.2km away</span>
-        </div>
-      </div>
-
-      <div class="mission-card" style="--mission-color:var(--viridian-bright)" onclick="toast('Convergence Point active during Moon\'s hour only. Return then.')">
-        <div class="mission-header">
-          <span class="mission-title">Lunar Confluence — Via dei Fiori</span>
-          <span class="mission-badge" style="color:var(--viridian-bright);">Gather</span>
-        </div>
-        <p class="mission-desc">The decoded Chaldean table marks this crossroads as a point where Lunar essence pools during the Moon\'s planetary hour. Standing here then will massively accelerate your gathering.</p>
-        <div class="mission-meta">
-          <span>☽ Moon\'s hour</span>
-          <span>📍 780m away</span>
-        </div>
+      <div class="section-label" id="field-events-label">Obligations &amp; Omens</div>
+      <div id="field-events-list">
+        <div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);padding:0.5rem 0;">The field is quiet. The ether holds its breath.</div>
       </div>
 
     </div>
@@ -2467,33 +2417,20 @@
       </div>
 
       <div class="section-label">Research Queue</div>
-      <!-- Research is static flavour until research system is fully implemented -->
-
-      <div class="research-item active">
-        <div class="research-name">Chaldean <span data-codex="planetary-hour">Planetary Correspondences</span> — Vol. III</div>
-        <p class="research-desc">Detailed mapping of planetary hours to geographic loci. Will improve <span data-codex="convergence-point">resource convergence</span> detection radius by 40%.</p>
-        <div class="research-progress"><div class="research-fill" style="width:65%"></div></div>
-        <div class="research-meta">
-          <span>65% Complete</span>
-          <span>~6h remaining</span>
+      <div id="research-queue-list">
+        <!-- Rendered by renderResearchQueue() from saves/{id}/research -->
+        <div class="research-item active">
+          <div class="research-name">Chaldean <span data-codex="planetary-hour">Planetary Correspondences</span> — Vol. III</div>
+          <p class="research-desc">Detailed mapping of planetary hours to geographic loci. Will improve convergence detection radius by 40%.</p>
+          <div class="research-progress"><div class="research-fill" style="width:65%"></div></div>
+          <div class="research-meta"><span>65% Complete</span><span>~6h remaining</span></div>
         </div>
-      </div>
-
-      <div class="research-item">
-        <div class="research-name">The Doctrine of Signatures</div>
-        <p class="research-desc">Reveals hidden elemental affinities in city architecture. Unlocks the <span data-codex="plague-scribe">Stone Reader</span> acolyte class.</p>
-        <div class="research-progress"><div class="research-fill" style="width:0%"></div></div>
-        <div class="research-meta">
-          <span>Queued</span>
-          <span>Cost: 500 <span data-codex="mercurial">☿</span> + 200 <span data-codex="saturnine">♄</span></span>
+        <div class="research-item completed">
+          <div class="research-name">✓ Hermetic Alphabets of the Lower Realm</div>
+          <p class="research-desc">Completed. Unlocked: <span data-codex="glyph">Glyph Inscription</span> skill for all Acolytes.</p>
+          <div class="research-progress"><div class="research-fill" style="width:100%"></div></div>
+          <div class="research-meta"><span>Completed</span></div>
         </div>
-      </div>
-
-      <div class="research-item completed">
-        <div class="research-name">✓ Hermetic Alphabets of the Lower Realm</div>
-        <p class="research-desc">Completed. Unlocked: <span data-codex="glyph">Glyph Inscription</span> skill for all Acolytes.</p>
-        <div class="research-progress"><div class="research-fill" style="width:100%"></div></div>
-        <div class="research-meta"><span>Completed 2 days ago</span></div>
       </div>
 
     </div>
@@ -2541,30 +2478,27 @@
       </div>
 
       <div class="section-label">Rites &amp; Invocations</div>
-
-      <div class="research-item" onclick="toast('You perform the Rite of Saturn. Saturnine income +50% for 3h. Costs 100 ♄.')">
-        <div class="research-name">☽ Rite of the <span data-codex="lunar">Silver Crescent</span></div>
-        <p class="research-desc">Offered during <span data-codex="planetary-hour">Lunar hours</span>, this rite triples <span data-codex="lunar">Lunar income</span> for one full planetary cycle. Requires a Lunar-aligned acolyte present in the lair.</p>
-        <div class="research-meta">
-          <span>Cost: 300 ☽</span>
-          <span>Duration: 1 Lunar cycle</span>
+      <div id="rites-list">
+        <div class="research-item" onclick="performRite('silver-crescent',300,1)">
+          <div class="research-name">☽ Rite of the <span data-codex="lunar">Silver Crescent</span></div>
+          <p class="research-desc">Offered during <span data-codex="planetary-hour">Lunar hours</span>, this rite triples <span data-codex="lunar">Lunar income</span> for one full planetary cycle. Requires a Lunar-aligned acolyte present in the lair.</p>
+          <div class="research-meta">
+            <span>Cost: 300 ☽</span>
+            <span>Duration: 1 Lunar cycle</span>
+          </div>
         </div>
-      </div>
-
-      <div class="research-item" onclick="toast('You invoke the Mercurial Tongue. Next decode attempt is free.')">
-        <div class="research-name">☿ Invocation of the <span data-codex="mercurial">Mercurial Tongue</span></div>
-        <p class="research-desc">Speed all ongoing <span data-codex="scriptorium">research</span> by 2× for the duration of <span data-codex="mercurial">Mercury\'s hour</span>. Only usable during Mercury's <span data-codex="planetary-hour">planetary hour</span>.</p>
-        <div class="research-meta">
-          <span>Cost: 150 ☿</span>
-          <span>Active: Mercury's Hour only</span>
+        <div class="research-item" onclick="performRite('mercurial-tongue',150,6)">
+          <div class="research-name">☿ Invocation of the <span data-codex="mercurial">Mercurial Tongue</span></div>
+          <p class="research-desc">Speed all ongoing <span data-codex="scriptorium">research</span> by 2× for the duration of <span data-codex="mercurial">Mercury's hour</span>. Only usable during Mercury's planetary hour.</p>
+          <div class="research-meta">
+            <span>Cost: 150 ☿</span>
+            <span>Active: Mercury's Hour only</span>
+          </div>
         </div>
-      </div>
-
-      <div class="research-item locked" style="opacity:0.5">
-        <div class="research-name">⛧ The Grand Conjuration — [LOCKED]</div>
-        <p class="research-desc">Complete the Third Seal research to unlock. A rite that aligns all seven planets simultaneously for 30 minutes. Effects unknown.</p>
-        <div class="research-meta">
-          <span>Research Required</span>
+        <div class="research-item locked" style="opacity:0.5">
+          <div class="research-name">⛧ The Grand Conjuration — [LOCKED]</div>
+          <p class="research-desc">Complete the Third Seal research to unlock. A rite that aligns all seven planets simultaneously for 30 minutes. Effects unknown.</p>
+          <div class="research-meta"><span>Research Required</span></div>
         </div>
       </div>
 
@@ -2823,8 +2757,10 @@
       setTimeout(() => { try { initCodex(); attachLongPress(); } catch(e) { console.error('init error:',e); } }, 600);
       startAutoSave();
       setTimeout(seedWorldDataIfEmpty, 2000);
-      setTimeout(loadBuildingsFromFirebase, 2600);
       setTimeout(loadRecipesFromFirebase, 2500);
+      setTimeout(loadBuildingsFromFirebase, 2600);
+      setTimeout(loadRitesFromFirebase, 2700);
+      setTimeout(refreshFieldEventCards, 3000);
       playerName = localStorage.getItem('llair_name') || '';
       playerCoven = localStorage.getItem('llair_coven') || '';
       // Auto-load saved state from Firebase on every startup
@@ -2902,6 +2838,9 @@
       Object.keys(randomMapMarkers).forEach(id => {
         if (!randomEvts[id]) { randomMapMarkers[id].remove(); delete randomMapMarkers[id]; }
       });
+
+      // Also update the mission card list below the map
+      renderFieldEventCards(data);
 
     } catch(e) {}
   }
@@ -3284,26 +3223,26 @@
   // TAROT
   // ══════════════════════════════════════════
   const majorArcana = [
-    {num:'0', sym:'🃏', name:'The Fool'},
-    {num:'I', sym:'🪄', name:'The Magician'},
-    {num:'II', sym:'📜', name:'High Priestess'},
-    {num:'III', sym:'🌿', name:'The Empress'},
-    {num:'IV', sym:'👑', name:'The Emperor'},
-    {num:'V', sym:'⛪', name:'Hierophant'},
-    {num:'VI', sym:'💞', name:'The Lovers'},
-    {num:'VII', sym:'🏆', name:'The Chariot'},
-    {num:'VIII', sym:'⚖', name:'Justice'},
-    {num:'X', sym:'☸', name:'Wheel of Fortune'},
-    {num:'XI', sym:'🦁', name:'Strength'},
-    {num:'XII', sym:'🙃', name:'The Hanged Man'},
-    {num:'XIII', sym:'💀', name:'Death'},
-    {num:'XIV', sym:'⚗', name:'Temperance'},
-    {num:'XV', sym:'😈', name:'The Devil'},
-    {num:'XVII', sym:'⭐', name:'The Star'},
-    {num:'XVIII', sym:'🌕', name:'The Moon'},
-    {num:'XIX', sym:'☀', name:'The Sun'},
-    {num:'XX', sym:'📯', name:'Judgement'},
-    {num:'XXI', sym:'🌍', name:'The World'},
+    {num:'0',    sym:'○',  name:'The Fool'},
+    {num:'I',    sym:'☿',  name:'The Magician'},
+    {num:'II',   sym:'☽',  name:'High Priestess'},
+    {num:'III',  sym:'♀',  name:'The Empress'},
+    {num:'IV',   sym:'♂',  name:'The Emperor'},
+    {num:'V',    sym:'⛧',  name:'Hierophant'},
+    {num:'VI',   sym:'✦',  name:'The Lovers'},
+    {num:'VII',  sym:'⬡',  name:'The Chariot'},
+    {num:'VIII', sym:'⚖',  name:'Justice'},
+    {num:'X',    sym:'☸',  name:'Wheel of Fortune'},
+    {num:'XI',   sym:'☉',  name:'Strength'},
+    {num:'XII',  sym:'🜃',  name:'The Hanged Man'},
+    {num:'XIII', sym:'♄',  name:'Death'},
+    {num:'XIV',  sym:'🜄',  name:'Temperance'},
+    {num:'XV',   sym:'🜂',  name:'The Devil'},
+    {num:'XVII', sym:'✶',  name:'The Star'},
+    {num:'XVIII',sym:'☽',  name:'The Moon'},
+    {num:'XIX',  sym:'☉',  name:'The Sun'},
+    {num:'XX',   sym:'✦',  name:'Judgement'},
+    {num:'XXI',  sym:'⊕',  name:'The World'},
   ];
 
   function drawThirdCard() {
@@ -3773,7 +3712,7 @@
     // Research
     if (state.research) {
       _researchData = state.research;
-      // research panel is static flavour for now — no re-render needed
+      renderResearchQueue(state.research);
     }
 
     return true;
@@ -3843,6 +3782,225 @@
       // Re-render lair if we have player building data
       if (_lairData) renderLairBuildings(_lairData.buildings || {});
     } catch(e) {}
+  }
+
+  // ══════════════════════════════════════════
+  // FIELD PANEL — world event cards
+  // ══════════════════════════════════════════
+  // Called by loadWorldEvents() after it updates dmMapMarkers/randomMapMarkers.
+  // Builds mission-card list from the same Firebase data, so map markers and
+  // the card list always stay in sync.
+  let _cachedWorldEvents = null;
+
+  async function refreshFieldEventCards() {
+    try {
+      const res = await fetch(`${FB_URL}/world/events.json?cb=` + Date.now());
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data || data.error) return;
+      _cachedWorldEvents = data;
+      renderFieldEventCards(data);
+    } catch(e) {}
+  }
+
+  function renderFieldEventCards(data) {
+    const el = document.getElementById('field-events-list');
+    if (!el) return;
+    const TYPE_COLOR = {
+      combat:  'var(--crimson-bright)',
+      story:   'var(--indigo-bright)',
+      gather:  'var(--viridian-bright)',
+      recruit: 'var(--amber-bright)',
+    };
+    const TYPE_SIGIL = { combat:'⚠', story:'✦', gather:'☽', recruit:'⬡' };
+    const allEvts = [
+      ...Object.entries(data.dm     || {}).map(([id,ev]) => ({...ev, id, src:'dm'})),
+      ...Object.entries(data.random || {}).map(([id,ev]) => ({...ev, id, src:'random'})),
+    ].filter(ev => ev && ev.title);
+
+    if (!allEvts.length) {
+      el.innerHTML = '<div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);padding:0.5rem 0;">The field is quiet. The ether holds its breath.</div>';
+      return;
+    }
+
+    const lbl = document.getElementById('field-events-label');
+    if (lbl) lbl.textContent = `Obligations & Omens (${allEvts.length})`;
+
+    el.innerHTML = allEvts.map(ev => {
+      const type  = ev.type || 'story';
+      const color = TYPE_COLOR[type] || 'var(--gold)';
+      const sigil = TYPE_SIGIL[type] || '✦';
+      const badge = ev.src === 'dm'
+        ? `<span class="mission-badge" style="color:var(--dm-bright,#a855f7);font-size:0.38rem;">DM</span>`
+        : `<span class="mission-badge ${type}">${type}</span>`;
+      const rewardLine = ev.reward
+        ? `<span style="color:var(--gold-dim);font-family:var(--ff-heading);font-size:0.38rem;letter-spacing:0.06em;">↳ ${ev.reward}</span>`
+        : '';
+      const onClick = ev.type === 'combat'
+        ? `showCombat()`
+        : `handleWorldEvent(${JSON.stringify(JSON.stringify(ev))})`;
+      return `<div class="mission-card" style="--mission-color:${color}" onclick="${onClick}">
+        <div class="mission-header">
+          <span class="mission-title">${sigil} ${ev.title}</span>
+          ${badge}
+        </div>
+        <p class="mission-desc">${ev.desc || ''}</p>
+        <div class="mission-meta">
+          ${rewardLine}
+          ${ev.src === 'dm' && ev.lat ? `<span>📍 ${Number(ev.lat).toFixed(4)}, ${Number(ev.lng).toFixed(4)}</span>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ══════════════════════════════════════════
+  // JOURNAL PANEL — dynamic feed
+  // ══════════════════════════════════════════
+  // DM events already show as fullscreen modals via pollDmEvents().
+  // This function additionally appends them as persistent journal entries
+  // so the player has a record after dismissing the modal.
+  const _journalEntryIds = new Set();
+
+  function appendJournalEntry(ev, evtId) {
+    if (_journalEntryIds.has(evtId)) return;
+    _journalEntryIds.add(evtId);
+    const feed = document.getElementById('journal-feed');
+    if (!feed) return;
+    const SIGILS = { urgent:'⚠', story:'✦', discovery:'⬡', neutral:'◈' };
+    const sigil  = SIGILS[ev.type] || '✦';
+    const cls    = ev.type || 'neutral';
+    const when   = new Date(ev.createdAt || Date.now()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    const entry  = document.createElement('div');
+    entry.className = `journal-entry ${cls}`;
+    const rewardLine = ev.reward
+      ? `<div style="font-family:var(--ff-heading);font-size:0.38rem;letter-spacing:0.08em;color:var(--gold-dim);margin-top:0.4rem;">↳ ${ev.reward}</div>`
+      : '';
+    entry.innerHTML = `
+      <div class="entry-header">
+        <span class="entry-title">${sigil} ${ev.title || 'An Omen Arrives'}</span>
+        <span class="entry-time">${when}</span>
+      </div>
+      <p class="entry-body">${ev.body || ''}</p>
+      ${rewardLine}
+      <div class="entry-actions">
+        ${ev.btn1 ? `<button class="btn-action primary" onclick="applyDmEventReward(${JSON.stringify(JSON.stringify(ev))});this.closest('.journal-entry').style.opacity='0.5';this.disabled=true;">${ev.btn1}</button>` : ''}
+        ${ev.btn2 ? `<button class="btn-action" onclick="this.closest('.journal-entry').style.opacity='0.5';this.disabled=true;">${ev.btn2}</button>` : ''}
+        ${ev.location?.lat ? `<button class="btn-action" onclick="switchTab('field')">📍 Go to Location</button>` : ''}
+      </div>`;
+    // Prepend so newest is at top, but after the planetary hour widget
+    feed.insertBefore(entry, feed.firstChild);
+    // Hide the seed entries once real events come in
+    const seed = document.getElementById('journal-seed');
+    if (seed && feed.children.length > 0) seed.style.display = 'none';
+  }
+
+  // ══════════════════════════════════════════
+  // RITES — load from Firebase /world/skills
+  //         filtered by category:'rite'
+  // ══════════════════════════════════════════
+  let _worldSkills = null;
+  const _activeRites = {}; // key -> expiresAt timestamp
+
+  async function loadRitesFromFirebase() {
+    try {
+      const res = await fetch(`${FB_URL}/world/skills.json?cb=` + Date.now());
+      if (!res.ok) return;
+      const d = await res.json();
+      if (!d || d.error) return;
+      _worldSkills = d;
+      renderRitesList();
+    } catch(e) {}
+  }
+
+  function renderRitesList() {
+    const el = document.getElementById('rites-list');
+    if (!el) return;
+    const skills = _worldSkills ? Object.entries(_worldSkills) : [];
+    const rites  = skills.filter(([, s]) => s && (s.category === 'rite' || s.type === 'rite'));
+
+    if (!rites.length) return; // keep seed HTML if nothing in Firebase yet
+
+    const RS_LOCAL = ['☉','☽','♃','♂','♄','♀','☿'];
+    const RN_LOCAL = ['Solar','Lunar','Jovian','Martial','Saturnine','Venusian','Mercurial'];
+
+    el.innerHTML = rites.map(([key, s]) => {
+      const cost    = Array.isArray(s.cost) ? s.cost : [];
+      const costStr = cost.map((v, i) => v > 0 ? `${RS_LOCAL[i]} ${v} ${RN_LOCAL[i]}` : null).filter(Boolean).join(' · ');
+      const now     = Date.now();
+      const active  = _activeRites[key] && _activeRites[key] > now;
+      const locked  = s.unlockCondition && s.unlockCondition.toLowerCase().includes('locked');
+      return `<div class="research-item ${locked ? 'locked' : ''} ${active ? 'active' : ''}"
+          style="${locked ? 'opacity:0.5;' : 'cursor:pointer;'}"
+          onclick="${locked ? '' : `performRite('${key}')`}">
+        <div class="research-name">${s.name || key}</div>
+        <p class="research-desc">${s.desc || ''}</p>
+        <div class="research-meta">
+          <span>${costStr ? 'Cost: ' + costStr : 'No cost'}</span>
+          ${s.unlockCondition ? `<span>${s.unlockCondition}</span>` : ''}
+          ${active ? `<span style="color:var(--viridian-bright);">Active</span>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function performRite(key, costAmt, resIdx) {
+    // If called from seed HTML with explicit cost args
+    if (costAmt !== undefined && resIdx !== undefined) {
+      if (values[resIdx] < costAmt) {
+        toast(`Insufficient essence. You need ${costAmt} ${['☉','☽','♃','♂','♄','♀','☿'][resIdx]}.`);
+        return;
+      }
+      values[resIdx] -= costAmt;
+      document.querySelectorAll('.resource-pill .res-value').forEach((el, i) => { el.textContent = Math.floor(values[i]); });
+      _activeRites[key] = Date.now() + 3 * 60 * 60 * 1000; // 3h active
+      toast(`✦ The rite is performed. The hour responds.`);
+      const myId = getOrCreatePlayerId();
+      fbWrite(myId, collectGameState()).catch(() => {});
+      return;
+    }
+    // Called from Firebase-rendered rites
+    if (!_worldSkills || !_worldSkills[key]) { toast('Rite not found.'); return; }
+    const s = _worldSkills[key];
+    const cost = Array.isArray(s.cost) ? s.cost : [];
+    for (let i = 0; i < cost.length; i++) {
+      if (cost[i] > 0 && values[i] < cost[i]) {
+        toast(`Insufficient ${['Solar','Lunar','Jovian','Martial','Saturnine','Venusian','Mercurial'][i]} essence. Need ${cost[i]}.`);
+        return;
+      }
+    }
+    cost.forEach((v, i) => { if (v > 0) values[i] -= v; });
+    document.querySelectorAll('.resource-pill .res-value').forEach((el, i) => { el.textContent = Math.floor(values[i]); });
+    _activeRites[key] = Date.now() + 3 * 60 * 60 * 1000;
+    toast(`✦ ${s.name || 'Rite'} performed. The lair shifts.`);
+    renderRitesList();
+    const myId = getOrCreatePlayerId();
+    fbWrite(myId, collectGameState()).catch(() => {});
+  }
+
+  // ══════════════════════════════════════════
+  // RESEARCH — render from save state
+  // ══════════════════════════════════════════
+  function renderResearchQueue(research) {
+    const el = document.getElementById('research-queue-list');
+    if (!el || !research) return;
+    const items = [];
+    if (research.active) {
+      items.push({ name: research.active, pct: research.progress || 0, state: 'active' });
+    }
+    (research.queue || []).forEach(name => items.push({ name, pct: 0, state: 'queued' }));
+    (research.completed || []).forEach(name => items.push({ name, pct: 100, state: 'completed' }));
+    if (!items.length) {
+      el.innerHTML = '<div style="font-family:var(--ff-body);font-style:italic;font-size:0.8rem;color:var(--text-secondary);">No research underway.</div>';
+      return;
+    }
+    el.innerHTML = items.map(it => `
+      <div class="research-item ${it.state === 'active' ? 'active' : it.state === 'completed' ? 'completed' : ''}">
+        <div class="research-name">${it.state === 'completed' ? '✓ ' : ''}${it.name}</div>
+        <div class="research-progress"><div class="research-fill" style="width:${it.pct}%"></div></div>
+        <div class="research-meta">
+          <span>${it.state === 'active' ? it.pct + '% Complete' : it.state === 'queued' ? 'Queued' : 'Completed'}</span>
+        </div>
+      </div>`).join('');
   }
 
   async function fbRead(playerId) {
@@ -4265,6 +4423,25 @@
       await fetch(`${FB_URL}/world/classes.json`, {
         method:'PUT', headers:{'Content-Type':'application/json'},
         body: JSON.stringify(defaultClasses)
+      });
+      // Seed default rites
+      const defaultSkills = {
+        'silver-crescent': { name:'Rite of the Silver Crescent', category:'rite', type:'rite',
+          desc:'Offered during Lunar hours, this rite triples Lunar income for one full planetary cycle. Requires a Lunar-aligned acolyte present in the lair.',
+          cost:[0,300,0,0,0,0,0], unlockCondition:'Altar Lv.1+' },
+        'mercurial-tongue': { name:'Invocation of the Mercurial Tongue', category:'rite', type:'rite',
+          desc:"Speed all ongoing research by 2× for the duration of Mercury's hour. Only usable during Mercury's planetary hour.",
+          cost:[0,0,0,0,0,0,150], unlockCondition:"Mercury's Hour only" },
+        'solar-invocation': { name:'Solar Invocation', category:'rite', type:'rite',
+          desc:'Empower all Fire-type combat skills for 24 hours. Costs Solar essence proportional to the Altar level.',
+          cost:[200,0,0,0,0,0,0], unlockCondition:'Altar Lv.2+' },
+        'grand-conjuration': { name:'The Grand Conjuration', category:'rite', type:'rite',
+          desc:'Aligns all seven planets simultaneously for 30 minutes. Effects: all resource income ×5, all combat stats +20%. Effects unknown in full.',
+          cost:[500,500,300,300,200,300,300], unlockCondition:'[LOCKED] — Complete the Third Seal research' },
+      };
+      await fetch(`${FB_URL}/world/skills.json`, {
+        method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(defaultSkills)
       });
       await fetch(`${FB_URL}/world/seeded.json`, {
         method:'PUT', headers:{'Content-Type':'application/json'}, body:'true'
@@ -4774,6 +4951,8 @@
         if (!ev || _shownDmEvents.has(evtId)) continue;
         _shownDmEvents.add(evtId);
         _dmEventQueue.push({ evtId, ev });
+        // Persist as journal entry
+        appendJournalEntry(ev, evtId);
         // Mark as read in Firebase
         fetch(`${FB_URL}/events/${myId}/${evtId}/read.json`, {
           method:'PUT', headers:{'Content-Type':'application/json'}, body:'true'
@@ -4820,6 +4999,7 @@
     // Show reward summary if present
     if (ev.reward) {
       const rwd = document.createElement('div');
+      rwd.className = 'dm-event-rwd';
       rwd.style.cssText = 'font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.08em;color:var(--gold-dim);text-align:left;padding:0.5rem 0.2rem 0;border-top:1px solid rgba(201,168,76,0.1);margin-top:0.5rem;';
       rwd.textContent = '↳ ' + ev.reward;
       actionsEl.parentElement.insertBefore(rwd, actionsEl);
@@ -4838,6 +5018,8 @@
   }
 
   function applyDmEventReward(ev) {
+    // Journal entry buttons pass JSON strings; modal passes objects directly
+    if (typeof ev === 'string') { try { ev = JSON.parse(ev); } catch(e) { return; } }
     if (!ev.rewardRes || !Array.isArray(ev.rewardRes)) return;
     const RES_NAMES_LOCAL = ['Solar','Lunar','Jovian','Martial','Saturnine','Venusian','Mercurial'];
     const gained = [];
