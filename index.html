@@ -1963,47 +1963,83 @@
   /* Incoming exchange popup */
   #incoming-exchange-modal { position:fixed;inset:0;z-index:900;background:rgba(5,4,7,0.85);display:none;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(4px); }
   #incoming-exchange-modal.open { display:flex; }
-  .incoming-modal-inner { background:var(--abyss);border:1px solid var(--gold-dim);width:100%;max-width:380px;padding:1.6rem 1.4rem;animation:slide-up 0.35s cubic-bezier(0.16,1,0.3,1);position:relative; }
-  .incoming-modal-sigil { font-size:1.6rem;text-align:center;margin-bottom:0.5rem;animation:pulse-sigil 3s ease-in-out infinite; }
-  .incoming-modal-title { font-family:var(--ff-heading);font-size:0.55rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);text-align:center;margin-bottom:0.2rem; }
-  .incoming-modal-from { font-family:var(--ff-title);font-size:1.4rem;color:var(--bone);text-align:center;margin-bottom:0.1rem; }
-  .incoming-modal-coven { font-family:var(--ff-body);font-style:italic;font-size:0.75rem;color:var(--text-secondary);text-align:center;margin-bottom:1.2rem; }
-  .incoming-modal-divider { border:none;border-top:1px solid var(--border);margin:0.8rem 0; }
-  .incoming-modal-row { display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.5rem; }
-  .incoming-modal-label { font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary); }
-  .incoming-modal-value { font-family:var(--ff-body);font-style:italic;font-size:0.9rem;color:var(--bone); }
-  .incoming-modal-actions { display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-top:1.2rem; }
-  .incoming-modal-btn { font-family:var(--ff-heading);font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.9rem;border:none;cursor:pointer;transition:all 0.2s; }
-  .incoming-modal-btn.accept { background:rgba(45,122,95,0.15);border:1px solid var(--viridian-bright);color:var(--viridian-bright); }
-  .incoming-modal-btn.accept:active { background:rgba(45,122,95,0.35); }
-  .incoming-modal-btn.decline { background:rgba(196,48,48,0.1);border:1px solid var(--crimson-bright);color:var(--crimson-bright); }
-  .incoming-modal-btn.decline:active { background:rgba(196,48,48,0.25); }
-  .incoming-modal-timer { font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.08em;color:var(--text-secondary);text-align:center;margin-top:0.8rem; }
+  .incoming-modal-inner {
+    background: var(--deep);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-top: 2px solid var(--gold-dim);
+    width:100%;max-width:360px;
+    padding:1.8rem 1.4rem 1.4rem;
+    animation:slide-up 0.35s cubic-bezier(0.16,1,0.3,1);
+    position:relative;
+  }
+  .incoming-modal-inner::before {
+    content:'';
+    position:absolute;
+    top:0;left:0;right:0;
+    height:60px;
+    background: linear-gradient(180deg, rgba(201,168,76,0.04) 0%, transparent 100%);
+    pointer-events:none;
+  }
+  .incoming-modal-sigil { font-size:1.2rem;text-align:center;margin-bottom:0.8rem;color:var(--gold-dim);letter-spacing:0.3em;opacity:0.7; }
+  .incoming-modal-title { font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--mist);text-align:center;margin-bottom:1rem; }
+  .incoming-modal-from { font-family:var(--ff-title);font-size:1.5rem;color:var(--gold);text-align:center;margin-bottom:0.2rem;text-shadow:0 0 20px rgba(201,168,76,0.2); }
+  .incoming-modal-coven { font-family:var(--ff-body);font-style:italic;font-size:0.78rem;color:var(--mist);text-align:center;margin-bottom:1.4rem; }
+  .incoming-modal-divider { border:none;border-top:1px solid rgba(201,168,76,0.1);margin:0.6rem 0; }
+  .incoming-modal-row { display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.6rem;padding:0 0.2rem; }
+  .incoming-modal-label { font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ash); }
+  .incoming-modal-value { font-family:var(--ff-body);font-style:italic;font-size:0.88rem;color:var(--pale); }
+  .incoming-modal-actions { display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:1.4rem; }
+  .incoming-modal-btn { font-family:var(--ff-heading);font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.85rem 0.5rem;border:1px solid;background:transparent;cursor:pointer;transition:all 0.2s; }
+  .incoming-modal-btn.accept { border-color:rgba(45,122,95,0.5);color:var(--viridian-bright); }
+  .incoming-modal-btn.accept:active { background:rgba(45,122,95,0.12); }
+  .incoming-modal-btn.decline { border-color:rgba(139,26,26,0.5);color:var(--crimson-bright); }
+  .incoming-modal-btn.decline:active { background:rgba(139,26,26,0.1); }
+  .incoming-modal-timer { font-family:var(--ff-body);font-style:italic;font-size:0.68rem;color:var(--ash);text-align:center;margin-top:0.9rem; }
   /* DM Story Event popup */
-  #dm-event-modal { position:fixed;inset:0;z-index:950;background:rgba(5,4,7,0.88);display:none;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(4px); }
+  #dm-event-modal { position:fixed;inset:0;z-index:950;background:rgba(5,4,7,0.92);display:none;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(3px); }
   #dm-event-modal.open { display:flex; }
-  .dm-event-inner { background:var(--abyss);border:1px solid var(--border-bright);width:100%;max-width:390px;padding:1.8rem 1.5rem 1.4rem;animation:slide-up 0.35s cubic-bezier(0.16,1,0.3,1);position:relative; }
-  .dm-event-sigil { font-size:1.4rem;text-align:center;margin-bottom:0.4rem; }
-  .dm-event-type { font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.25em;text-transform:uppercase;text-align:center;margin-bottom:0.6rem; }
+  .dm-event-inner {
+    background: var(--deep);
+    border-left: 3px solid var(--gold-dim);
+    border-right: none;
+    border-top: 1px solid rgba(201,168,76,0.15);
+    border-bottom: 1px solid rgba(201,168,76,0.15);
+    width:100%;max-width:370px;
+    padding:2rem 1.6rem 1.5rem;
+    animation:slide-up 0.4s cubic-bezier(0.16,1,0.3,1);
+    position:relative;
+  }
+  .dm-event-inner::after {
+    content:'⋆ ✦ ⋆';
+    position:absolute;
+    top:-0.6rem;left:50%;transform:translateX(-50%);
+    font-size:0.5rem;letter-spacing:0.4em;
+    color:var(--gold-dim);
+    background:var(--deep);
+    padding:0 0.5rem;
+  }
+  .dm-event-sigil { font-size:0.9rem;text-align:left;margin-bottom:0.5rem;color:var(--gold-dim);letter-spacing:0.2em; }
+  .dm-event-type { font-family:var(--ff-heading);font-size:0.38rem;letter-spacing:0.3em;text-transform:uppercase;text-align:left;margin-bottom:0.5rem; }
   .dm-event-type.urgent    { color:var(--crimson-bright); }
-  .dm-event-type.story     { color:var(--indigo-bright); }
+  .dm-event-type.story     { color:rgba(100,100,200,0.8); }
   .dm-event-type.discovery { color:var(--viridian-bright); }
-  .dm-event-type.neutral   { color:var(--text-secondary); }
-  .dm-event-title { font-family:var(--ff-heading);font-size:0.9rem;color:var(--gold);text-align:center;margin-bottom:1rem;letter-spacing:0.04em; }
-  .dm-event-body  { font-family:var(--ff-body);font-style:italic;font-size:0.88rem;color:var(--pale);line-height:1.75;margin-bottom:1.2rem;text-align:center; }
-  .dm-event-actions { display:flex;gap:0.6rem; }
-  .dm-event-btn { flex:1;font-family:var(--ff-heading);font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.75rem;border:1px solid var(--border-bright);background:transparent;color:var(--gold);cursor:pointer;transition:all 0.2s; }
-  .dm-event-btn:active { background:rgba(201,168,76,0.1); }
-  .dm-event-btn.primary { border-color:var(--gold-dim);color:var(--gold); }
+  .dm-event-type.neutral   { color:var(--mist); }
+  .dm-event-title { font-family:var(--ff-heading);font-size:0.82rem;color:var(--bone);text-align:left;margin-bottom:1rem;letter-spacing:0.03em;line-height:1.3; }
+  .dm-event-body  { font-family:var(--ff-body);font-style:italic;font-size:0.88rem;color:var(--pale);line-height:1.8;margin-bottom:1.4rem;text-align:left;border-left:1px solid rgba(201,168,76,0.12);padding-left:0.8rem; }
+  .dm-event-actions { display:flex;gap:0.5rem; }
+  .dm-event-btn { flex:1;font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.7rem 0.5rem;border:1px solid rgba(201,168,76,0.25);background:transparent;color:var(--gold-dim);cursor:pointer;transition:all 0.2s; }
+  .dm-event-btn:hover { border-color:var(--gold-dim);color:var(--gold); }
+  .dm-event-btn:active { background:rgba(201,168,76,0.06); }
+  .dm-event-btn.primary { border-color:rgba(201,168,76,0.4);color:var(--gold); }
 
   /* DM Broadcast banner */
-  #dm-broadcast-banner { position:fixed;top:0;left:0;right:0;z-index:960;background:rgba(61,61,170,0.95);border-bottom:1px solid var(--indigo-bright);padding:0.9rem 1.4rem;display:none;align-items:center;gap:1rem;backdrop-filter:blur(4px); }
-  #dm-broadcast-banner.show { display:flex;animation:slide-down 0.4s cubic-bezier(0.16,1,0.3,1); }
+  #dm-broadcast-banner { position:fixed;top:0;left:0;right:0;z-index:960;background:rgba(10,8,15,0.97);border-bottom:1px solid rgba(201,168,76,0.2);padding:0.8rem 1.2rem;display:none;align-items:flex-start;gap:0.9rem;backdrop-filter:blur(4px); }
+  #dm-broadcast-banner.show { display:flex;animation:slide-down 0.35s cubic-bezier(0.16,1,0.3,1); }
   @keyframes slide-down { from { transform:translateY(-100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
-  .broadcast-icon { font-size:1.1rem;flex-shrink:0; }
-  .broadcast-text { font-family:var(--ff-body);font-style:italic;font-size:0.9rem;color:var(--ghost);flex:1;line-height:1.5; }
-  .broadcast-dismiss { font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--indigo-bright);background:transparent;border:1px solid var(--indigo-bright);padding:0.4rem 0.8rem;cursor:pointer;flex-shrink:0; }
-  .broadcast-dismiss:active { background:rgba(61,61,170,0.3); }
+  .broadcast-icon { font-size:0.8rem;flex-shrink:0;color:var(--gold-dim);margin-top:0.15rem;letter-spacing:0.2em; }
+  .broadcast-text { font-family:var(--ff-body);font-style:italic;font-size:0.85rem;color:var(--pale);flex:1;line-height:1.6; }
+  .broadcast-dismiss { font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--ash);background:transparent;border:1px solid var(--stone);padding:0.35rem 0.7rem;cursor:pointer;flex-shrink:0;margin-top:0.1rem;transition:all 0.2s; }
+  .broadcast-dismiss:hover { color:var(--pale);border-color:var(--ash); }
   #exchange-modal { position:fixed;inset:0;z-index:700;background:rgba(5,4,7,0.97);display:none;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem; }
   #exchange-modal.open { display:flex; }
   .exchange-title { font-family:var(--ff-title);font-size:1.6rem;color:var(--gold);letter-spacing:2px;margin-bottom:0.3rem;text-align:center; }
@@ -2088,12 +2124,12 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.17</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.18</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
-      <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
+      <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">⊕</button>
       <div class="topbar-location">
         <div class="location-dot"></div>
-        <span id="location-text">Locating...</span>
+        <span id="location-text">Reading the stars…</span>
       </div>
     </div>
   </div>
@@ -2149,27 +2185,27 @@
   <!-- TABS -->
   <div id="tabs">
     <button class="tab active" onclick="switchTab('journal')">
-      <span class="tab-icon">📜</span>
+      <span class="tab-icon">✦</span>
       <span class="tab-label">Journal</span>
     </button>
     <button class="tab" onclick="switchTab('field')">
-      <span class="tab-icon">🗺</span>
+      <span class="tab-icon">⬡</span>
       <span class="tab-label">Field</span>
     </button>
     <button class="tab" onclick="switchTab('company')">
-      <span class="tab-icon">👁</span>
+      <span class="tab-icon">🜄</span>
       <span class="tab-label">Company</span>
     </button>
     <button class="tab" onclick="switchTab('lair')">
-      <span class="tab-icon">🏚</span>
+      <span class="tab-icon">⛧</span>
       <span class="tab-label">Lair</span>
     </button>
     <button class="tab" onclick="switchTab('arcana')">
-      <span class="tab-icon">🌙</span>
+      <span class="tab-icon">☽</span>
       <span class="tab-label">Arcana</span>
     </button>
     <button class="tab" onclick="switchTab('codex')">
-      <span class="tab-icon">📖</span>
+      <span class="tab-icon">☿</span>
       <span class="tab-label">Codex</span>
     </button>
   </div>
@@ -2206,7 +2242,7 @@
         </p>
         <div class="entry-actions">
           <button class="btn-action primary" onclick="showCombat()">Enter the Passage</button>
-          <button class="btn-action" onclick="toast('You send Maurus to rest in the Dormitorium.')">Rest Maurus</button>
+          <button class="btn-action" onclick="toast('Maurus withdraws to the Dormitorium. His wounds will keep.')">Send to the Dormitorium</button>
         </div>
       </div>
 
@@ -2219,7 +2255,7 @@
           The Mercurial hour worked its gift: the spiral inscription on the eastern wall reveals itself as a <em>Chaldean <span data-codex="planetary-hour">planetary table</span></em>. Cross-referencing with the city's founding maps, three <span data-codex="convergence-point">convergence points</span> emerge above ground. They pulse during the <span data-codex="lunar">Moon\'s hour</span>.
         </p>
         <div class="entry-actions">
-          <button class="btn-action primary" onclick="switchTab('field')">Mark Convergences</button>
+          <button class="btn-action primary" onclick="switchTab('field')">Mark the Points</button>
           <button class="btn-action" onclick="switchTab('arcana')">Study Further</button>
         </div>
       </div>
@@ -2233,8 +2269,8 @@
           Near the old market, a young woman named <em>Serena Falch</em> pressed a strange coin into your palm — the same sigil as the one above the lair's gate. She is waiting at the designated corner at dusk.
         </p>
         <div class="entry-actions">
-          <button class="btn-action primary" onclick="switchTab('field')">Go to Meeting</button>
-          <button class="btn-action" onclick="toast('You ignore the summons. The coin grows warm in your pocket.')">Ignore</button>
+          <button class="btn-action primary" onclick="switchTab('field')">Find Her at Dusk</button>
+          <button class="btn-action" onclick="toast('You let the moment pass. The coin grows warm in your pocket.')">Ignore the Summons</button>
         </div>
       </div>
 
@@ -2249,7 +2285,7 @@
           While you slept, the lair's mechanisms continued their slow accumulation. The <em><span data-codex="lunar">Lunar confluence</span></em> was favourable: +216 <span data-codex="lunar">Lunar essence</span> gathered. The <span data-codex="altar">Altar of Mercury</span> processed two unfinished inscriptions. Brother Orin completed his transcription of the Third <span data-codex="scriptorium">Grimoire</span>.
         </p>
         <div class="entry-actions">
-          <button class="btn-action" onclick="toast('Resources claimed.')">Claim</button>
+          <button class="btn-action" onclick="toast('The essences settle into your reserves.')">Receive</button>
         </div>
       </div>
 
@@ -2263,13 +2299,13 @@
         <div class="map-vignette"></div>
         <div class="map-loading" id="map-loading">
           <span class="map-loading-symbol">⛧</span>
-          <span class="map-loading-text">Divining Your Location...</span>
+          <span class="map-loading-text">The field takes shape…</span>
         </div>
       </div>
 
       <div class="map-legend">
         <div class="legend-item"><div class="legend-dot" style="background:var(--gold);box-shadow:0 0 5px var(--gold)"></div>You</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#7b4fcf;border-radius:2px;box-shadow:0 0 5px #7b4fcf"></div>Nearby Seeker</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#7b4fcf;border-radius:2px;box-shadow:0 0 5px #7b4fcf"></div>Another Seeker</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--crimson-bright)"></div>Combat Encounter</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--indigo-bright)"></div>Story Event</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--viridian-bright)"></div>Convergence Point</div>
@@ -2277,10 +2313,10 @@
       </div>
 
       <div id="nearby-players-list" style="display:none;margin-bottom:0.8rem;">
-        <div class="section-label">Nearby Seekers</div>
+        <div class="section-label">Others in the Field</div>
         <div id="nearby-players-cards"></div>
       </div>
-      <div class="section-label">Active Missions</div>
+      <div class="section-label">Obligations &amp; Omens</div>
 
       <div class="mission-card" style="--mission-color:var(--crimson-bright)" onclick="showCombat()">
         <div class="mission-header">
@@ -2295,7 +2331,7 @@
         </div>
       </div>
 
-      <div class="mission-card" style="--mission-color:var(--indigo-bright)" onclick="toast('You must go to the market in person to trigger this event.')">
+      <div class="mission-card" style="--mission-color:var(--indigo-bright)" onclick="toast('Serena will not wait forever. Go to her.')">
         <div class="mission-header">
           <span class="mission-title">The Coin Bearer</span>
           <span class="mission-badge story">Story</span>
@@ -2308,7 +2344,7 @@
         </div>
       </div>
 
-      <div class="mission-card" style="--mission-color:var(--viridian-bright)" onclick="toast('Convergence Point active during Moon\'s hour only. Return then.')">
+      <div class="mission-card" style="--mission-color:var(--viridian-bright)" onclick="toast('This place speaks only during the Moon\'s hour. Return then.')">
         <div class="mission-header">
           <span class="mission-title">Lunar Confluence — Via dei Fiori</span>
           <span class="mission-badge" style="color:var(--viridian-bright);">Gather</span>
@@ -2325,7 +2361,7 @@
     <!-- COMPANY PANEL -->
     <div id="panel-company" class="tab-panel">
 
-      <div class="section-label">The Seeker</div>
+      <div class="section-label">The Archivist</div>
 
       <div class="char-header">
         <div class="char-avatar">🜏</div>
@@ -2624,8 +2660,8 @@
     <div class="save-id-display" id="save-id-display" onclick="copySaveId()">—</div>
     <p class="save-id-hint">This seal identifies your chronicle. Tap to copy it. Keep it safe — you will need it to restore your game on another device.</p>
     <div class="save-btn-row">
-      <button class="save-btn primary" onclick="saveGame()">Save Now</button>
-      <button class="save-btn" onclick="loadGame()">Load Cloud</button>
+      <button class="save-btn primary" onclick="saveGame()">Seal Chronicle</button>
+      <button class="save-btn" onclick="loadGame()">Restore Chronicle</button>
     </div>
     <div class="save-status" id="save-status"></div>
   </div>
@@ -4364,9 +4400,9 @@
       inbox.style.display = 'block';
       const card = document.createElement('div');
       card.id = 'exch-' + exchId;
-      card.style.cssText = 'border:1px solid rgba(201,168,76,0.5);background:rgba(201,168,76,0.06);padding:0.9rem 1rem;margin-bottom:0.5rem;';
+      card.style.cssText = 'border-left:2px solid var(--gold-dim);border-top:1px solid rgba(201,168,76,0.15);border-right:1px solid rgba(201,168,76,0.1);border-bottom:1px solid rgba(201,168,76,0.1);background:rgba(10,8,15,0.7);padding:0.9rem 1rem;margin-bottom:0.5rem;';
       card.innerHTML = `
-        <div style="font-family:var(--ff-heading);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem;">⟺ Exchange from ${ex.fromName}</div>
+        <div style="font-family:var(--ff-heading);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem;">⟺ Proposal from ${ex.fromName}</div>
         <div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--pale);margin-bottom:0.6rem;">
           Coven of ${ex.fromCoven||'Unknown'}<br>
           <strong style="color:var(--bone);">Offers:</strong> ${offerText}<br>
@@ -4604,21 +4640,21 @@
 <div id="incoming-exchange-modal">
   <div class="incoming-modal-inner">
     <div class="incoming-modal-sigil">⟺</div>
-    <div class="incoming-modal-title">Exchange Proposal</div>
+    <div class="incoming-modal-title">A Proposal Arrives</div>
     <div class="incoming-modal-from" id="iem-from"></div>
     <div class="incoming-modal-coven" id="iem-coven"></div>
     <hr class="incoming-modal-divider">
     <div class="incoming-modal-row">
-      <span class="incoming-modal-label">They Offer</span>
+      <span class="incoming-modal-label">What is Offered</span>
       <span class="incoming-modal-value" id="iem-offer"></span>
     </div>
     <div class="incoming-modal-row">
-      <span class="incoming-modal-label">They Request</span>
+      <span class="incoming-modal-label">What is Sought</span>
       <span class="incoming-modal-value" id="iem-request"></span>
     </div>
     <div class="incoming-modal-actions">
-      <button class="incoming-modal-btn accept" id="iem-accept-btn">✓ Accept</button>
-      <button class="incoming-modal-btn decline" id="iem-decline-btn">✗ Decline</button>
+      <button class="incoming-modal-btn accept" id="iem-accept-btn">Bind the Exchange</button>
+      <button class="incoming-modal-btn decline" id="iem-decline-btn">Refuse</button>
     </div>
     <div class="incoming-modal-timer" id="iem-timer"></div>
   </div>
@@ -4637,9 +4673,9 @@
 
 <!-- DM Broadcast Banner -->
 <div id="dm-broadcast-banner">
-  <span class="broadcast-icon">📢</span>
+  <span class="broadcast-icon">✦</span>
   <span class="broadcast-text" id="broadcast-msg-text"></span>
-  <button class="broadcast-dismiss" onclick="dismissBroadcast()">Dismiss</button>
+  <button class="broadcast-dismiss" onclick="dismissBroadcast()">Acknowledge</button>
 </div>
 </body>
 </html>
