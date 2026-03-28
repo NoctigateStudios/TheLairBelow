@@ -4223,7 +4223,13 @@
         if (!ex) return;
         const toMatch = (ex.to||'').toLowerCase() === myId.toLowerCase();
         const fromMatch = (ex.from||'').toLowerCase() === myId.toLowerCase();
-        toast('Exchange: from=' + (ex.fromName||'?') + ' status=' + ex.status + ' toMe=' + toMatch + ' fromMe=' + fromMatch + ' expired=' + ((ex.expires||0) < now));
+        const expired = (ex.expires||0) < now;
+        toast('ID:' + id.slice(0,8) + ' from=' + (ex.fromName||'?') + ' status=' + (ex.status||'?') + ' toMe=' + toMatch + ' expired=' + expired);
+        // Auto-delete expired or corrupted entries
+        if (expired || !ex.status) {
+          fetch(`https://lairbelow-default-rtdb.firebaseio.com/exchanges/${id}.json`, {method:'DELETE'})
+            .then(() => toast('Deleted stale exchange ' + id.slice(0,8)));
+        }
         if (toMatch && ex.status === 'pending' && (ex.expires||0) > now) {
           // Clear old card and re-show
           const old = document.getElementById('exch-' + id);
@@ -4271,7 +4277,7 @@
       entries.forEach(([id, ex]) => {
         if (!ex) return;
         const isForMe = (ex.to||'').toLowerCase() === myId.toLowerCase();
-        toast((isForMe ? '→ FOR ME: ' : '← SENT: ') + (ex.fromName||'?') + ' → ' + ex.status + ' | to match: ' + isForMe);
+        toast('ID:' + id.slice(0,8) + ' from=' + (ex.fromName||'?') + ' status=' + ex.status + ' toMe=' + isForMe + ' expired=' + ((ex.expires||0) < now));
       });
     } catch(e) { toast('Error: ' + e.message); }
   }
