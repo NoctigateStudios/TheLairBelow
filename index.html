@@ -2771,6 +2771,7 @@
       startAutoSave();
       playerName = localStorage.getItem('llair_name') || '';
       playerCoven = localStorage.getItem('llair_coven') || '';
+      setTimeout(restoreBorrowedAcolytes, 1000);
       if (!playerName) {
         setTimeout(() => document.getElementById('identity-modal').classList.add('open'), 1800);
       }
@@ -4041,6 +4042,51 @@
 
   function closePlayerModal() { document.getElementById('player-modal').classList.remove('open'); }
 
+  function restoreBorrowedAcolytes() {
+    const now = Date.now();
+    Object.keys(localStorage).filter(k => k.startsWith('borrow_') && !k.endsWith('_name') && !k.endsWith('_owner')).forEach(bkey => {
+      const expiry = parseInt(localStorage.getItem(bkey));
+      if (expiry <= now) {
+        localStorage.removeItem(bkey);
+        localStorage.removeItem(bkey + '_name');
+        localStorage.removeItem(bkey + '_owner');
+        return;
+      }
+      // Parse: borrow_{ownerId}_{acolyteId}
+      const withoutPrefix = bkey.slice(7); // remove 'borrow_'
+      // ownerId is a UUID (5 parts with -), acolyteId is the last segment
+      const parts = withoutPrefix.split('_');
+      const acolyteId = parts[parts.length - 1];
+      const ownerId = parts.slice(0, -1).join('_');
+      const acolyteName = localStorage.getItem(bkey + '_name') || 'Unknown Acolyte';
+      const ownerName = localStorage.getItem(bkey + '_owner') || 'Nearby Seeker';
+      const minsLeft = Math.round((expiry - now) / 60000);
+
+      const existCard = document.getElementById('borrowed-' + ownerId + '-' + acolyteId);
+      if (existCard) return;
+      const card = document.createElement('div');
+      card.className = 'acolyte-card';
+      card.id = 'borrowed-' + ownerId + '-' + acolyteId;
+      card.style.cssText = 'border-color:rgba(123,79,207,0.5);background:rgba(123,79,207,0.04);';
+      card.innerHTML = `<div class="acolyte-avatar" style="border-color:rgba(123,79,207,0.4);">🜁</div>
+        <div class="acolyte-info">
+          <div class="acolyte-name">${acolyteName}</div>
+          <div class="acolyte-class" style="color:#9b6fd4;">Borrowed · ${ownerName} · ${minsLeft}m remaining</div>
+          <div class="stress-bar"><div class="stress-fill" style="width:30%;"></div></div>
+          <div class="acolyte-states"><span class="state-tag" style="border-color:rgba(123,79,207,0.5);color:#9b6fd4;">Borrowed</span></div>
+        </div>`;
+      const recruit = document.querySelector('#panel-company .acolyte-card[style*="dashed"]');
+      if (recruit) recruit.parentNode.insertBefore(card, recruit);
+      setTimeout(() => {
+        card.remove();
+        localStorage.removeItem(bkey);
+        localStorage.removeItem(bkey + '_name');
+        localStorage.removeItem(bkey + '_owner');
+        toast(acolyteName + ' returns to their coven.');
+      }, expiry - now);
+    });
+  }
+
   function borrowAcolyte(ownerId, acolyteId, acolyteName) {
     const bkey = 'borrow_' + ownerId + '_' + acolyteId;
     const existing = parseInt(localStorage.getItem(bkey)||'0');
@@ -4049,7 +4095,10 @@
       return;
     }
     const expiry = Date.now() + 60 * 60 * 1000;
+    // Store full borrow info for restore on reload
     localStorage.setItem(bkey, expiry.toString());
+    localStorage.setItem(bkey + '_name', acolyteName);
+    localStorage.setItem(bkey + '_owner', nearbyPlayers[ownerId]?.name || 'Nearby Seeker');
     const owner = nearbyPlayers[ownerId];
     const existCard = document.getElementById('borrowed-'+ownerId+'-'+acolyteId);
     if (existCard) existCard.remove();
@@ -4138,6 +4187,8 @@
     } catch(e) { toast('✗ Failed to send proposal: ' + e.message); }
   }
 
+  const _pendingExchanges = {};
+
   async function pollIncomingExchanges() {
     const myId = getOrCreatePlayerId();
     try {
@@ -4192,7 +4243,8 @@
   }
 
   async function acceptExchange(exchId, ex) {
-    if (typeof ex === 'string') ex = JSON.parse(ex);
+    if (!ex) ex = _pendingExchanges[exchId];
+    if (!ex) { toast('Exchange data not found. Try reloading.'); return; }
     const myId = getOrCreatePlayerId();
     // Validate I can give what they request
     for (const [res, amt] of Object.entries(ex.request||{})) {
