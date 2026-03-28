@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE LAIR BELOW — Dungeon Master</title>
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cinzel:wght@400;600;900&family=Cinzel+Decorative:wght@400;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void: #050407;
+  --abyss: #0a080f;
+  --deep: #100c1a;
+  --shadow: #1a1326;
+  --stone: #2e2440;
+  --ash: #4a3d5c;
+  --mist: #6b5c80;
+  --pale: #9b8aaa;
+  --bone: #c4b5d4;
+  --ghost: #e8dff0;
+  --gold: #c9a84c;
+  --gold-bright: #f0cc6a;
+  --gold-dim: #7a5f2a;
+  --crimson: #8b1a1a;
+  --crimson-bright: #c43030;
+  --viridian: #1a4a3a;
+  --viridian-bright: #2d7a5f;
+  --indigo-bright: #3d3daa;
+  --amber-bright: #d4890a;
+  --dm-accent: #7b2fff;
+  --dm-accent-dim: #3a1a7a;
+  --dm-accent-bright: #a855f7;
+  --border: rgba(201,168,76,0.2);
+  --border-bright: rgba(201,168,76,0.5);
+  --ff-title: 'UnifrakturMaguntia', serif;
+  --ff-heading: 'Cinzel', serif;
+  --ff-heading-deco: 'Cinzel Decorative', serif;
+  --ff-body: 'IM Fell English', serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--void);
+  color: var(--bone);
+  font-family: var(--ff-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(ellipse at 10% 10%, rgba(123,47,255,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 90% 90%, rgba(139,26,26,0.06) 0%, transparent 50%);
+  pointer-events:none;
+  z-index:0;
+}
+
+#app { position:relative; z-index:1; display:grid; grid-template-columns:260px 1fr; min-height:100vh; }
+
+/* ── SIDEBAR ── */
+#sidebar {
+  background: var(--abyss);
+  border-right: 1px solid rgba(123,47,255,0.3);
+  padding: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-title {
+  font-family: var(--ff-title);
+  font-size: 1.5rem;
+  color: var(--dm-accent-bright);
+  text-align: center;
+  padding: 0 1rem 1rem;
+  border-bottom: 1px solid rgba(123,47,255,0.2);
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 20px rgba(123,47,255,0.5);
+}
+.sidebar-subtitle {
+  font-family: var(--ff-heading);
+  font-size: 0.38rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--mist);
+  text-align: center;
+  margin-top: -0.8rem;
+  margin-bottom: 1rem;
+}
+
+.nav-section {
+  font-family: var(--ff-heading);
+  font-size: 0.38rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ash);
+  padding: 0.8rem 1.2rem 0.3rem;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.65rem 1.2rem;
+  background: transparent;
+  border: none;
+  color: var(--pale);
+  font-family: var(--ff-heading);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-transform: uppercase;
+}
+.nav-btn:hover { background: rgba(123,47,255,0.08); color: var(--bone); }
+.nav-btn.active { background: rgba(123,47,255,0.15); color: var(--dm-accent-bright); border-left: 2px solid var(--dm-accent-bright); }
+.nav-btn .nav-icon { font-size: 0.85rem; width: 1rem; text-align: center; }
+
+.sidebar-player-list {
+  margin-top: auto;
+  padding: 0.8rem 1rem;
+  border-top: 1px solid rgba(123,47,255,0.2);
+}
+.sidebar-player-list-title {
+  font-family: var(--ff-heading);
+  font-size: 0.38rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ash);
+  margin-bottom: 0.5rem;
+}
+.player-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  margin-bottom: 0.3rem;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.15s;
+}
+.player-pill:hover { background: rgba(123,47,255,0.1); }
+.player-dot { width:6px; height:6px; border-radius:50%; background: var(--viridian-bright); flex-shrink:0; }
+.player-dot.offline { background: var(--ash); }
+.player-pill-name { font-family: var(--ff-heading); font-size: 0.55rem; color: var(--bone); }
+.player-pill-coven { font-family: var(--ff-body); font-style: italic; font-size: 0.5rem; color: var(--mist); }
+
+/* ── MAIN ── */
+#main { padding: 2rem; overflow-y: auto; }
+
+.page { display: none; }
+.page.active { display: block; }
+
+.page-title {
+  font-family: var(--ff-heading-deco);
+  font-size: 1.1rem;
+  color: var(--gold);
+  margin-bottom: 0.3rem;
+  letter-spacing: 0.05em;
+}
+.page-subtitle {
+  font-family: var(--ff-body);
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--mist);
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── CARDS / PANELS ── */
+.card {
+  background: rgba(10,8,15,0.8);
+  border: 1px solid var(--border);
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 1rem;
+}
+.card-title {
+  font-family: var(--ff-heading);
+  font-size: 0.55rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.card-title::after { content:''; flex:1; height:1px; background: var(--border); }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+/* ── PLAYER SELECTOR ── */
+.player-select-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1.2rem;
+  padding: 0.8rem 1rem;
+  background: rgba(123,47,255,0.06);
+  border: 1px solid rgba(123,47,255,0.25);
+}
+.player-select-bar label {
+  font-family: var(--ff-heading);
+  font-size: 0.5rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mist);
+  white-space: nowrap;
+}
+select {
+  background: var(--deep);
+  border: 1px solid var(--border);
+  color: var(--bone);
+  font-family: var(--ff-heading);
+  font-size: 0.6rem;
+  padding: 0.5rem 0.7rem;
+  cursor: pointer;
+  flex: 1;
+  letter-spacing: 0.05em;
+}
+select:focus { outline: none; border-color: var(--dm-accent-bright); }
+
+/* ── RESOURCE ROW ── */
+.res-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+.res-cell {
+  background: var(--deep);
+  border: 1px solid var(--border);
+  padding: 0.6rem 0.5rem;
+  text-align: center;
+}
+.res-symbol { font-size: 1rem; color: var(--gold); display: block; margin-bottom: 0.2rem; }
+.res-name { font-family: var(--ff-heading); font-size: 0.38rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mist); display: block; margin-bottom: 0.4rem; }
+.res-input {
+  width: 100%;
+  background: var(--abyss);
+  border: 1px solid var(--stone);
+  color: var(--bone);
+  font-family: var(--ff-heading);
+  font-size: 0.7rem;
+  text-align: center;
+  padding: 0.3rem;
+}
+.res-input:focus { outline: none; border-color: var(--dm-accent-bright); }
+
+/* ── BUTTONS ── */
+.btn {
+  font-family: var(--ff-heading);
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.7rem 1.2rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary { background: rgba(123,47,255,0.15); border: 1px solid var(--dm-accent-bright); color: var(--dm-accent-bright); }
+.btn-primary:hover { background: rgba(123,47,255,0.3); }
+.btn-gold { background: rgba(201,168,76,0.1); border: 1px solid var(--gold-dim); color: var(--gold); }
+.btn-gold:hover { background: rgba(201,168,76,0.2); }
+.btn-danger { background: rgba(196,48,48,0.1); border: 1px solid var(--crimson-bright); color: var(--crimson-bright); }
+.btn-danger:hover { background: rgba(196,48,48,0.25); }
+.btn-green { background: rgba(45,122,95,0.1); border: 1px solid var(--viridian-bright); color: var(--viridian-bright); }
+.btn-green:hover { background: rgba(45,122,95,0.25); }
+.btn + .btn { margin-left: 0.5rem; }
+
+/* ── INPUTS / TEXTAREAS ── */
+input[type=text], input[type=number], textarea {
+  background: var(--deep);
+  border: 1px solid var(--border);
+  color: var(--bone);
+  font-family: var(--ff-body);
+  font-size: 0.85rem;
+  padding: 0.55rem 0.7rem;
+  width: 100%;
+}
+input[type=text]:focus, input[type=number]:focus, textarea:focus {
+  outline: none;
+  border-color: var(--dm-accent-bright);
+}
+textarea { resize: vertical; min-height: 80px; }
+.field { margin-bottom: 0.8rem; }
+.field label {
+  display: block;
+  font-family: var(--ff-heading);
+  font-size: 0.45rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mist);
+  margin-bottom: 0.3rem;
+}
+
+/* ── STATUS / LOG ── */
+#dm-log {
+  background: var(--abyss);
+  border: 1px solid rgba(123,47,255,0.2);
+  padding: 0.8rem 1rem;
+  height: 180px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 0.72rem;
+}
+.log-entry { padding: 0.15rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.log-ok { color: var(--viridian-bright); }
+.log-err { color: var(--crimson-bright); }
+.log-info { color: var(--mist); }
+.log-warn { color: var(--amber-bright); }
+
+/* ── PLAYER SAVE VIEWER ── */
+.save-viewer {
+  background: var(--deep);
+  border: 1px solid var(--border);
+  padding: 1rem;
+  font-family: monospace;
+  font-size: 0.72rem;
+  color: var(--pale);
+  max-height: 320px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ── EVENTS TABLE ── */
+.events-table { width:100%; border-collapse: collapse; }
+.events-table th {
+  font-family: var(--ff-heading);
+  font-size: 0.42rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mist);
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.events-table td {
+  font-family: var(--ff-body);
+  font-size: 0.8rem;
+  padding: 0.6rem 0.7rem;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  vertical-align: top;
+}
+.events-table tr:hover td { background: rgba(123,47,255,0.05); }
+
+/* ── BADGE ── */
+.badge {
+  display: inline-block;
+  font-family: var(--ff-heading);
+  font-size: 0.38rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid;
+}
+.badge-story  { border-color: var(--indigo-bright); color: var(--indigo-bright); }
+.badge-urgent { border-color: var(--crimson-bright); color: var(--crimson-bright); }
+.badge-discovery { border-color: var(--viridian-bright); color: var(--viridian-bright); }
+
+/* ── TOAST ── */
+#dm-toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: var(--deep);
+  border: 1px solid var(--dm-accent-bright);
+  color: var(--dm-accent-bright);
+  font-family: var(--ff-heading);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  padding: 0.8rem 1.2rem;
+  z-index: 999;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s;
+  pointer-events: none;
+  max-width: 320px;
+}
+#dm-toast.show { opacity: 1; transform: translateY(0); }
+
+/* ── STAT BLOCK ── */
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+.stat-cell {
+  background: var(--deep);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  text-align: center;
+}
+.stat-key { font-family: var(--ff-heading); font-size: 0.38rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mist); }
+.stat-val { font-family: var(--ff-heading); font-size: 1rem; color: var(--bone); }
+
+/* ── ACOLYTE ROW ── */
+.acolyte-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--border);
+  margin-bottom: 0.5rem;
+  background: var(--deep);
+}
+.acolyte-avatar { font-size: 1.3rem; color: var(--gold); }
+.acolyte-info { flex:1; }
+.acolyte-name { font-family: var(--ff-heading); font-size: 0.65rem; color: var(--bone); }
+.acolyte-class { font-family: var(--ff-body); font-style: italic; font-size: 0.72rem; color: var(--mist); }
+.stress-bar-wrap { width: 80px; }
+.stress-bar-label { font-family: var(--ff-heading); font-size: 0.38rem; color: var(--mist); margin-bottom: 0.2rem; }
+.stress-bar { height: 4px; background: var(--stone); position: relative; }
+.stress-bar-fill { height: 100%; background: var(--crimson-bright); transition: width 0.3s; }
+.stress-val { font-family: var(--ff-heading); font-size: 0.5rem; color: var(--crimson-bright); margin-top: 0.1rem; }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<nav id="sidebar">
+  <div class="sidebar-title">Lair Below</div>
+  <div class="sidebar-subtitle">Dungeon Master Console</div>
+
+  <div class="nav-section">Overview</div>
+  <button class="nav-btn active" onclick="showPage('dashboard')" data-page="dashboard">
+    <span class="nav-icon">⬡</span> Dashboard
+  </button>
+
+  <div class="nav-section">Players</div>
+  <button class="nav-btn" onclick="showPage('resources')" data-page="resources">
+    <span class="nav-icon">☉</span> Resources
+  </button>
+  <button class="nav-btn" onclick="showPage('saves')" data-page="saves">
+    <span class="nav-icon">📜</span> Save Files
+  </button>
+  <button class="nav-btn" onclick="showPage('roster')" data-page="roster">
+    <span class="nav-icon">🜃</span> Rosters
+  </button>
+
+  <div class="nav-section">World</div>
+  <button class="nav-btn" onclick="showPage('events')" data-page="events">
+    <span class="nav-icon">⚠</span> Story Events
+  </button>
+  <button class="nav-btn" onclick="showPage('exchanges')" data-page="exchanges">
+    <span class="nav-icon">⟺</span> Exchanges
+  </button>
+
+  <div class="nav-section">Tools</div>
+  <button class="nav-btn" onclick="showPage('broadcast')" data-page="broadcast">
+    <span class="nav-icon">✦</span> Broadcast
+  </button>
+
+  <!-- Live player list -->
+  <div class="sidebar-player-list">
+    <div class="sidebar-player-list-title">Online Players</div>
+    <div id="sidebar-players"><span style="font-family:var(--ff-body);font-style:italic;font-size:0.65rem;color:var(--ash);">Loading...</span></div>
+  </div>
+</nav>
+
+<!-- ══════════ MAIN ══════════ -->
+<main id="main">
+
+  <!-- ── LOG (always visible bottom) ── -->
+  <div style="position:fixed;bottom:0;right:0;width:calc(100% - 260px);z-index:50;background:var(--abyss);border-top:1px solid rgba(123,47,255,0.2);padding:0.5rem 1rem;">
+    <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.3rem;">
+      <span style="font-family:var(--ff-heading);font-size:0.38rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ash);">Console Log</span>
+      <button onclick="document.getElementById('dm-log').innerHTML=''" style="background:none;border:none;color:var(--ash);cursor:pointer;font-size:0.6rem;">clear</button>
+    </div>
+    <div id="dm-log"></div>
+  </div>
+
+  <!-- ══ DASHBOARD ══ -->
+  <div id="page-dashboard" class="page active">
+    <div class="page-title">Dashboard</div>
+    <div class="page-subtitle">Overview of all active players and world state.</div>
+
+    <div style="display:flex;gap:0.8rem;margin-bottom:1rem;">
+      <button class="btn btn-primary" onclick="refreshAll()">↻ Refresh All</button>
+      <button class="btn btn-gold" onclick="showPage('broadcast')">✦ Broadcast Event</button>
+    </div>
+
+    <div class="grid3" id="dashboard-player-cards">
+      <div class="card" style="color:var(--mist);font-style:italic;font-family:var(--ff-body);">Loading players...</div>
+    </div>
+  </div>
+
+  <!-- ══ RESOURCES ══ -->
+  <div id="page-resources" class="page">
+    <div class="page-title">Resource Management</div>
+    <div class="page-subtitle">Read and write the resource values of any player directly.</div>
+
+    <div class="player-select-bar">
+      <label>Target Player</label>
+      <select id="res-player-select" onchange="loadPlayerResources()">
+        <option value="">— Select a player —</option>
+      </select>
+      <button class="btn btn-primary" onclick="loadPlayerResources()">Load</button>
+    </div>
+
+    <div class="card" id="res-card" style="display:none;">
+      <div class="card-title">☉ Essence Reserves</div>
+      <div class="res-grid" id="res-grid"></div>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;">
+        <button class="btn btn-green" onclick="savePlayerResources()">✓ Write to Firebase</button>
+        <button class="btn btn-gold" onclick="loadPlayerResources()">↻ Reload</button>
+        <button class="btn btn-danger" onclick="zeroPlayerResources()">✗ Zero All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SAVES ══ -->
+  <div id="page-saves" class="page">
+    <div class="page-title">Save Files</div>
+    <div class="page-subtitle">Read and overwrite any player's full save state.</div>
+
+    <div class="player-select-bar">
+      <label>Target Player</label>
+      <select id="save-player-select" onchange="loadPlayerSave()">
+        <option value="">— Select a player —</option>
+      </select>
+      <button class="btn btn-primary" onclick="loadPlayerSave()">Load</button>
+    </div>
+
+    <div class="card" id="save-card" style="display:none;">
+      <div class="card-title">📜 Raw Save Data</div>
+      <textarea id="save-json-editor" style="font-family:monospace;font-size:0.72rem;height:300px;"></textarea>
+      <div style="display:flex;gap:0.5rem;margin-top:0.8rem;">
+        <button class="btn btn-green" onclick="writeSaveJson()">✓ Write Save to Firebase</button>
+        <button class="btn btn-gold" onclick="loadPlayerSave()">↻ Reload</button>
+        <button class="btn btn-danger" onclick="deleteSave()">✗ Delete Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ROSTER ══ -->
+  <div id="page-roster" class="page">
+    <div class="page-title">Acolyte Rosters</div>
+    <div class="page-subtitle">View and modify acolyte stress and availability for any player.</div>
+
+    <div class="player-select-bar">
+      <label>Target Player</label>
+      <select id="roster-player-select" onchange="loadPlayerRoster()">
+        <option value="">— Select a player —</option>
+      </select>
+      <button class="btn btn-primary" onclick="loadPlayerRoster()">Load</button>
+    </div>
+
+    <div id="roster-card" style="display:none;">
+      <div id="roster-acolytes"></div>
+      <div style="margin-top:0.8rem;">
+        <button class="btn btn-green" onclick="savePlayerRoster()">✓ Write Roster to Firebase</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STORY EVENTS ══ -->
+  <div id="page-events" class="page">
+    <div class="page-title">Story Events</div>
+    <div class="page-subtitle">Inject narrative events into a player's journal, optionally tied to a map location.</div>
+
+    <div class="grid2">
+      <div>
+        <div class="card">
+          <div class="card-title">⚠ Create Event</div>
+          <div class="field">
+            <label>Target Player</label>
+            <select id="event-player-select">
+              <option value="__all__">— All Players —</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Event Type</label>
+            <select id="event-type">
+              <option value="urgent">Urgent</option>
+              <option value="story" selected>Story</option>
+              <option value="discovery">Discovery</option>
+              <option value="neutral">Neutral</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Title</label>
+            <input type="text" id="event-title" placeholder="The Second Seal Stirs...">
+          </div>
+          <div class="field">
+            <label>Body Text</label>
+            <textarea id="event-body" placeholder="Narrative text shown to the player in their Journal..."></textarea>
+          </div>
+          <div class="field">
+            <label>Button 1 Label (optional)</label>
+            <input type="text" id="event-btn1" placeholder="Investigate">
+          </div>
+          <div class="field">
+            <label>Button 2 Label (optional)</label>
+            <input type="text" id="event-btn2" placeholder="Ignore">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📍 Map Location (optional)</div>
+          <div class="grid2">
+            <div class="field">
+              <label>Latitude</label>
+              <input type="number" id="event-lat" step="0.0001" placeholder="46.1713">
+            </div>
+            <div class="field">
+              <label>Longitude</label>
+              <input type="number" id="event-lng" step="0.0001" placeholder="9.8694">
+            </div>
+          </div>
+          <div class="field">
+            <label>Map Marker Label</label>
+            <input type="text" id="event-marker-label" placeholder="The Weeping Eye">
+          </div>
+        </div>
+
+        <button class="btn btn-primary" style="width:100%;padding:1rem;" onclick="pushEvent()">✦ Push Event to Player(s)</button>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-title">📋 Active Events in Firebase</div>
+          <div id="events-list" style="min-height:100px;">
+            <span style="font-family:var(--ff-body);font-style:italic;color:var(--mist);">Loading...</span>
+          </div>
+          <button class="btn btn-gold" style="margin-top:0.8rem;" onclick="loadActiveEvents()">↻ Refresh</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ EXCHANGES ══ -->
+  <div id="page-exchanges" class="page">
+    <div class="page-title">Exchange Monitor</div>
+    <div class="page-subtitle">View and moderate all pending exchanges in Firebase.</div>
+
+    <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+      <button class="btn btn-primary" onclick="loadExchanges()">↻ Refresh</button>
+      <button class="btn btn-danger" onclick="purgeExpiredExchanges()">✗ Purge Expired</button>
+    </div>
+
+    <div class="card">
+      <table class="events-table" id="exchanges-table">
+        <thead>
+          <tr>
+            <th>ID</th><th>From</th><th>To</th><th>Offer</th><th>Request</th><th>Status</th><th>Expires</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="exchanges-tbody">
+          <tr><td colspan="8" style="color:var(--mist);font-style:italic;">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ BROADCAST ══ -->
+  <div id="page-broadcast" class="page">
+    <div class="page-title">Broadcast</div>
+    <div class="page-subtitle">Send a global message or inject a resource bonus/penalty to all players simultaneously.</div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">📢 Global Announcement</div>
+        <div class="field">
+          <label>Message (shown as toast to all players)</label>
+          <textarea id="broadcast-msg" placeholder="The Third Seal has been broken. All Saturnine essence surges."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="pushBroadcast()">✦ Broadcast to All</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">☉ Global Resource Modifier</div>
+        <p style="font-family:var(--ff-body);font-style:italic;font-size:0.8rem;color:var(--mist);margin-bottom:0.8rem;">Add or subtract from every player's resources. Use negative values to deduct.</p>
+        <div class="res-grid" id="broadcast-res-grid"></div>
+        <button class="btn btn-gold" style="margin-top:0.5rem;width:100%;" onclick="pushResourceModifier()">Apply to All Players</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<div id="dm-toast"></div>
+
+<script>
+const FB = 'https://lairbelow-default-rtdb.firebaseio.com';
+const RES_SYMBOLS = ['☉','☽','♃','♂','♄','♀','☿'];
+const RES_NAMES   = ['Solar','Lunar','Jovian','Martial','Saturnine','Venusian','Mercurial'];
+
+let allPlayers = {}; // id -> { presence, profile, save }
+let currentRosterEdits = {}; // id -> acolytes array being edited
+
+// ══════════════════════════════════════
+// LOGGING
+// ══════════════════════════════════════
+function log(msg, type='info') {
+  const el = document.getElementById('dm-log');
+  const div = document.createElement('div');
+  div.className = 'log-entry log-' + type;
+  const ts = new Date().toLocaleTimeString();
+  div.textContent = '[' + ts + '] ' + msg;
+  el.prepend(div);
+}
+
+function toast(msg) {
+  const t = document.getElementById('dm-toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ══════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelector(`[data-page="${name}"]`).classList.add('active');
+  // Lazy load page data
+  if (name === 'resources') populatePlayerSelects();
+  if (name === 'saves')     populatePlayerSelects();
+  if (name === 'roster')    populatePlayerSelects();
+  if (name === 'events')    { populatePlayerSelects(); loadActiveEvents(); }
+  if (name === 'exchanges') loadExchanges();
+  if (name === 'broadcast') buildBroadcastResGrid();
+}
+
+// ══════════════════════════════════════
+// FIREBASE HELPERS
+// ══════════════════════════════════════
+async function fbGet(path) {
+  const res = await fetch(`${FB}/${path}.json?cb=` + Date.now());
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  if (data && data.error) throw new Error(data.error);
+  return data;
+}
+
+async function fbPut(path, data) {
+  const res = await fetch(`${FB}/${path}.json`, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+async function fbPatch(path, data) {
+  const res = await fetch(`${FB}/${path}.json`, {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+async function fbDelete(path) {
+  const res = await fetch(`${FB}/${path}.json`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+}
+
+// ══════════════════════════════════════
+// LOAD ALL PLAYERS
+// ══════════════════════════════════════
+async function loadAllPlayers() {
+  try {
+    log('Fetching all players and saves...', 'info');
+    const [players, saves] = await Promise.all([
+      fbGet('players'),
+      fbGet('saves'),
+    ]);
+
+    allPlayers = {};
+
+    if (players) {
+      Object.entries(players).forEach(([id, data]) => {
+        allPlayers[id] = allPlayers[id] || {};
+        allPlayers[id].presence = data.presence || null;
+        allPlayers[id].profile  = data.profile  || null;
+      });
+    }
+    if (saves) {
+      Object.entries(saves).forEach(([id, data]) => {
+        allPlayers[id] = allPlayers[id] || {};
+        allPlayers[id].save = data || null;
+      });
+    }
+
+    log('Loaded ' + Object.keys(allPlayers).length + ' player(s).', 'ok');
+    renderDashboard();
+    renderSidebarPlayers();
+    populatePlayerSelects();
+  } catch(e) {
+    log('Failed to load players: ' + e.message, 'err');
+  }
+}
+
+// ══════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════
+function renderDashboard() {
+  const container = document.getElementById('dashboard-player-cards');
+  const ids = Object.keys(allPlayers);
+  if (!ids.length) {
+    container.innerHTML = '<div class="card" style="color:var(--mist);font-style:italic;font-family:var(--ff-body);">No players found in Firebase.</div>';
+    return;
+  }
+  const now = Date.now();
+  container.innerHTML = ids.map(id => {
+    const p = allPlayers[id];
+    const pres = p.presence;
+    const save = p.save;
+    const online = pres && (now - pres.lastSeen < 3 * 60 * 1000);
+    const name = pres?.name || save?.character?.name || id.slice(0,8);
+    const coven = pres?.coven || '—';
+    const res = save?.resources?.values || [];
+    const resHtml = RES_SYMBOLS.map((s,i) =>
+      `<span style="font-family:var(--ff-heading);font-size:0.55rem;color:var(--gold);">${s}</span>
+       <span style="font-family:var(--ff-heading);font-size:0.55rem;color:var(--bone);">${res[i] !== undefined ? Math.floor(res[i]) : '?'}</span>`
+    ).join('<span style="color:var(--stone);margin:0 0.2rem;">·</span>');
+
+    return `<div class="card" style="cursor:pointer;" onclick="quickSelectPlayer('${id}')">
+      <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem;">
+        <div style="width:8px;height:8px;border-radius:50%;background:${online ? 'var(--viridian-bright)' : 'var(--ash)'};flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div style="font-family:var(--ff-heading);font-size:0.75rem;color:var(--bone);">${name}</div>
+          <div style="font-family:var(--ff-body);font-style:italic;font-size:0.65rem;color:var(--mist);">${coven}</div>
+        </div>
+        <span style="font-family:var(--ff-heading);font-size:0.38rem;letter-spacing:0.08em;color:${online ? 'var(--viridian-bright)' : 'var(--ash)'};">${online ? 'ONLINE' : 'OFFLINE'}</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:0.3rem 0.5rem;font-size:0.7rem;">${resHtml}</div>
+      <div style="margin-top:0.6rem;font-family:var(--ff-heading);font-size:0.38rem;letter-spacing:0.06em;color:var(--ash);">
+        ${save?.savedAt ? 'Saved: ' + new Date(save.savedAt).toLocaleString() : 'No save found'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderSidebarPlayers() {
+  const now = Date.now();
+  const el = document.getElementById('sidebar-players');
+  const ids = Object.keys(allPlayers);
+  if (!ids.length) { el.innerHTML = '<span style="font-family:var(--ff-body);font-style:italic;font-size:0.65rem;color:var(--ash);">No players.</span>'; return; }
+  el.innerHTML = ids.map(id => {
+    const p = allPlayers[id];
+    const online = p.presence && (now - p.presence.lastSeen < 3 * 60 * 1000);
+    const name = p.presence?.name || p.save?.character?.name || id.slice(0,8);
+    const coven = p.presence?.coven || '—';
+    return `<div class="player-pill" onclick="quickSelectPlayer('${id}')">
+      <div class="player-dot ${online ? '' : 'offline'}"></div>
+      <div>
+        <div class="player-pill-name">${name}</div>
+        <div class="player-pill-coven">${coven}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function quickSelectPlayer(id) {
+  // Set all selects to this player and navigate to resources
+  ['res-player-select','save-player-select','roster-player-select','event-player-select'].forEach(sel => {
+    const el = document.getElementById(sel);
+    if (el) el.value = id;
+  });
+  showPage('resources');
+  loadPlayerResources();
+}
+
+// ══════════════════════════════════════
+// PLAYER SELECTS
+// ══════════════════════════════════════
+function populatePlayerSelects() {
+  const ids = Object.keys(allPlayers);
+  const selects = ['res-player-select','save-player-select','roster-player-select'];
+  selects.forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">— Select a player —</option>';
+    ids.forEach(id => {
+      const p = allPlayers[id];
+      const name = p.presence?.name || p.save?.character?.name || id.slice(0,8);
+      sel.innerHTML += `<option value="${id}">${name} (${id.slice(0,8)})</option>`;
+    });
+    if (current) sel.value = current;
+  });
+
+  // Event player select also has "All Players"
+  const evSel = document.getElementById('event-player-select');
+  if (evSel) {
+    const cur = evSel.value;
+    evSel.innerHTML = '<option value="__all__">— All Players —</option>';
+    ids.forEach(id => {
+      const p = allPlayers[id];
+      const name = p.presence?.name || p.save?.character?.name || id.slice(0,8);
+      evSel.innerHTML += `<option value="${id}">${name} (${id.slice(0,8)})</option>`;
+    });
+    if (cur) evSel.value = cur;
+  }
+}
+
+// ══════════════════════════════════════
+// RESOURCES
+// ══════════════════════════════════════
+async function loadPlayerResources() {
+  const id = document.getElementById('res-player-select').value;
+  if (!id) return;
+  try {
+    log('Loading resources for ' + id.slice(0,8) + '...', 'info');
+    const save = await fbGet('saves/' + id);
+    if (!save) { log('No save found for this player.', 'warn'); return; }
+    allPlayers[id] = allPlayers[id] || {};
+    allPlayers[id].save = save;
+    renderResGrid(save.resources?.values || Array(7).fill(0));
+    document.getElementById('res-card').style.display = 'block';
+    log('Resources loaded.', 'ok');
+  } catch(e) { log('Error: ' + e.message, 'err'); }
+}
+
+function renderResGrid(vals) {
+  document.getElementById('res-grid').innerHTML = RES_SYMBOLS.map((s,i) => `
+    <div class="res-cell">
+      <span class="res-symbol">${s}</span>
+      <span class="res-name">${RES_NAMES[i]}</span>
+      <input class="res-input" type="number" id="res-val-${i}" value="${Math.floor(vals[i] || 0)}" min="0" step="1">
+    </div>`).join('');
+}
+
+async function savePlayerResources() {
+  const id = document.getElementById('res-player-select').value;
+  if (!id) return;
+  const vals = RES_SYMBOLS.map((_,i) => parseFloat(document.getElementById('res-val-'+i).value) || 0);
+  try {
+    log('Writing resources for ' + id.slice(0,8) + '...', 'info');
+    // Patch only the resources field in the save
+    await fbPatch('saves/' + id, { resources: { values: vals } });
+    allPlayers[id].save.resources = { values: vals };
+    log('Resources saved.', 'ok');
+    toast('✓ Resources written to Firebase.');
+    renderDashboard();
+  } catch(e) { log('Error: ' + e.message, 'err'); }
+}
+
+function zeroPlayerResources() {
+  RES_SYMBOLS.forEach((_,i) => { const el = document.getElementById('res-val-'+i); if(el) el.value = 0; });
+}
+
+// ══════════════════════════════════════
+// SAVES
+// ══════════════════════════════════════
+async function loadPlayerSave() {
+  const id = document.getElementById('save-player-select').value;
+  if (!id) return;
+  try {
+    log('Loading full save for ' + id.slice(0,8) + '...', 'info');
+    const save = await fbGet('saves/' + id);
+    document.getElementById('save-json-editor').value = JSON.stringify(save, null, 2);
+    document.getElementById('save-card').style.display = 'block';
+    log('Save loaded.', 'ok');
+  } catch(e) { log('Error: ' + e.message, 'err'); }
+}
+
+async function writeSaveJson() {
+  const id = document.getElementById('save-player-select').value;
+  if (!id) return;
+  let parsed;
+  try { parsed = JSON.parse(document.getElementById('save-json-editor').value); }
+  catch(e) { log('Invalid JSON: ' + e.message, 'err'); toast('✗ Invalid JSON.'); return; }
+  try {
+    log('Writing full save for ' + id.slice(0,8) + '...', 'info');
+    await fbPut('saves/' + id, parsed);
+    allPlayers[id] = allPlayers[id] || {};
+    allPlayers[id].save = parsed;
+    log('Save written.', 'ok');
+    toast('✓ Save written to Firebase.');
+    renderDashboard();
+  } catch(e) { log('Error: ' + e.message, 'err'); }
+}
+
+async function deleteSave() {
+  const id = document.getElementById('save-player-select').value;
+  if (!id || !confirm('Delete save for ' + id.slice(0,8) + '? This cannot be undone.')) return;
+  try {
+    await fbDelete('saves/' + id);
+    log('Save deleted for ' + id.slice(0,8), 'warn');
+    toast('Save deleted.');
+    document.getElementById('save-json-editor').value = '';
+  } catch(e) { log('Error: ' + e.message, 'err'); }
+}
+
+// ══════════════════════════════════════
+// ROSTER
+// ══════════════════════════════════════
+async function loadPlayerRoster() {
+  const id = document.getElementById('roster-player-select').value;
+  if (!id) return;
+  try {
+    log('Loading roster for ' + id.slice(0,8) + '...', 'info');
+    const save = await fbGet('saves/' + id);
+    if (!save) { log('No save found.', 'warn'); return; }
+    const acolytes = save.acolytes || [];
+    currentRosterEdits[id] = JSON.parse(JSON.stringify(acolytes));
+    renderRoster(id, currentRosterEdits[id]);
+    document.getElementById('roster-card').style.display = 'block';
+    log('Roster loaded: ' + acolytes.length + ' acolyte(s).', 'ok');
+  } catch(e) { log('Error: ' + e.message, 'err'); }
+}
+
+function renderRoster(playerId, acolytes) {
+  const container = document.getElementById('roster-acolytes');
+  if (!acolytes.length) { container.innerHTML = '<p style="color:var(--mist);font-style:italic;">No acolytes found.</p>'; return; }
+  container.innerHTML = acolytes.map((a, i) => `
+    <div class="acolyte-row">
+      <div class="acolyte-avatar">🜃</div>
+      <div class="acolyte-info">
+        <div class="acolyte-name">${a.name}</div>
+        <div class="acolyte-class">${a.class || a.cls || '—'} · Lv.${a.level || '?'}</div>
+        <div style="margin-top:0.3rem;font-family:var(--ff-heading);font-size:0.42rem;color:var(--mist);">States: ${(a.states||[]).join(', ') || 'none'}</div>
+      </div>
+      <div class="stress-bar-wrap">
+        <div class="stress-bar-label">Stress</div>
+        <div class="stress-bar"><div class="stress-bar-fill" style="width:${a.stress||0}%"></div></div>
+        <div class="stress-val">${a.stress||0}%</div>
+        <input type="number" min="0" max="100" value="${a.stress||0}" 
+          style="width:60px;margin-top:0.3rem;font-family:var(--ff-heading);font-size:0.6rem;background:var(--abyss);border:1px solid var(--border);color:var(--bone);padding:0.2rem 0.4rem;text-align:center;"
+          oninput="currentRosterEdits['${playerId}'][${i}].stress=parseInt(this.value)||0; this.parentElement.querySelector('.stress-bar-fill').style.width=this.value+'%'; this.parentElement.querySelector('.stress-val').textContent=this.value+'%';">
+      </div>
+    </div>`).join('');
+}
+
+async function savePlayerRoster() {
+  const id = document.getElementById('roster-player-select').value;
+  if (!id || !currentRosterEdits[id]) return;
+  try {
+    log('Writing roster for ' + id.slice(0,8) + '...', 'info');
+    await fbPatch('saves/' + id, { acolytes: currentRosterEdits[id] });
+    log('Roster saved.', 'ok');
+    toast('✓ Roster written to Firebase.');
+  } catch(e) { log('Error: ' + e.message, 'err'); }
+}
+
+// ══════════════════════════════════════
+// STORY EVENTS
+// ══════════════════════════════════════
+async function pushEvent() {
+  const targetId = document.getElementById('event-player-select').value;
+  const type    = document.getElementById('event-type').value;
+  const title   = document.getElementById('event-title').value.trim();
+  const body    = document.getElementById('event-body').value.trim();
+  const btn1    = document.getElementById('event-btn1').value.trim();
+  const btn2    = document.getElementById('event-btn2').value.trim();
+  const lat     = parseFloat(document.getElementById('event-lat').value);
+  const lng     = parseFloat(document.getElementById('event-lng').value);
+  const marker  = document.getElementById('event-marker-label').value.trim();
+
+  if (!title || !body) { toast('✗ Title and body are required.'); return; }
+
+  const event = {
+    type, title, body,
+    btn1: btn1 || null,
+    btn2: btn2 || null,
+    location: (!isNaN(lat) && !isNaN(lng)) ? { lat, lng, label: marker || title } : null,
+    createdAt: Date.now(),
+    createdBy: 'DM',
+    read: false,
+  };
+
+  const targets = targetId === '__all__' ? Object.keys(allPlayers) : [targetId];
+
+  try {
+    log('Pushing event "' + title + '" to ' + targets.length + ' player(s)...', 'info');
+    await Promise.all(targets.map(id => {
+      const eventId = 'dm-' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
+      return fbPut('events/' + id + '/' + eventId, event);
+    }));
+    log('Event pushed.', 'ok');
+    toast('✦ Event pushed to ' + targets.length + ' player(s).');
+    loadActiveEvents();
+  } catch(e) { log('Error: ' + e.message, 'err'); }
+}
+
+async function loadActiveEvents() {
+  const el = document.getElementById('events-list');
+  try {
+    const all = await fbGet('events');
+    if (!all) { el.innerHTML = '<p style="color:var(--mist);font-style:italic;">No events found.</p>'; return; }
+    let html = '';
+    Object.entries(all).forEach(([playerId, evts]) => {
+      if (!evts) return;
+      const p = allPlayers[playerId];
+      const name = p?.presence?.name || p?.save?.character?.name || playerId.slice(0,8);
+      Object.entries(evts).forEach(([evtId, ev]) => {
+        if (!ev) return;
+        const badgeClass = ev.type === 'urgent' ? 'badge-urgent' : ev.type === 'discovery' ? 'badge-discovery' : 'badge-story';
+        html += `<div style="border:1px solid var(--border);padding:0.6rem 0.8rem;margin-bottom:0.5rem;background:var(--deep);">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;">
+            <div>
+              <span class="badge ${badgeClass}" style="margin-right:0.4rem;">${ev.type}</span>
+              <span style="font-family:var(--ff-heading);font-size:0.65rem;color:var(--bone);">${ev.title}</span>
+              <div style="font-family:var(--ff-body);font-style:italic;font-size:0.7rem;color:var(--mist);margin-top:0.2rem;">→ ${name}</div>
+            </div>
+            <button onclick="deleteEvent('${playerId}','${evtId}')" class="btn btn-danger" style="padding:0.3rem 0.6rem;font-size:0.45rem;">✗</button>
+          </div>
+        </div>`;
+      });
+    });
+    el.innerHTML = html || '<p style="color:var(--mist);font-style:italic;">No active events.</p>';
+  } catch(e) { log('Error loading events: ' + e.message, 'err'); }
+}
+
+async function deleteEvent(playerId, evtId) {
+  try {
+    await fbDelete('events/' + playerId + '/' + evtId);
+    log('Event deleted.', 'warn');
+    loadActiveEvents();
+  } catch(e) { log('Error: ' + e.message, 'err'); }
+}
+
+// ══════════════════════════════════════
+// EXCHANGES
+// ══════════════════════════════════════
+async function loadExchanges() {
+  const tbody = document.getElementById('exchanges-tbody');
+  try {
+    const all = await fbGet('exchanges');
+    if (!all) { tbody.innerHTML = '<tr><td colspan="8" style="color:var(--mist);font-style:italic;">No exchanges found.</td></tr>'; return; }
+    const now = Date.now();
+    const rows = Object.entries(all).map(([id, ex]) => {
+      if (!ex) return '';
+      const expired = (ex.expires||0) < now;
+      const fromName = ex.fromName || ex.from?.slice(0,8) || '?';
+      const toId = ex.to?.slice(0,8) || '?';
+      const offer = Object.entries(ex.offer||{}).map(([r,a]) => RES_SYMBOLS[r]+a).join(' ') || '—';
+      const req   = Object.entries(ex.request||{}).map(([r,a]) => RES_SYMBOLS[r]+a).join(' ') || '—';
+      const statusColor = ex.status === 'accepted' ? 'var(--viridian-bright)' : ex.status === 'declined' ? 'var(--crimson-bright)' : expired ? 'var(--ash)' : 'var(--gold)';
+      const expiresStr = expired ? '<span style="color:var(--crimson-bright);">Expired</span>' : Math.round(((ex.expires||0) - now) / 60000) + 'm';
+      return `<tr>
+        <td style="font-family:monospace;font-size:0.65rem;color:var(--mist);">${id.slice(0,12)}</td>
+        <td>${fromName}</td>
+        <td style="color:var(--mist);">${toId}</td>
+        <td style="color:var(--gold);">${offer}</td>
+        <td style="color:var(--pale);">${req}</td>
+        <td style="color:${statusColor};">${ex.status || 'pending'}</td>
+        <td>${expiresStr}</td>
+        <td><button onclick="deleteExchange('${id}')" class="btn btn-danger" style="padding:0.3rem 0.5rem;font-size:0.42rem;">✗ Delete</button></td>
+      </tr>`;
+    }).join('');
+    tbody.innerHTML = rows || '<tr><td colspan="8" style="color:var(--mist);font-style:italic;">No exchanges.</td></tr>';
+    log('Exchanges loaded: ' + Object.keys(all).length, 'ok');
+  } catch(e) { log('Error: ' + e.message, 'err'); }
+}
+
+async function deleteExchange(id) {
+  try { await fbDelete('exchanges/' + id); log('Exchange ' + id.slice(0,8) + ' deleted.', 'warn'); loadExchanges(); }
+  catch(e) { log('Error: ' + e.message, 'err'); }
+}
+
+async function purgeExpiredExchanges() {
+  try {
+    const all = await fbGet('exchanges');
+    if (!all) { toast('No exchanges found.'); return; }
+    const now = Date.now();
+    const expired = Object.entries(all).filter(([,ex]) => ex && (ex.expires||0) < now);
+    await Promise.all(expired.map(([id]) => fbDelete('exchanges/' + id)));
+    log('Purged ' + expired.length + ' expired exchange(s).', 'warn');
+    toast('Purged ' + expired.length + ' expired exchange(s).');
+    loadExchanges();
+  } catch(e) { log('Error: ' + e.message, 'err'); }
+}
+
+// ══════════════════════════════════════
+// BROADCAST
+// ══════════════════════════════════════
+function buildBroadcastResGrid() {
+  document.getElementById('broadcast-res-grid').innerHTML = RES_SYMBOLS.map((s,i) => `
+    <div class="res-cell">
+      <span class="res-symbol">${s}</span>
+      <span class="res-name">${RES_NAMES[i]}</span>
+      <input class="res-input" type="number" id="bc-res-${i}" value="0" step="1">
+    </div>`).join('');
+}
+
+async function pushBroadcast() {
+  const msg = document.getElementById('broadcast-msg').value.trim();
+  if (!msg) { toast('Enter a message.'); return; }
+  const ids = Object.keys(allPlayers);
+  if (!ids.length) { toast('No players loaded.'); return; }
+  try {
+    log('Broadcasting to ' + ids.length + ' player(s)...', 'info');
+    const ts = Date.now();
+    await Promise.all(ids.map(id =>
+      fbPut('broadcasts/' + id + '/msg-' + ts, { message: msg, createdAt: ts, read: false })
+    ));
+    log('Broadcast sent.', 'ok');
+    toast('✦ Broadcast sent to ' + ids.length + ' player(s).');
+  } catch(e) { log('Error: ' + e.message, 'err'); }
+}
+
+async function pushResourceModifier() {
+  const deltas = RES_SYMBOLS.map((_,i) => parseFloat(document.getElementById('bc-res-'+i).value) || 0);
+  if (deltas.every(d => d === 0)) { toast('All deltas are 0 — nothing to apply.'); return; }
+  const ids = Object.keys(allPlayers);
+  if (!ids.length) { toast('No players loaded.'); return; }
+
+  try {
+    log('Applying resource modifier to ' + ids.length + ' player(s)...', 'info');
+    let modified = 0;
+    for (const id of ids) {
+      const save = await fbGet('saves/' + id);
+      if (!save) continue;
+      const vals = save.resources?.values || Array(7).fill(0);
+      const newVals = vals.map((v, i) => Math.max(0, (v||0) + deltas[i]));
+      await fbPatch('saves/' + id, { resources: { values: newVals } });
+      modified++;
+    }
+    log('Resource modifier applied to ' + modified + ' player(s).', 'ok');
+    toast('✓ Applied to ' + modified + ' player(s).');
+    await loadAllPlayers();
+  } catch(e) { log('Error: ' + e.message, 'err'); }
+}
+
+// ══════════════════════════════════════
+// REFRESH
+// ══════════════════════════════════════
+function refreshAll() { loadAllPlayers(); }
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+loadAllPlayers();
+setInterval(loadAllPlayers, 30000); // auto-refresh every 30s
+</script>
+</body>
+</html>
