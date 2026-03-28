@@ -2136,6 +2136,16 @@
     <div id="panel-journal" class="tab-panel active">
 
       <div id="exchange-inbox" style="display:none;margin-bottom:0.8rem;"></div>
+
+      <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);padding:0.6rem 0.8rem;margin-bottom:0.6rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.4rem;">
+        <span style="font-family:var(--ff-heading);font-size:0.45rem;letter-spacing:0.08em;color:var(--gold);" id="debug-id-display">loading...</span>
+        <div style="display:flex;gap:0.4rem;">
+          <button onclick="debugPresence()" style="background:none;border:1px solid var(--gold-dim);color:var(--gold);font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.08em;padding:0.25rem 0.5rem;cursor:pointer;">⬡ SCAN</button>
+          <button onclick="debugExchanges()" style="background:none;border:1px solid var(--gold-dim);color:var(--gold);font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.08em;padding:0.25rem 0.5rem;cursor:pointer;">⟺ CHK</button>
+          <button onclick="pollIncomingExchanges()" style="background:none;border:1px solid rgba(45,122,95,0.6);color:var(--viridian-bright);font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.08em;padding:0.25rem 0.5rem;cursor:pointer;">↻ POLL</button>
+        </div>
+      </div>
+
       <div class="planet-hour-widget">
         <div class="ph-header">
           <span class="ph-title">⌛ <span data-codex="planetary-hour">Planetary Hour</span></span>
@@ -2771,6 +2781,10 @@
       startAutoSave();
       playerName = localStorage.getItem('llair_name') || '';
       playerCoven = localStorage.getItem('llair_coven') || '';
+      setTimeout(() => {
+        const el = document.getElementById('debug-id-display');
+        if (el) el.textContent = 'ID: ' + getOrCreatePlayerId().slice(0,8) + ' · ' + (playerName||'no name');
+      }, 500);
       setTimeout(restoreBorrowedAcolytes, 1000);
       if (!playerName) {
         setTimeout(() => document.getElementById('identity-modal').classList.add('open'), 1800);
