@@ -2090,7 +2090,7 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.26</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.27</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
@@ -2643,6 +2643,10 @@
           const json = await fbRead(id);
           if (json && applyGameState(json)) {
             toast('Chronicle restored from the ether.');
+          } else if (!json) {
+            // Brand new player — set a default starting lair so buildings show
+            _lairData = { buildings: { 'alchemical-forge':1, 'altar':1, 'dormitorium':1, 'scriptorium':1 } };
+            renderLairBuildings(_lairData.buildings);
           }
         } catch(e) { console.error('Auto-load failed:', e); }
       }, 800);
@@ -3577,9 +3581,13 @@
     }
 
     // Lair
-    if (state.lair) {
+    if (state.lair && Object.keys(state.lair.buildings || {}).length > 0) {
       _lairData = state.lair;
-      renderLairBuildings(state.lair.buildings || {});
+      renderLairBuildings(state.lair.buildings);
+    } else {
+      // Save exists but has no buildings — give starting defaults
+      _lairData = { buildings: { 'alchemical-forge':1, 'altar':1, 'dormitorium':1, 'scriptorium':1 } };
+      renderLairBuildings(_lairData.buildings);
     }
 
     // Research
@@ -3661,7 +3669,12 @@
       }
       if (sRes.ok) {
         const s = await sRes.json();
-        if (s && s.lair) _lairData = s.lair;
+        if (s && s.lair && Object.keys(s.lair.buildings || {}).length > 0) {
+          _lairData = s.lair;
+        } else if (!_lairData) {
+          // No lair in save yet — use starting defaults
+          _lairData = { buildings: { 'alchemical-forge':1, 'altar':1, 'dormitorium':1, 'scriptorium':1 } };
+        }
       }
       // Now render — both values are guaranteed to be set (or not available)
       renderLairBuildings(_lairData?.buildings || {});
