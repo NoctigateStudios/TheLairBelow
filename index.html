@@ -2090,7 +2090,7 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.22</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.23</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
@@ -4822,15 +4822,21 @@
       const all = await res.json();
       if (!all || all.error) return;
       for (const [evtId, ev] of Object.entries(all)) {
-        if (!ev || _shownDmEvents.has(evtId)) continue;
+        if (!ev) continue;
+        // Skip if already seen this session
+        if (_shownDmEvents.has(evtId)) continue;
+        // Skip if already read in Firebase AND not marked repeatable
+        if (ev.read === true && ev.repeatable !== true) continue;
         _shownDmEvents.add(evtId);
         _dmEventQueue.push({ evtId, ev });
         // Persist as journal entry
         appendJournalEntry(ev, evtId);
-        // Mark as read in Firebase
-        fetch(`${FB_URL}/events/${myId}/${evtId}/read.json`, {
-          method:'PUT', headers:{'Content-Type':'application/json'}, body:'true'
-        }).catch(()=>{});
+        // Mark as read in Firebase (unless repeatable — those stay unread so they re-show next session)
+        if (ev.repeatable !== true) {
+          fetch(`${FB_URL}/events/${myId}/${evtId}/read.json`, {
+            method:'PUT', headers:{'Content-Type':'application/json'}, body:'true'
+          }).catch(()=>{});
+        }
       }
       drainDmEventQueue();
     } catch(e) {}
@@ -4930,20 +4936,29 @@
       const all = await res.json();
       if (!all || all.error) return;
       for (const [msgId, msg] of Object.entries(all)) {
-        if (!msg || _shownBroadcasts.has(msgId)) continue;
+        if (!msg) continue;
+        // Skip if already seen this session
+        if (_shownBroadcasts.has(msgId)) continue;
+        // Skip if already read AND not pinned
+        if (msg.read === true && msg.pinned !== true) continue;
         _shownBroadcasts.add(msgId);
-        showBroadcastBanner(msg.message || '');
-        // Mark as read
-        fetch(`${FB_URL}/broadcasts/${myId}/${msgId}/read.json`, {
-          method:'PUT', headers:{'Content-Type':'application/json'}, body:'true'
-        }).catch(()=>{});
+        showBroadcastBanner(msg.message || '', msg.pinned === true);
+        // Mark as read (pinned messages stay unread so they always re-show)
+        if (msg.pinned !== true) {
+          fetch(`${FB_URL}/broadcasts/${myId}/${msgId}/read.json`, {
+            method:'PUT', headers:{'Content-Type':'application/json'}, body:'true'
+          }).catch(()=>{});
+        }
       }
     } catch(e) {}
   }
 
-  function showBroadcastBanner(message) {
+  function showBroadcastBanner(message, pinned) {
     const banner = document.getElementById('dm-broadcast-banner');
     document.getElementById('broadcast-msg-text').textContent = message;
+    // Show a pin indicator for pinned messages
+    const icon = banner.querySelector('.broadcast-icon');
+    if (icon) icon.textContent = pinned ? '📌' : '✦';
     banner.classList.add('show');
   }
 
