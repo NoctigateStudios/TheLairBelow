@@ -1256,174 +1256,209 @@
   }
 
   /* ═══════════════════════════════════════
-     COMBAT MODAL
+     COMBAT MODAL — deep system
   ═══════════════════════════════════════ */
   #combat-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 500;
-    background: rgba(5,4,7,0.97);
-    display: none;
-    flex-direction: column;
-    overflow-y: auto;
-  }
-
-  #combat-modal.open { display: flex; }
-
-  .combat-top {
-    background: linear-gradient(180deg, rgba(139,26,26,0.15) 0%, transparent 100%);
-    border-bottom: 1px solid rgba(139,26,26,0.3);
-    padding: 1rem;
-    text-align: center;
-  }
-
-  .combat-title {
-    font-family: var(--ff-title);
-    font-size: 2rem;
-    color: var(--crimson-bright);
-    letter-spacing: 2px;
-    text-shadow: 0 0 20px rgba(196,48,48,0.5);
-    margin-bottom: 0.3rem;
-  }
-
-  .combat-turn {
-    font-family: var(--ff-heading);
-    font-size: 0.55rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-  }
-
-  .combat-field {
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .combat-label {
-    font-family: var(--ff-heading);
-    font-size: 0.5rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    margin-bottom: 0.3rem;
-  }
-
-  .combatant {
-    border: 1px solid var(--border);
-    padding: 0.7rem 0.8rem;
-    background: rgba(255,255,255,0.01);
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    position: relative;
+    position: fixed; inset: 0; z-index: 500;
+    background: var(--void);
+    display: none; flex-direction: column;
     overflow: hidden;
   }
+  #combat-modal.open { display: flex; }
 
-  .combatant.enemy { border-color: rgba(139,26,26,0.3); }
-  .combatant.ally { border-color: rgba(45,122,95,0.3); }
-
-  .combatant-icon { font-size: 1.4rem; flex-shrink: 0; }
-
-  .combatant-info { flex: 1; }
-
-  .combatant-name {
-    font-family: var(--ff-heading);
-    font-size: 0.65rem;
-    letter-spacing: 0.06em;
-    color: var(--bone);
-    margin-bottom: 0.2rem;
+  /* Layout: fixed header + scrollable middle + fixed footer */
+  #combat-header {
+    flex-shrink: 0;
+    background: linear-gradient(180deg, rgba(139,26,26,0.18) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(139,26,26,0.25);
+    padding: 0.7rem 1rem 0.6rem;
+  }
+  #combat-title {
+    font-family: var(--ff-title); font-size: 1.6rem;
+    color: var(--crimson-bright); letter-spacing: 2px;
+    text-shadow: 0 0 20px rgba(196,48,48,0.4);
+    margin-bottom: 0.25rem; text-align: center;
+  }
+  #combat-phase-bar {
+    font-family: var(--ff-heading); font-size: 0.42rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--text-secondary); text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  /* Initiative track */
+  #combat-init-track {
+    display: flex; gap: 0.25rem; overflow-x: auto;
+    padding: 0.3rem 0; scrollbar-width: none;
+  }
+  #combat-init-track::-webkit-scrollbar { display: none; }
+  .init-token {
+    flex-shrink: 0; width: 36px; height: 36px;
+    border: 1px solid var(--border); border-radius: 2px;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; font-size: 0.9rem;
+    background: var(--deep); transition: all 0.2s;
+    position: relative;
+  }
+  .init-token.active {
+    border-color: var(--gold); background: rgba(201,168,76,0.12);
+    box-shadow: 0 0 8px rgba(201,168,76,0.3);
+  }
+  .init-token.enemy-token { border-color: rgba(139,26,26,0.4); }
+  .init-token.ally-token  { border-color: rgba(45,122,95,0.4); }
+  .init-token.dead-token  { opacity: 0.25; filter: grayscale(1); }
+  .init-num {
+    font-family: var(--ff-heading); font-size: 0.28rem;
+    color: var(--ash); position: absolute; top: 1px; right: 3px;
   }
 
-  .hp-bar {
-    height: 4px;
-    background: var(--stone);
-    margin-bottom: 0.15rem;
+  /* Battlefield */
+  #combat-battlefield {
+    flex: 1; overflow-y: auto; padding: 0.6rem 0.8rem;
+    display: flex; flex-direction: column; gap: 0.3rem;
+  }
+  #combat-battlefield::-webkit-scrollbar { width: 2px; }
+  #combat-battlefield::-webkit-scrollbar-thumb { background: var(--stone); }
+
+  .combat-section-label {
+    font-family: var(--ff-heading); font-size: 0.38rem;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--text-secondary); margin: 0.3rem 0 0.2rem;
+  }
+  .combatant-card {
+    border: 1px solid var(--border); padding: 0.5rem 0.65rem;
+    background: rgba(255,255,255,0.01); display: flex;
+    align-items: flex-start; gap: 0.6rem; position: relative;
+    transition: border-color 0.2s;
+    cursor: default;
+  }
+  .combatant-card.enemy-card { border-color: rgba(139,26,26,0.25); }
+  .combatant-card.ally-card  { border-color: rgba(45,122,95,0.25); }
+  .combatant-card.active-card {
+    border-color: var(--gold) !important;
+    background: rgba(201,168,76,0.04);
+  }
+  .combatant-card.dead-card  { opacity: 0.35; }
+  .combatant-card.targeted   { border-color: var(--crimson-bright) !important; animation: pulse-target 0.6s ease infinite; }
+  @keyframes pulse-target { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 8px rgba(196,48,48,0.5)} }
+  .cc-rank {
+    font-family: var(--ff-heading); font-size: 0.32rem;
+    color: var(--ash); position: absolute; top: 4px; left: 5px;
+  }
+  .cc-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 0.1rem; }
+  .cc-body { flex: 1; min-width: 0; }
+  .cc-name {
+    font-family: var(--ff-heading); font-size: 0.62rem;
+    letter-spacing: 0.04em; color: var(--bone); margin-bottom: 0.2rem;
+  }
+  .cc-bars { display: flex; flex-direction: column; gap: 0.18rem; margin-bottom: 0.2rem; }
+  .cc-bar-row { display: flex; align-items: center; gap: 0.3rem; }
+  .cc-bar-lbl { font-family: var(--ff-heading); font-size: 0.3rem; letter-spacing: 0.06em; color: var(--ash); width: 1.4rem; flex-shrink: 0; }
+  .cc-bar { flex: 1; height: 4px; background: var(--stone); position: relative; }
+  .cc-bar-fill { height: 100%; transition: width 0.4s ease; }
+  .hp-fill-ally   { background: var(--viridian-bright); }
+  .hp-fill-enemy  { background: var(--crimson-bright); }
+  .mana-fill      { background: var(--indigo-bright); }
+  .stress-fill-c  { background: linear-gradient(90deg, var(--amber-bright), var(--crimson-bright)); }
+  .cc-bar-val { font-family: var(--ff-heading); font-size: 0.32rem; color: var(--pale); width: 2.8rem; text-align: right; flex-shrink: 0; }
+  .cc-statline {
+    font-family: var(--ff-heading); font-size: 0.35rem;
+    letter-spacing: 0.06em; color: var(--text-secondary);
+    display: flex; flex-wrap: wrap; gap: 0.3rem 0.6rem;
+  }
+  .cc-statline span { white-space: nowrap; }
+  .cc-statline .stat-hi { color: var(--gold); }
+  .cc-statline .stat-danger { color: var(--crimson-bright); }
+  .cc-effects {
+    display: flex; flex-wrap: wrap; gap: 0.2rem; margin-top: 0.2rem;
+  }
+  .effect-pip {
+    font-family: var(--ff-heading); font-size: 0.3rem;
+    letter-spacing: 0.06em; padding: 0.1rem 0.3rem;
+    border: 1px solid; border-radius: 1px;
+  }
+  .effect-pip.blight { border-color: #6b4c8b; color: #a07fcc; }
+  .effect-pip.burn   { border-color: #d4890a; color: #f0b050; }
+  .effect-pip.bleed  { border-color: #c43030; color: #e06060; }
+  .effect-pip.stun   { border-color: #8b8ba0; color: #aaaacc; }
+  .effect-pip.blind  { border-color: #4a3d5c; color: #9b8aaa; }
+  .effect-pip.shielded { border-color: #2d7a5f; color: #50aa80; }
+  .effect-pip.inspired { border-color: #c9a84c; color: #f0cc6a; }
+  .effect-pip.weakened { border-color: #8b7355; color: #c4a080; }
+
+  /* Log */
+  #combat-log-panel {
+    flex-shrink: 0; max-height: 100px; overflow-y: auto;
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    padding: 0.4rem 0.8rem; background: rgba(5,4,7,0.6);
+  }
+  #combat-log-panel::-webkit-scrollbar { width: 2px; }
+  #combat-log-panel::-webkit-scrollbar-thumb { background: var(--stone); }
+  .log-line { font-family: var(--ff-body); font-style: italic; font-size: 0.78rem; color: var(--mist); line-height: 1.6; }
+  .log-line.hit     { color: var(--crimson-bright); }
+  .log-line.crit    { color: var(--gold); font-weight: 600; }
+  .log-line.miss    { color: var(--indigo-bright); }
+  .log-line.heal    { color: var(--viridian-bright); }
+  .log-line.effect  { color: #a07fcc; }
+  .log-line.system  { color: var(--ash); font-style: normal; font-size: 0.68rem; letter-spacing: 0.06em; }
+
+  /* Skill buttons */
+  #combat-actions {
+    flex-shrink: 0; padding: 0.5rem 0.6rem;
+    background: rgba(5,4,7,0.8);
+  }
+  #combat-actor-label {
+    font-family: var(--ff-heading); font-size: 0.38rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--gold-dim); margin-bottom: 0.4rem;
+    text-align: center;
+  }
+  #combat-skill-grid {
+    display: grid; grid-template-columns: repeat(2,1fr); gap: 0.4rem;
+    margin-bottom: 0.4rem;
+  }
+  .skill-btn {
+    font-family: var(--ff-heading); font-size: 0.48rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 0.55rem 0.4rem; border: 1px solid var(--border);
+    background: transparent; color: var(--bone);
+    cursor: pointer; transition: all 0.15s;
+    display: flex; flex-direction: column; align-items: center; gap: 0.15rem;
+    text-align: center;
+  }
+  .skill-btn:active, .skill-btn:hover { border-color: var(--gold); background: rgba(201,168,76,0.06); color: var(--gold); }
+  .skill-btn.attack-btn:hover { border-color: var(--crimson-bright); background: rgba(196,48,48,0.06); color: var(--crimson-bright); }
+  .skill-btn.heal-btn:hover   { border-color: var(--viridian-bright); background: rgba(45,122,95,0.06); color: var(--viridian-bright); }
+  .skill-btn.disabled-btn { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+  .skill-btn-name { font-size: 0.5rem; }
+  .skill-btn-sub  { font-size: 0.35rem; color: var(--ash); letter-spacing: 0.06em; }
+  .skill-btn-cost { font-size: 0.32rem; color: var(--indigo-bright); }
+  #combat-footer-btns {
+    display: flex; gap: 0.4rem;
+  }
+  .combat-pass-btn {
+    flex: 1; font-family: var(--ff-heading); font-size: 0.42rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 0.6rem; border: 1px solid rgba(201,168,76,0.2);
+    background: transparent; color: var(--text-secondary); cursor: pointer;
+  }
+  .combat-retreat-btn {
+    flex: 1; font-family: var(--ff-heading); font-size: 0.42rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 0.6rem; border: 1px solid rgba(139,26,26,0.3);
+    background: transparent; color: rgba(196,48,48,0.6); cursor: pointer;
   }
 
-  .hp-fill {
-    height: 100%;
-    background: var(--viridian-bright);
-    transition: width 0.5s ease;
+  /* Target selection overlay */
+  #combat-target-prompt {
+    display: none; position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(5,4,7,0.95); border-top: 1px solid var(--gold-dim);
+    padding: 0.6rem 0.8rem; z-index: 10;
+    font-family: var(--ff-heading); font-size: 0.42rem;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold);
+    text-align: center;
   }
+  #combat-target-prompt.active { display: block; }
 
-  .hp-fill.enemy { background: var(--crimson-bright); }
-
-  .combatant-stats {
-    font-family: var(--ff-heading);
-    font-size: 0.45rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-  }
-
-  .combat-log {
-    padding: 1rem;
-    border-bottom: 1px solid var(--border);
-    max-height: 120px;
-    overflow-y: auto;
-  }
-
-  .log-line {
-    font-family: var(--ff-body);
-    font-style: italic;
-    font-size: 0.8rem;
-    color: var(--mist);
-    line-height: 1.7;
-    padding: 0.1rem 0;
-  }
-
-  .log-line.hit { color: var(--crimson-bright); }
-  .log-line.crit { color: var(--gold); }
-  .log-line.dodge { color: var(--indigo-bright); }
-
-  .combat-actions {
-    padding: 1rem;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-  }
-
-  .combat-btn {
-    font-family: var(--ff-heading);
-    font-size: 0.6rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 0.8rem;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.3rem;
-  }
-
-  .combat-btn:active { background: rgba(201,168,76,0.1); border-color: var(--gold); color: var(--gold); }
-  .combat-btn.dark:active { background: rgba(139,26,26,0.15); border-color: var(--crimson-bright); color: var(--crimson-bright); }
-
-  .combat-btn-icon { font-size: 1.2rem; }
-  .combat-cost {
-    font-size: 0.45rem;
-    color: var(--text-secondary);
-    letter-spacing: 0.08em;
-  }
-
-  .combat-close {
-    margin: 0 1rem 1rem;
-    font-family: var(--ff-heading);
-    font-size: 0.55rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    padding: 0.8rem;
-    border: 1px solid rgba(139,26,26,0.3);
-    background: transparent;
-    color: var(--text-secondary);
-    cursor: pointer;
     text-align: center;
     width: calc(100% - 2rem);
   }
@@ -2090,7 +2125,7 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.28</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.29</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
@@ -2463,80 +2498,33 @@
 </div>
 
 <!-- COMBAT MODAL -->
-<div id="combat-modal">
-  <div class="combat-top">
-    <div class="combat-title">The Writhing Threshold</div>
-    <div class="combat-turn">Turn 1 · Your Party's Initiative</div>
+<div id="combat-modal" style="position:relative;">
+
+  <div id="combat-header">
+    <div id="combat-title">Combat</div>
+    <div id="combat-phase-bar">Initialising…</div>
+    <div id="combat-init-track"></div>
   </div>
 
-  <div class="combat-field">
-    <div class="combat-label">ENEMIES</div>
-    <div class="combatant enemy">
-      <span class="combatant-icon">🕷</span>
-      <div class="combatant-info">
-        <div class="combatant-name">The Membrane Watcher</div>
-        <div class="hp-bar"><div class="hp-fill enemy" style="width:100%"></div></div>
-        <div class="combatant-stats">HP: 32 / 32 · <span data-codex="blight">BLIGHT</span> RESIST: 60% · <span data-codex="cunning">DODGE</span>: 15</div>
-      </div>
-    </div>
-    <div class="combatant enemy">
-      <span class="combatant-icon">🦠</span>
-      <div class="combatant-info">
-        <div class="combatant-name">Seeping Filament</div>
-        <div class="hp-bar"><div class="hp-fill enemy" style="width:100%"></div></div>
-        <div class="combatant-stats">HP: 14 / 14 · BLIGHT RESIST: 90% · DODGE: 0</div>
-      </div>
-    </div>
+  <div id="combat-battlefield">
+    <div class="combat-section-label">ENEMIES</div>
+    <div id="combat-enemies"></div>
+    <div class="combat-section-label" style="margin-top:0.4rem;">YOUR COMPANY</div>
+    <div id="combat-allies"></div>
+  </div>
 
-    <div class="combat-label" style="margin-top:0.5rem">YOUR COMPANY</div>
-    <div class="combatant ally">
-      <span class="combatant-icon">🜏</span>
-      <div class="combatant-info">
-        <div class="combatant-name">The Archivist (You)</div>
-        <div class="hp-bar"><div class="hp-fill" style="width:88%"></div></div>
-        <div class="combatant-stats">HP: 28/32 · STR: 15 · SPD: 13 · Stress: 24%</div>
-      </div>
-    </div>
-    <div class="combatant ally">
-      <span class="combatant-icon">🜃</span>
-      <div class="combatant-info">
-        <div class="combatant-name">Brother Maurus</div>
-        <div class="hp-bar"><div class="hp-fill" style="width:60%"></div></div>
-        <div class="combatant-stats">HP: 18/30 · STR: 12 · Stress: 85% ⚠</div>
-      </div>
+  <div id="combat-log-panel"></div>
+
+  <div id="combat-actions">
+    <div id="combat-actor-label">Awaiting…</div>
+    <div id="combat-skill-grid"></div>
+    <div id="combat-footer-btns">
+      <button class="combat-pass-btn" onclick="combatPass()">⊘ Pass Turn</button>
+      <button class="combat-retreat-btn" onclick="closeCombat()">⚊ Retreat</button>
     </div>
   </div>
 
-  <div class="combat-log" id="combat-log">
-    <div class="log-line">The air tastes of copper and wet stone. Something breathes in the dark ahead.</div>
-    <div class="log-line">Brother Maurus mutters a protective formula, his hands trembling.</div>
-    <div class="log-line">The Membrane Watcher regards you with seventeen unblinking eyes.</div>
-  </div>
-
-  <div class="combat-actions">
-    <button class="combat-btn" onclick="combatAction('strike')">
-      <span class="combat-btn-icon">⚔</span>
-      <span data-codex="hermeticist">Hermetic Strike</span>
-      <span class="combat-cost"><span data-codex="rank">Rank</span> 1–2</span>
-    </button>
-    <button class="combat-btn dark" onclick="combatAction('blight')">
-      <span class="combat-btn-icon">☠</span>
-      <span data-codex="blight">Vile Inscription</span>
-      <span class="combat-cost">Blight 2/turn · 2☿</span>
-    </button>
-    <button class="combat-btn" onclick="combatAction('guard')">
-      <span class="combat-btn-icon">🛡</span>
-      Sigil Ward
-      <span class="combat-cost">Block 6 · 1 turn</span>
-    </button>
-    <button class="combat-btn dark" onclick="combatAction('ritual')">
-      <span class="combat-btn-icon">☉</span>
-      <span data-codex="solar">Solar Banishment</span>
-      <span class="combat-cost">8–12 holy · 50☉</span>
-    </button>
-  </div>
-
-  <button class="combat-close" onclick="closeCombat()">⚊ RETREAT FROM THE PASSAGE ⚊</button>
+  <div id="combat-target-prompt">Tap an enemy to target — or press Pass to cancel</div>
 </div>
 
 <!-- IDENTITY MODAL -->
@@ -3037,71 +3025,369 @@
   // ══════════════════════════════════════════
   // COMBAT
   // ══════════════════════════════════════════
-  const combatLines = {
-    strike: [
-      'Your sigil-branded fist connects — the Watcher recoils. <span class="hit">5 damage.</span>',
-      'The hermetic strike tears through the membrane. <span class="crit">CRITICAL — 9 damage!</span>',
-      'The Watcher\'s surface ripples — your blow glances aside. <span class="dodge">2 damage.</span>'
-    ],
-    blight: [
-      'Vile Inscription etches itself into the Filament. It begins to corrode. <span class="hit">Blight 2/turn applied.</span>',
-      'The inscription burns deeper than expected. <span class="crit">Blight 3/turn — SEVERE.</span>'
-    ],
-    guard: [
-      'A sigil of warding flares between you and the darkness. Blocking 6 damage next turn.',
-      'Maurus steps behind your ward, stress fractionally easing.'
-    ],
-    ritual: [
-      'Solar radiance pours through the cracks in the ceiling — the Watcher shrieks. <span class="crit">HOLY — 11 damage!</span>',
-      'The Banishment scorches both creatures. <span class="hit">8 damage to all enemies.</span>'
-    ]
-  };
 
-  let combatTurn = 1;
 
-  function showCombat() {
+  // ══════════════════════════════════════════
+  // COMBAT ENGINE — deep turn-based system
+  // ══════════════════════════════════════════
+  let _CS = null;
+  let _pendingSkill = null;
+
+  function derivedStats(baseStats, level) {
+    const s = baseStats || {};
+    const lv = level || 1;
+    const cs = (typeof _combatSystem !== 'undefined' && _combatSystem) ? _combatSystem.formulae : null;
+    const calc = (key, def) => {
+      if (!cs || !cs[key]) return def;
+      let v = (cs[key].flat||0) + (cs[key].perLevel||0)*lv;
+      for (const [stat,coeff] of Object.entries(cs[key].coeffs||{})) v += (s[stat]||0)*coeff;
+      if (cs[key].min !== undefined) v = Math.max(cs[key].min, v);
+      if (cs[key].cap !== undefined) v = Math.min(cs[key].cap, v);
+      return Math.round(v*10)/10;
+    };
+    const fo=s.fortitude||10,wr=s.wrath||8,it=s.intuition||12,em=s.empathy||10;
+    const en=s.endurance||10,me=s.memory||8,cu=s.cunning||12,gn=s.gnosis||0,sp=s.speed||10;
+    return {
+      hp:        calc('hp',        en*5+fo*2+lv*3),
+      mana:      calc('mana',      gn*5+me*2+lv*2),
+      shield:    calc('shield',    fo*2+en),
+      initiative:calc('initiative',cu*2+sp),
+      crit:      calc('crit',      Math.min(60,Math.max(5,cu*1.5+wr*0.5))),
+      dodge:     calc('dodge',     Math.min(50,Math.max(0,cu+it*0.5))),
+      accuracy:  calc('accuracy',  60+it*1.5+cu*0.5),
+      stressRes: calc('stressRes', em*2+en),
+    };
+  }
+
+  function rollDice(expr) {
+    if (!expr) return 0;
+    const m = String(expr).match(/(\d+)d(\d+)([+-]\d+)?/);
+    if (!m) return parseInt(expr)||0;
+    let t=0;
+    for (let i=0;i<parseInt(m[1]);i++) t+=Math.floor(Math.random()*parseInt(m[2]))+1;
+    if (m[3]) t+=parseInt(m[3]);
+    return Math.max(0,t);
+  }
+
+  async function showCombat(encounterKey) {
+    if (!_combatSystem) {
+      try { const d=await fetch(FB_URL+'/world/combat.json?cb='+Date.now()).then(r=>r.json()); if(d&&!d.error)_combatSystem=d; } catch(e){}
+    }
+    if (!_cachedWorldSkills) {
+      try { const d=await fetch(FB_URL+'/world/skills.json?cb='+Date.now()).then(r=>r.json()); if(d&&!d.error)_cachedWorldSkills=d; } catch(e){}
+    }
+    const charData = _characterData||{name:playerName||'Seeker',level:1,stats:{fortitude:10,wrath:8,intuition:12,empathy:10,endurance:10,memory:8,cunning:12,gnosis:0,speed:10},classKey:'hermeticist',class:'Seeker'};
+    const charDerived = derivedStats(charData.stats, charData.level||1);
+    const player = {id:'player',name:charData.name||playerName||'Seeker',icon:'🜏',side:'ally',rank:3,
+      stats:charData.stats,derived:charDerived,hp:charDerived.hp,maxHp:charDerived.hp,
+      mana:charDerived.mana,maxMana:charDerived.mana,stress:_characterData?.stress||0,
+      initiative:charDerived.initiative+Math.random()*4,effects:[],dead:false,
+      classKey:charData.classKey||'hermeticist'};
+    const acolytes=(_acolytesData||[]).filter(a=>a.available!==false).slice(0,3).map((a,i)=>{
+      const as2=a.stats||{fortitude:10,wrath:8,intuition:10,empathy:10,endurance:10,memory:8,cunning:10,gnosis:0,speed:9};
+      const ad=derivedStats(as2,a.level||1);
+      return {id:'acol_'+i,name:a.name,icon:['🜃','🜁','🜂'][i]||'🜃',side:'ally',rank:i+1,
+        stats:as2,derived:ad,hp:ad.hp,maxHp:ad.hp,mana:ad.mana,maxMana:ad.mana,
+        stress:a.stress||0,initiative:ad.initiative+Math.random()*4,effects:[],dead:false,
+        classKey:(a.class||'').toLowerCase().replace(/\s+/g,'-')};
+    });
+    let enemyDefs=[];
+    try {
+      const crt=await fetch(FB_URL+'/world/creatures.json?cb='+Date.now()).then(r=>r.json());
+      if(crt&&!crt.error){
+        const keys=Object.keys(crt).sort(()=>Math.random()-0.5).slice(0,Math.min(2,Object.keys(crt).length));
+        enemyDefs=keys.map(k=>({key:k,...crt[k]}));
+      }
+    } catch(e){}
+    if(!enemyDefs.length){
+      enemyDefs=[
+        {key:'watcher',name:'The Membrane Watcher',icon:'🕷',stats:{hp:32,armour:4,dodge:15,speed:11,damage:'2d6+2',stress:10,xp:120},abilities:['Blight Aura']},
+        {key:'filament',name:'Seeping Filament',icon:'🦠',stats:{hp:14,armour:0,dodge:0,speed:8,damage:'1d4',stress:5,xp:60}}
+      ];
+    }
+    const enemies=enemyDefs.map((e,i)=>{
+      const ehp=e.stats?.hp||20;
+      return {id:'enemy_'+i,name:e.name||'Enemy '+(i+1),icon:e.icon||'⛧',side:'enemy',rank:i+1,
+        stats:e.stats||{},hp:ehp,maxHp:ehp,mana:0,maxMana:0,stress:0,
+        dodge:e.stats?.dodge||0,armour:e.stats?.armour||0,damageExpr:e.stats?.damage||'1d6',
+        abilities:e.abilities||[],loot:e.loot||[],xpReward:e.stats?.xp||50,
+        initiative:(e.stats?.speed||10)*2+Math.random()*4,effects:[],dead:false,
+        resistances:e.resistances||{}};
+    });
+    const all=[...enemies,player,...acolytes].sort((a,b)=>b.initiative-a.initiative);
+    _CS={title:enemyDefs[0]?.name||'Combat',combatants:all,round:1,turnIdx:0};
     document.getElementById('combat-modal').classList.add('open');
+    combatLog('The encounter begins. Turn order set by initiative.','system');
+    renderCombat();
+    setTimeout(()=>maybeEnemyTurn(),300);
   }
 
-  function closeCombat() {
+  function closeCombat(){
     document.getElementById('combat-modal').classList.remove('open');
-    toast('You retreat through the crumbling passage. The threshold holds — for now.');
+    _CS=null; _pendingSkill=null;
+    document.getElementById('combat-target-prompt').classList.remove('active');
+    toast('You retreat through the passage. The threshold holds — for now.');
   }
 
-  function combatAction(type) {
-    const lines = combatLines[type];
-    const line = lines[Math.floor(Math.random() * lines.length)];
-    const log = document.getElementById('combat-log');
-    
-    const el = document.createElement('div');
-    el.className = 'log-line ' + (line.includes('CRITICAL') ? 'crit' : line.includes('damage') ? 'hit' : '');
-    el.innerHTML = line;
-    log.appendChild(el);
-    log.scrollTop = log.scrollHeight;
+  function combatLog(text,cls=''){
+    const p=document.getElementById('combat-log-panel'); if(!p)return;
+    const el=document.createElement('div'); el.className='log-line '+cls; el.innerHTML=text;
+    p.appendChild(el); p.scrollTop=p.scrollHeight;
+  }
 
-    combatTurn++;
-    document.querySelector('.combat-turn').textContent = 
-      'Turn ' + combatTurn + ' · ' + (combatTurn % 2 === 0 ? 'Enemy Phase' : 'Your Party\'s Initiative');
+  function renderCombat(){
+    if(!_CS)return;
+    document.getElementById('combat-title').textContent=_CS.title;
+    const active=_CS.combatants[_CS.turnIdx];
+    document.getElementById('combat-phase-bar').textContent='Round '+_CS.round+(active?'  ·  '+active.name+"'s turn":'');
+    // Init track
+    const track=document.getElementById('combat-init-track');
+    track.innerHTML=_CS.combatants.map((c,i)=>`<div class="init-token ${c.side==='enemy'?'enemy-token':'ally-token'}${i===_CS.turnIdx?' active':''}${c.dead?' dead-token':''}" title="${c.name}"><span class="init-num">${i+1}</span><span>${c.icon}</span></div>`).join('');
+    // Battlefield
+    document.getElementById('combat-enemies').innerHTML=_CS.combatants.filter(c=>c.side==='enemy').map(renderCard).join('');
+    document.getElementById('combat-allies').innerHTML=_CS.combatants.filter(c=>c.side==='ally').map(renderCard).join('');
+    if(active){document.querySelectorAll('.combatant-card').forEach(el=>el.classList.remove('active-card'));document.querySelector('[data-cid="'+active.id+'"]')?.classList.add('active-card');}
+    renderActions();
+  }
 
-    if (combatTurn % 2 === 0) {
-      setTimeout(() => {
-        const enemy = document.createElement('div');
-        enemy.className = 'log-line hit';
-        const attacks = [
-          'The Membrane Watcher lashes — a tendril finds Maurus. 4 damage. Stress +8.',
-          'The Filament secretes something dark. Blight 1/turn on The Archivist.',
-          'Seventeen eyes focus. A psychic lance — Stress +12 to both party members.',
-          'The Watcher retreats, repositioning to rank 2.'
-        ];
-        enemy.innerHTML = attacks[Math.floor(Math.random() * attacks.length)];
-        log.appendChild(enemy);
-        log.scrollTop = log.scrollHeight;
-        combatTurn++;
-        document.querySelector('.combat-turn').textContent = 
-          'Turn ' + combatTurn + ' · Your Party\'s Initiative';
-      }, 900);
+  function renderCard(c){
+    const hpPct=Math.max(0,Math.min(100,(c.hp/c.maxHp)*100));
+    const mpPct=c.maxMana>0?Math.max(0,Math.min(100,(c.mana/c.maxMana)*100)):0;
+    const stPct=Math.min(100,c.stress||0);
+    const hpCls=c.side==='enemy'?'hp-fill-enemy':'hp-fill-ally';
+    const pips=(c.effects||[]).map(ef=>`<span class="effect-pip ${ef.type}">${ef.type}${ef.stacks>1?' x'+ef.stacks:''} ${ef.turns}t</span>`).join('');
+    const sline=c.side==='enemy'
+      ?`<span>DODGE:${c.dodge||0}%</span><span>ARM:${c.armour||0}</span>`
+      :`<span>INIT:${Math.round(c.initiative)}</span><span>CRIT:${c.derived?.crit||0}%</span><span>DODGE:${c.derived?.dodge||0}%</span>${c.shield>0?`<span class="stat-hi">🛡${c.shield}</span>`:''}${c.stress>=80?'<span class="stat-danger">⚠</span>':''}`;
+    return `<div class="combatant-card ${c.side}-card${c.dead?' dead-card':''}" data-cid="${c.id}" onclick="handleCombatantClick('${c.id}')">
+      ${c.side==='ally'?`<span class="cc-rank">R${c.rank}</span>`:''}
+      <span class="cc-icon">${c.icon}</span>
+      <div class="cc-body">
+        <div class="cc-name">${c.name}${c.dead?' <span style="color:var(--ash);font-size:0.5rem;">[fallen]</span>':''}</div>
+        <div class="cc-bars">
+          <div class="cc-bar-row"><span class="cc-bar-lbl">HP</span><div class="cc-bar"><div class="cc-bar-fill ${hpCls}" style="width:${hpPct}%"></div></div><span class="cc-bar-val">${Math.ceil(c.hp)}/${c.maxHp}</span></div>
+          ${c.maxMana>0?`<div class="cc-bar-row"><span class="cc-bar-lbl">MP</span><div class="cc-bar"><div class="cc-bar-fill mana-fill" style="width:${mpPct}%"></div></div><span class="cc-bar-val">${Math.ceil(c.mana)}/${c.maxMana}</span></div>`:''}
+          ${c.side==='ally'?`<div class="cc-bar-row"><span class="cc-bar-lbl">STR</span><div class="cc-bar"><div class="cc-bar-fill stress-fill-c" style="width:${stPct}%"></div></div><span class="cc-bar-val">${Math.round(c.stress)}%</span></div>`:''}
+        </div>
+        <div class="cc-statline">${sline}</div>
+        ${pips?`<div class="cc-effects">${pips}</div>`:''}
+      </div></div>`;
+  }
+
+  function renderActions(){
+    if(!_CS)return;
+    const active=_CS.combatants[_CS.turnIdx];
+    const label=document.getElementById('combat-actor-label');
+    const grid=document.getElementById('combat-skill-grid');
+    if(!active||active.dead){label.textContent='Waiting…';grid.innerHTML='';return;}
+    if(active.side==='enemy'){label.textContent=active.name+' is acting…';grid.innerHTML='';return;}
+    label.textContent=active.name+' — Choose an Action';
+    const skills=getSkillsFor(active);
+    grid.innerHTML=skills.map(sk=>{
+      const cat=sk.category||sk.cat||'attack';
+      const bcls='skill-btn'+(cat==='attack'||cat==='debuff'?' attack-btn':cat==='heal'||cat==='revive'?' heal-btn':'');
+      const mc=sk.cost?.mana||0;
+      const dis=mc>(active.mana||0)?'disabled-btn':'';
+      const dmg=sk.damage?.type&&sk.damage.type!=='none'?(sk.damage.dice||'')+(sk.damage.flat?'+'+sk.damage.flat:'')+' '+sk.damage.type:'';
+      return `<button class="${bcls} ${dis}" onclick="selectSkill('${sk._key}')">
+        <span class="skill-btn-name">${sk.name||sk._key}</span>
+        <span class="skill-btn-sub">${dmg||cat}</span>
+        ${mc?`<span class="skill-btn-cost">${mc} mana</span>`:''}
+      </button>`;
+    }).join('')+`<button class="skill-btn" onclick="combatBasicAttack()"><span class="skill-btn-name">⚔ Strike</span><span class="skill-btn-sub">Basic · No cost</span></button>`;
+  }
+
+  function getSkillsFor(combatant){
+    if(!_cachedWorldSkills)return[];
+    const cc=(combatant.classKey||'').toLowerCase();
+    return Object.entries(_cachedWorldSkills).filter(([k,s])=>{
+      if(!s)return false;
+      const cat=s.category||s.cat||s.type||'';
+      if(cat==='rite')return false;
+      const classOk=!s.classKey||s.classKey.toLowerCase()===cc;
+      const levelOk=(s.unlockLevel||1)<=(_characterData?.level||1);
+      return classOk&&levelOk;
+    }).map(([k,s])=>({_key:k,...s})).slice(0,5);
+  }
+
+  function handleCombatantClick(cid){
+    if(!_pendingSkill||!_CS)return;
+    const target=_CS.combatants.find(c=>c.id===cid); if(!target)return;
+    const tgt=_pendingSkill.targeting?.target||'single-enemy';
+    if(tgt.includes('enemy')&&target.side!=='enemy'){combatLog('Targets enemies only.','system');return;}
+    if(tgt.includes('ally')&&target.side!=='ally'){combatLog('Targets allies only.','system');return;}
+    if(target.dead&&_pendingSkill.category!=='revive'){combatLog('Cannot target fallen.','system');return;}
+    const sk=_pendingSkill; _pendingSkill=null;
+    document.getElementById('combat-target-prompt').classList.remove('active');
+    document.querySelectorAll('.combatant-card').forEach(c=>c.classList.remove('targeted'));
+    executeSkill(sk,_CS.combatants[_CS.turnIdx],[target]);
+  }
+
+  function selectSkill(key){
+    if(!_CS||!_cachedWorldSkills)return;
+    const sk={_key:key,..._cachedWorldSkills[key]};
+    const actor=_CS.combatants[_CS.turnIdx]; if(!actor||actor.dead)return;
+    const tgt=sk.targeting?.target||'single-enemy';
+    if(tgt==='self'){executeSkill(sk,actor,[actor]);return;}
+    if(tgt==='all-enemies'){executeSkill(sk,actor,_CS.combatants.filter(c=>c.side==='enemy'&&!c.dead));return;}
+    if(tgt==='all-allies'){executeSkill(sk,actor,_CS.combatants.filter(c=>c.side==='ally'&&!c.dead));return;}
+    if(tgt==='random-enemy'){const t=_CS.combatants.filter(c=>c.side==='enemy'&&!c.dead);if(t.length)executeSkill(sk,actor,[t[Math.floor(Math.random()*t.length)]]);return;}
+    _pendingSkill=sk;
+    document.getElementById('combat-target-prompt').classList.add('active');
+    const vs=tgt.includes('enemy')?'enemy':'ally';
+    document.querySelectorAll('.combatant-card').forEach(el=>{
+      const c=_CS.combatants.find(x=>x.id===el.dataset.cid);
+      if(c&&c.side===vs&&!c.dead)el.classList.add('targeted');
+    });
+  }
+
+  function combatBasicAttack(){
+    if(!_CS)return;
+    const actor=_CS.combatants[_CS.turnIdx];
+    const sk={_key:'basic',name:'Strike',category:'attack',damage:{type:'physical',dice:'1d6',flat:0,scaleStat:'wrath',scaleAmt:50,critMult:1.5},targeting:{target:'single-enemy',hits:1,accuracyMod:0}};
+    const targets=_CS.combatants.filter(c=>c.side==='enemy'&&!c.dead);
+    if(targets.length===1){_pendingSkill=null;executeSkill(sk,actor,[targets[0]]);return;}
+    _pendingSkill=sk;
+    document.getElementById('combat-target-prompt').classList.add('active');
+    document.querySelectorAll('.combatant-card.enemy-card').forEach(el=>el.classList.add('targeted'));
+  }
+
+  function executeSkill(sk,actor,targets){
+    if(!sk||!actor||!targets.length)return;
+    const cat=sk.category||sk.cat||'attack';
+    if(sk.cost?.mana)actor.mana=Math.max(0,(actor.mana||0)-sk.cost.mana);
+    const hits=sk.targeting?.hits||1;
+    for(const t of targets)for(let h=0;h<hits;h++){
+      if(cat==='attack'||cat==='debuff')resolveAttack(sk,actor,t);
+      else if(cat==='heal'||cat==='revive')resolveHeal(sk,actor,t);
+      else if(cat==='buff')resolveBuff(sk,actor,t);
+    }
+    checkCombatEnd();
+    if(_CS){renderCombat();setTimeout(()=>advanceTurn(),400);}
+  }
+
+  function resolveAttack(sk,actor,target){
+    if(target.dead)return;
+    const acc=(actor.derived?.accuracy||75)+(sk.targeting?.accuracyMod||0);
+    const dodge=target.dodge||target.derived?.dodge||0;
+    if(Math.random()*100>acc-dodge){combatLog(actor.name+' attacks '+target.name+' — <em>miss!</em>','miss');return;}
+    let dmg=rollDice(sk.damage?.dice||'1d6')+(sk.damage?.flat||0);
+    const ss=sk.damage?.scaleStat; if(ss&&ss!=='none'&&actor.stats?.[ss])dmg+=Math.floor(actor.stats[ss]*(sk.damage.scaleAmt||50)/100);
+    const isCrit=Math.random()*100<(actor.derived?.crit||5);
+    if(isCrit)dmg=Math.round(dmg*(sk.damage?.critMult||1.5));
+    dmg=Math.max(1,dmg-(target.armour||0));
+    const resist=target.resistances?.[sk.damage?.type||'physical']||0;
+    if(resist>0)dmg=Math.round(dmg*(1-resist/100));
+    if((target.shield||0)>0){const ab=Math.min(target.shield,dmg);target.shield-=ab;dmg-=ab;if(ab)combatLog(target.name+"'s shield absorbs "+ab+'.','effect');}
+    target.hp=Math.max(0,target.hp-dmg);
+    combatLog(actor.name+' hits '+target.name+' — '+dmg+' '+(sk.damage?.type||'physical')+' damage'+(isCrit?' <strong>CRITICAL!</strong>':'')+'.',isCrit?'crit':'hit');
+    if(sk.effects?.dot?.type&&sk.effects.dot.type!=='none'&&sk.effects.dot.dmg>0)applyEffect(target,sk.effects.dot.type,{dmg:sk.effects.dot.dmg,turns:sk.effects.dot.turns||2,maxStacks:sk.effects.dot.maxStacks||1});
+    if(sk.effects?.status?.effect&&sk.effects.status.effect!=='none'&&Math.random()*100<(sk.effects.status.chance||100))applyEffect(target,sk.effects.status.effect,{turns:2});
+    if(target.side==='ally'){const sd=Math.max(0,(sk.effects?.stressDmg||0)-(target.derived?.stressRes||0)/10);if(sd>0){target.stress=Math.min(100,(target.stress||0)+sd);combatLog(target.name+' stress +'+sd+'%.','effect');}}
+    if(target.hp<=0&&!target.dead){target.dead=true;combatLog(target.name+' falls.','crit');if(target.side==='enemy'&&_characterData){_characterData.xp=(_characterData.xp||0)+(target.xpReward||50);combatLog('+'+(target.xpReward||50)+' XP','system');checkLevelUp();}}
+  }
+
+  function resolveHeal(sk,actor,target){
+    if(!sk.effects?.heal)return;
+    const h=rollDice(sk.effects.heal.dice||'0')+(sk.effects.heal.flat||0);
+    if(sk.category==='revive'&&target.dead){target.dead=false;target.hp=Math.max(1,Math.round(target.maxHp*(sk.effects.heal.reviveHpPct||25)/100));combatLog(target.name+' is revived with '+target.hp+' HP!','heal');}
+    else if(!target.dead&&h>0){target.hp=Math.min(target.maxHp,target.hp+h);combatLog(actor.name+' heals '+target.name+' for '+h+' HP.','heal');}
+    if(sk.effects.heal.stressHeal>0&&!target.dead){target.stress=Math.max(0,(target.stress||0)-sk.effects.heal.stressHeal);combatLog(target.name+' stress -'+sk.effects.heal.stressHeal+'%.','effect');}
+  }
+
+  function resolveBuff(sk,actor,target){
+    if(!sk.effects?.buff||sk.effects.buff.stat==='none')return;
+    const st=sk.effects.buff.stat,am=sk.effects.buff.amt||0,tu=sk.effects.buff.turns||1;
+    if(st==='hp')target.hp=Math.min(target.maxHp,target.hp+am);
+    else if(st==='shield')target.shield=(target.shield||0)+am;
+    else if(st==='stress')target.stress=Math.max(0,Math.min(100,(target.stress||0)+am));
+    else if(target.derived)target.derived[st]=(target.derived[st]||0)+am;
+    combatLog(target.name+': '+st+' '+(am>0?'+':'')+am+' for '+tu+' turns.','effect');
+    applyEffect(target,st+'_buff',{amt:am,turns:tu});
+    if(sk.effects?.turnOrder?.initiativeMod){const t2=sk.effects.turnOrder.applyTo==='self'?actor:target;t2.initiative+=sk.effects.turnOrder.initiativeMod;_CS.combatants.sort((a,b)=>b.initiative-a.initiative);}
+  }
+
+  function applyEffect(combatant,type,opts){
+    const ex=combatant.effects.find(e=>e.type===type);
+    if(ex){ex.stacks=Math.min(opts.maxStacks||99,(ex.stacks||1)+1);ex.turns=Math.max(ex.turns,opts.turns||2);}
+    else combatant.effects.push({type,stacks:1,turns:opts.turns||2,dmg:opts.dmg||0});
+  }
+
+  function processDots(){
+    if(!_CS)return;
+    _CS.combatants.filter(c=>!c.dead&&c.effects.length).forEach(c=>{
+      const rm=[];
+      c.effects.forEach((ef,i)=>{
+        if(ef.dmg>0){const d=ef.dmg*(ef.stacks||1);c.hp=Math.max(0,c.hp-d);combatLog(c.name+' takes '+d+' '+ef.type+' damage.','effect');if(c.hp<=0&&!c.dead){c.dead=true;combatLog(c.name+' falls to '+ef.type+'.','crit');}}
+        ef.turns--; if(ef.turns<=0)rm.push(i);
+      });
+      rm.reverse().forEach(i=>c.effects.splice(i,1));
+    });
+  }
+
+  function maybeEnemyTurn(){
+    if(!_CS)return;
+    const active=_CS.combatants[_CS.turnIdx];
+    if(active&&active.side==='enemy'&&!active.dead)runEnemyAI(active);
+  }
+
+  function advanceTurn(){
+    if(!_CS)return;
+    let next=_CS.turnIdx+1;
+    if(next>=_CS.combatants.length){next=0;_CS.round++;processDots();combatLog('— Round '+_CS.round+' —','system');}
+    let safety=0;
+    while(_CS.combatants[next]?.dead&&safety<_CS.combatants.length){next++;if(next>=_CS.combatants.length)next=0;safety++;}
+    _CS.turnIdx=next;
+    renderCombat();
+    setTimeout(()=>maybeEnemyTurn(),300);
+  }
+
+  function runEnemyAI(enemy){
+    if(!_CS)return;
+    const targets=_CS.combatants.filter(c=>c.side==='ally'&&!c.dead);
+    if(!targets.length){checkCombatEnd();return;}
+    const target=targets[Math.floor(Math.random()*targets.length)];
+    const sk={_key:'basic',name:enemy.name,category:'attack',damage:{type:'physical',dice:enemy.damageExpr||'1d6',flat:0,scaleStat:'none',scaleAmt:0,critMult:1.3},targeting:{target:'single-ally',hits:1,accuracyMod:0}};
+    resolveAttack(sk,enemy,target);
+    const sd=Math.max(0,(enemy.stats?.stress||5)-(target.derived?.stressRes||0)/10);
+    if(sd>0)target.stress=Math.min(100,(target.stress||0)+sd);
+    checkCombatEnd();
+    if(_CS){renderCombat();setTimeout(()=>advanceTurn(),600);}
+  }
+
+  function combatPass(){
+    if(!_CS)return;
+    _pendingSkill=null;
+    document.getElementById('combat-target-prompt').classList.remove('active');
+    document.querySelectorAll('.combatant-card').forEach(c=>c.classList.remove('targeted'));
+    combatLog((_CS.combatants[_CS.turnIdx]?.name||'?')+' passes.','system');
+    advanceTurn();
+  }
+
+  function checkCombatEnd(){
+    if(!_CS)return;
+    const allEDead=_CS.combatants.filter(c=>c.side==='enemy').every(c=>c.dead);
+    const allADead=_CS.combatants.filter(c=>c.side==='ally').every(c=>c.dead);
+    if(allEDead){
+      combatLog('✦ All enemies defeated. Victory.','crit');
+      const loot=[];
+      _CS.combatants.filter(c=>c.side==='enemy').forEach(e=>{
+        (e.loot||[]).forEach(l=>{const idx=['Solar','Lunar','Jovian','Martial','Saturnine','Venusian','Mercurial'].indexOf(l.name);if(idx>=0&&l.amount>0){values[idx]=(values[idx]||0)+l.amount;loot.push(RES_SYMBOLS[idx]+'+'+l.amount);}});
+      });
+      if(loot.length)combatLog('Loot: '+loot.join(' '),'system');
+      document.querySelectorAll('.resource-pill .res-value').forEach((el,i)=>{el.textContent=Math.floor(values[i]);});
+      fbWrite(getOrCreatePlayerId(),collectGameState()).catch(()=>{});
+      document.getElementById('combat-skill-grid').innerHTML='';
+      document.getElementById('combat-actor-label').textContent='Victory — the passage is clear.';
+      _CS=null;
+    } else if(allADead){
+      combatLog('✗ Your company has fallen.','hit');
+      document.getElementById('combat-skill-grid').innerHTML='';
+      document.getElementById('combat-actor-label').textContent='Defeated.';
+      _CS=null;
     }
   }
+
 
   // ══════════════════════════════════════════
   // TAROT
