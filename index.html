@@ -1981,7 +1981,14 @@
   .exchange-toast-btn.decline { border-color:var(--crimson-bright);color:var(--crimson-bright); }
 
   /* NEARBY PLAYER MARKER */
-  .llair-player-other { width:16px;height:16px;border-radius:50%;background:#7b4fcf;border:2px solid rgba(123,79,207,0.6);box-shadow:0 0 12px rgba(123,79,207,0.7);animation:pulse-ring 2.5s ease-in-out infinite;cursor:pointer; }
+  .llair-player-other {
+    width:32px;height:32px;background:rgba(100,60,200,0.95);
+    border:2px solid #c4a0ff;border-radius:4px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;color:#fff;cursor:pointer;
+    box-shadow:0 0 0 5px rgba(123,79,207,0.3),0 0 22px rgba(123,79,207,0.9);
+    animation:pulse-ring 2s ease-in-out infinite;
+  }
 
   /* AVAILABLE ACOLYTE TOGGLE */
   .acolyte-avail-toggle { font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.2rem 0.5rem;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;transition:all 0.2s;margin-top:0.3rem; }
@@ -2213,12 +2220,18 @@
       </div>
 
       <div class="map-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--gold);box-shadow:0 0 5px var(--gold)"></div>You</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#7b4fcf;border-radius:2px;box-shadow:0 0 5px #7b4fcf"></div>Nearby Seeker</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--crimson-bright)"></div>Combat Encounter</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--indigo-bright)"></div>Story Event</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--viridian-bright)"></div>Convergence Point</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--amber-bright)"></div>Recruit</div>
       </div>
 
+      <div id="nearby-players-list" style="display:none;margin-bottom:0.8rem;">
+        <div class="section-label">Nearby Seekers</div>
+        <div id="nearby-players-cards"></div>
+      </div>
       <div class="section-label">Active Missions</div>
 
       <div class="mission-card" style="--mission-color:var(--crimson-bright)" onclick="showCombat()">
@@ -3861,6 +3874,33 @@
     } catch(e) {}
   }
 
+  function renderNearbyPlayersList() {
+    const cards = document.getElementById('nearby-players-cards');
+    const panel = document.getElementById('nearby-players-list');
+    if (!cards || !panel) return;
+    const ids = Object.keys(nearbyPlayers);
+    panel.style.display = ids.length ? 'block' : 'none';
+    if (!ids.length) { cards.innerHTML = ''; return; }
+    cards.innerHTML = ids.map(id => {
+      const p = nearbyPlayers[id];
+      if (!p) return '';
+      const dist = Math.round(haversineM(playerLat, playerLng, p.lat, p.lng));
+      const availCount = p.profile?.acolytes?.filter(a => a.available).length || 0;
+      return `<div onclick="openPlayerModal('${id}')" style="border:1px solid rgba(123,79,207,0.5);background:rgba(123,79,207,0.06);padding:0.8rem 0.9rem;margin-bottom:0.5rem;cursor:pointer;display:flex;align-items:center;gap:0.8rem;">
+        <div style="width:12px;height:12px;background:#7b4fcf;border-radius:2px;flex-shrink:0;box-shadow:0 0 8px rgba(123,79,207,0.8);"></div>
+        <div style="flex:1;">
+          <div style="font-family:var(--ff-heading);font-size:0.72rem;letter-spacing:0.06em;color:var(--bone);">${p.name}</div>
+          <div style="font-family:var(--ff-body);font-style:italic;font-size:0.65rem;color:var(--gold);">${p.coven}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-family:var(--ff-heading);font-size:0.5rem;color:var(--text-secondary);text-transform:uppercase;">${dist}m</div>
+          ${availCount > 0 ? `<div style="font-family:var(--ff-heading);font-size:0.45rem;color:var(--viridian-bright);margin-top:0.1rem;">${availCount} acolyte${availCount>1?'s':''} shared</div>` : ''}
+        </div>
+        <span style="color:rgba(123,79,207,0.7);font-size:1.1rem;">›</span>
+      </div>`;
+    }).join('');
+  }
+
   async function scanNearbyPlayers() {
     if (!map) return;
     const myName = playerName || localStorage.getItem('llair_name') || '';
@@ -3892,15 +3932,17 @@
         nearbyPlayers[id] = { ...p, profile: data.profile || null, id };
 
         // Add/update map marker
-        const icon = L.divIcon({ className:'', html:'<div class="llair-player-other"></div>', iconSize:[16,16], iconAnchor:[8,8] });
+        const icon = L.divIcon({ className:'', html:'<div class="llair-player-other">✦</div>', iconSize:[36,36], iconAnchor:[18,18] });
         if (otherPlayerMarkers[id]) {
           otherPlayerMarkers[id].setLatLng([p.lat, p.lng]);
         } else {
           otherPlayerMarkers[id] = L.marker([p.lat,p.lng],{icon,zIndexOffset:900}).addTo(map);
+          otherPlayerMarkers[id].bindTooltip(p.name, {permanent:true,direction:'top',offset:[0,-6]});
           otherPlayerMarkers[id].on('click', () => openPlayerModal(id));
           toast('✦ ' + p.name + ' of ' + p.coven + ' is nearby.');
         }
       });
+      renderNearbyPlayersList();
     } catch(e) {}
   }
 
@@ -3948,13 +3990,22 @@
       html += '<div class="pm-section"><div class="pm-section-title">Acolytes</div>';
       profile.acolytes.forEach(a => {
         const avail = a.available;
-        html += `<div class="pm-acolyte ${avail?'pm-acolyte-available':''}">
+        const bkey = 'borrow_' + id + '_' + a.id;
+        const bexp = parseInt(localStorage.getItem(bkey)||'0');
+        const borrowed = bexp > Date.now();
+        const minsLeft = borrowed ? Math.round((bexp - Date.now())/60000) : 0;
+        const badge = borrowed
+          ? `<span class="pm-acolyte-badge" style="border-color:var(--gold);color:var(--gold);">In Roster · ${minsLeft}m</span>`
+          : avail ? `<span class="pm-acolyte-badge" style="border-color:var(--viridian-bright);color:var(--viridian-bright);">⊕ Borrow 1h</span>` : '';
+        html += `<div class="pm-acolyte ${avail&&!borrowed?'pm-acolyte-available':''}"
+          ${avail&&!borrowed?`onclick="borrowAcolyte('${id}','${a.id}','${a.name}')"`:''} 
+          style="${avail&&!borrowed?'cursor:pointer':''}">
           <div class="pm-acolyte-avatar">🜃</div>
           <div class="pm-acolyte-info">
             <div class="pm-acolyte-name">${a.name}</div>
             <div class="pm-acolyte-class">${a.cls} · Stress ${a.stress}%</div>
           </div>
-          ${avail ? '<span class="pm-acolyte-badge">Available</span>' : ''}
+          ${badge}
         </div>`;
       });
       html += '</div>';
@@ -3989,6 +4040,36 @@
   }
 
   function closePlayerModal() { document.getElementById('player-modal').classList.remove('open'); }
+
+  function borrowAcolyte(ownerId, acolyteId, acolyteName) {
+    const bkey = 'borrow_' + ownerId + '_' + acolyteId;
+    const existing = parseInt(localStorage.getItem(bkey)||'0');
+    if (existing > Date.now()) {
+      toast(acolyteName + ' already in your roster — ' + Math.round((existing-Date.now())/60000) + 'm left.');
+      return;
+    }
+    const expiry = Date.now() + 60 * 60 * 1000;
+    localStorage.setItem(bkey, expiry.toString());
+    const owner = nearbyPlayers[ownerId];
+    const existCard = document.getElementById('borrowed-'+ownerId+'-'+acolyteId);
+    if (existCard) existCard.remove();
+    const card = document.createElement('div');
+    card.className = 'acolyte-card';
+    card.id = 'borrowed-' + ownerId + '-' + acolyteId;
+    card.style.cssText = 'border-color:rgba(123,79,207,0.5);background:rgba(123,79,207,0.04);';
+    card.innerHTML = `<div class="acolyte-avatar" style="border-color:rgba(123,79,207,0.4);">🜁</div>
+      <div class="acolyte-info">
+        <div class="acolyte-name">${acolyteName}</div>
+        <div class="acolyte-class" style="color:#9b6fd4;">Borrowed · ${owner?.name||'Nearby Seeker'} · 60m</div>
+        <div class="stress-bar"><div class="stress-fill" style="width:30%;"></div></div>
+        <div class="acolyte-states"><span class="state-tag" style="border-color:rgba(123,79,207,0.5);color:#9b6fd4;">Borrowed</span></div>
+      </div>`;
+    const recruit = document.querySelector('#panel-company .acolyte-card[style*="dashed"]');
+    if (recruit) recruit.parentNode.insertBefore(card, recruit);
+    setTimeout(() => { card.remove(); toast(acolyteName + ' returns to their coven.'); }, expiry - Date.now());
+    toast('✦ ' + acolyteName + ' joins your company for 1 hour.');
+    closePlayerModal();
+  }
 
   // ══════════════════════════════════════════
   // EXCHANGE SYSTEM
