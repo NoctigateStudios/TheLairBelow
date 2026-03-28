@@ -1979,6 +1979,31 @@
   .incoming-modal-btn.decline { background:rgba(196,48,48,0.1);border:1px solid var(--crimson-bright);color:var(--crimson-bright); }
   .incoming-modal-btn.decline:active { background:rgba(196,48,48,0.25); }
   .incoming-modal-timer { font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.08em;color:var(--text-secondary);text-align:center;margin-top:0.8rem; }
+  /* DM Story Event popup */
+  #dm-event-modal { position:fixed;inset:0;z-index:950;background:rgba(5,4,7,0.88);display:none;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(4px); }
+  #dm-event-modal.open { display:flex; }
+  .dm-event-inner { background:var(--abyss);border:1px solid var(--border-bright);width:100%;max-width:390px;padding:1.8rem 1.5rem 1.4rem;animation:slide-up 0.35s cubic-bezier(0.16,1,0.3,1);position:relative; }
+  .dm-event-sigil { font-size:1.4rem;text-align:center;margin-bottom:0.4rem; }
+  .dm-event-type { font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.25em;text-transform:uppercase;text-align:center;margin-bottom:0.6rem; }
+  .dm-event-type.urgent    { color:var(--crimson-bright); }
+  .dm-event-type.story     { color:var(--indigo-bright); }
+  .dm-event-type.discovery { color:var(--viridian-bright); }
+  .dm-event-type.neutral   { color:var(--text-secondary); }
+  .dm-event-title { font-family:var(--ff-heading);font-size:0.9rem;color:var(--gold);text-align:center;margin-bottom:1rem;letter-spacing:0.04em; }
+  .dm-event-body  { font-family:var(--ff-body);font-style:italic;font-size:0.88rem;color:var(--pale);line-height:1.75;margin-bottom:1.2rem;text-align:center; }
+  .dm-event-actions { display:flex;gap:0.6rem; }
+  .dm-event-btn { flex:1;font-family:var(--ff-heading);font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.75rem;border:1px solid var(--border-bright);background:transparent;color:var(--gold);cursor:pointer;transition:all 0.2s; }
+  .dm-event-btn:active { background:rgba(201,168,76,0.1); }
+  .dm-event-btn.primary { border-color:var(--gold-dim);color:var(--gold); }
+
+  /* DM Broadcast banner */
+  #dm-broadcast-banner { position:fixed;top:0;left:0;right:0;z-index:960;background:rgba(61,61,170,0.95);border-bottom:1px solid var(--indigo-bright);padding:0.9rem 1.4rem;display:none;align-items:center;gap:1rem;backdrop-filter:blur(4px); }
+  #dm-broadcast-banner.show { display:flex;animation:slide-down 0.4s cubic-bezier(0.16,1,0.3,1); }
+  @keyframes slide-down { from { transform:translateY(-100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
+  .broadcast-icon { font-size:1.1rem;flex-shrink:0; }
+  .broadcast-text { font-family:var(--ff-body);font-style:italic;font-size:0.9rem;color:var(--ghost);flex:1;line-height:1.5; }
+  .broadcast-dismiss { font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--indigo-bright);background:transparent;border:1px solid var(--indigo-bright);padding:0.4rem 0.8rem;cursor:pointer;flex-shrink:0; }
+  .broadcast-dismiss:active { background:rgba(61,61,170,0.3); }
   #exchange-modal { position:fixed;inset:0;z-index:700;background:rgba(5,4,7,0.97);display:none;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem; }
   #exchange-modal.open { display:flex; }
   .exchange-title { font-family:var(--ff-title);font-size:1.6rem;color:var(--gold);letter-spacing:2px;margin-bottom:0.3rem;text-align:center; }
@@ -2063,7 +2088,7 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.16</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.17</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
@@ -4461,6 +4486,119 @@
 
   setInterval(pollIncomingExchanges, 5000);
   setTimeout(pollIncomingExchanges, 2000);
+
+  // ══════════════════════════════════════
+  // DM EVENTS & BROADCASTS POLLING
+  // ══════════════════════════════════════
+  const _shownDmEvents    = new Set();
+  const _shownBroadcasts  = new Set();
+  // Queue so multiple events show one at a time
+  const _dmEventQueue     = [];
+  let   _dmEventShowing   = false;
+
+  async function pollDmEvents() {
+    const myId = getOrCreatePlayerId();
+    try {
+      const res = await fetch(`${FB_URL}/events/${myId}.json?cb=` + Date.now());
+      if (!res.ok) return;
+      const all = await res.json();
+      if (!all || all.error) return;
+      for (const [evtId, ev] of Object.entries(all)) {
+        if (!ev || _shownDmEvents.has(evtId)) continue;
+        _shownDmEvents.add(evtId);
+        _dmEventQueue.push({ evtId, ev });
+        // Mark as read in Firebase
+        fetch(`${FB_URL}/events/${myId}/${evtId}/read.json`, {
+          method:'PUT', headers:{'Content-Type':'application/json'}, body:'true'
+        }).catch(()=>{});
+      }
+      drainDmEventQueue();
+    } catch(e) {}
+  }
+
+  function drainDmEventQueue() {
+    if (_dmEventShowing || !_dmEventQueue.length) return;
+    const { evtId, ev } = _dmEventQueue.shift();
+    showDmEventModal(evtId, ev);
+  }
+
+  function showDmEventModal(evtId, ev) {
+    _dmEventShowing = true;
+    const sigils = { urgent:'⚠', story:'✦', discovery:'⬡', neutral:'◈' };
+    document.getElementById('dm-evt-sigil').textContent  = sigils[ev.type] || '✦';
+    document.getElementById('dm-evt-type').textContent   = (ev.type || 'event').toUpperCase();
+    document.getElementById('dm-evt-type').className     = 'dm-event-type ' + (ev.type || 'neutral');
+    document.getElementById('dm-evt-title').textContent  = ev.title || '';
+    document.getElementById('dm-evt-body').textContent   = ev.body  || '';
+
+    // Build action buttons
+    const actionsEl = document.getElementById('dm-evt-actions');
+    actionsEl.innerHTML = '';
+
+    const makeBtn = (label, primary) => {
+      const btn = document.createElement('button');
+      btn.className = 'dm-event-btn' + (primary ? ' primary' : '');
+      btn.textContent = label;
+      btn.onclick = () => closeDmEventModal();
+      actionsEl.appendChild(btn);
+    };
+
+    if (ev.btn1) makeBtn(ev.btn1, true);
+    if (ev.btn2) makeBtn(ev.btn2, false);
+    if (!ev.btn1 && !ev.btn2) makeBtn('Acknowledge', true);
+
+    // If event has a location, add a "Go to Map" button
+    if (ev.location?.lat && ev.location?.lng) {
+      const btn = document.createElement('button');
+      btn.className = 'dm-event-btn';
+      btn.textContent = '📍 Mark on Map';
+      btn.onclick = () => { closeDmEventModal(); switchTab('field'); };
+      actionsEl.appendChild(btn);
+    }
+
+    document.getElementById('dm-event-modal').classList.add('open');
+  }
+
+  function closeDmEventModal() {
+    document.getElementById('dm-event-modal').classList.remove('open');
+    _dmEventShowing = false;
+    // Show next queued event after a short pause
+    setTimeout(drainDmEventQueue, 400);
+  }
+
+  async function pollBroadcasts() {
+    const myId = getOrCreatePlayerId();
+    try {
+      const res = await fetch(`${FB_URL}/broadcasts/${myId}.json?cb=` + Date.now());
+      if (!res.ok) return;
+      const all = await res.json();
+      if (!all || all.error) return;
+      for (const [msgId, msg] of Object.entries(all)) {
+        if (!msg || _shownBroadcasts.has(msgId)) continue;
+        _shownBroadcasts.add(msgId);
+        showBroadcastBanner(msg.message || '');
+        // Mark as read
+        fetch(`${FB_URL}/broadcasts/${myId}/${msgId}/read.json`, {
+          method:'PUT', headers:{'Content-Type':'application/json'}, body:'true'
+        }).catch(()=>{});
+      }
+    } catch(e) {}
+  }
+
+  function showBroadcastBanner(message) {
+    const banner = document.getElementById('dm-broadcast-banner');
+    document.getElementById('broadcast-msg-text').textContent = message;
+    banner.classList.add('show');
+  }
+
+  function dismissBroadcast() {
+    document.getElementById('dm-broadcast-banner').classList.remove('show');
+  }
+
+  setInterval(pollDmEvents,   6000);
+  setInterval(pollBroadcasts, 6000);
+  setTimeout(pollDmEvents,    3000);
+  setTimeout(pollBroadcasts,  3500);
 </script>
 
 <div id="incoming-exchange-modal">
@@ -4484,6 +4622,24 @@
     </div>
     <div class="incoming-modal-timer" id="iem-timer"></div>
   </div>
+</div>
+
+<!-- DM Story Event Modal -->
+<div id="dm-event-modal">
+  <div class="dm-event-inner">
+    <div class="dm-event-sigil" id="dm-evt-sigil">✦</div>
+    <div class="dm-event-type" id="dm-evt-type">Story</div>
+    <div class="dm-event-title" id="dm-evt-title"></div>
+    <div class="dm-event-body"  id="dm-evt-body"></div>
+    <div class="dm-event-actions" id="dm-evt-actions"></div>
+  </div>
+</div>
+
+<!-- DM Broadcast Banner -->
+<div id="dm-broadcast-banner">
+  <span class="broadcast-icon">📢</span>
+  <span class="broadcast-text" id="broadcast-msg-text"></span>
+  <button class="broadcast-dismiss" onclick="dismissBroadcast()">Dismiss</button>
 </div>
 </body>
 </html>
