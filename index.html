@@ -2090,7 +2090,7 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.25</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.26</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
@@ -3648,13 +3648,22 @@
 
   let _worldBuildings = null;
   async function loadBuildingsFromFirebase() {
+    const myId = getOrCreatePlayerId();
     try {
-      const res = await fetch(`${FB_URL}/world/buildings.json?cb=` + Date.now());
-      if (!res.ok) return;
-      const d = await res.json();
-      if (!d || d.error) return;
-      _worldBuildings = d;
-      // Render with whatever lair data we have (may have arrived before this)
+      // Fetch world buildings and player save in parallel
+      const [bRes, sRes] = await Promise.all([
+        fetch(`${FB_URL}/world/buildings.json?cb=` + Date.now()),
+        fetch(`${FB_URL}/saves/${myId}.json?cb=` + Date.now()),
+      ]);
+      if (bRes.ok) {
+        const d = await bRes.json();
+        if (d && !d.error) _worldBuildings = d;
+      }
+      if (sRes.ok) {
+        const s = await sRes.json();
+        if (s && s.lair) _lairData = s.lair;
+      }
+      // Now render — both values are guaranteed to be set (or not available)
       renderLairBuildings(_lairData?.buildings || {});
     } catch(e) {}
   }
