@@ -131,6 +131,10 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
   <button class="nb" onclick="nav('grimoires')" data-page="grimoires"><span class="ni">📜</span> Grimoires</button>
   <button class="nb" onclick="nav('acolytes')" data-page="acolytes"><span class="ni">🜃</span> Acolyte Rolls</button>
   <button class="nb" onclick="nav('characters')" data-page="characters"><span class="ni">🜏</span> Characters &amp; Classes</button>
+  <button class="nb" onclick="nav('reset')" data-page="reset"><span class="ni">↺</span> Reset &amp; Class Pick</button>
+  <div class="nav-sec">Combat</div>
+  <button class="nb" onclick="nav('combatsys')" data-page="combatsys"><span class="ni">⚔</span> Combat System</button>
+  <button class="nb" onclick="nav('skillbuilder')" data-page="skillbuilder"><span class="ni">✦</span> Skill &amp; Spell Builder</button>
   <div class="nav-sec">The World</div>
   <button class="nb" onclick="nav('events')" data-page="events"><span class="ni">⚠</span> Omens &amp; Events</button>
   <button class="nb" onclick="nav('worldmap')" data-page="worldmap"><span class="ni">⬡</span> World Map Events</button>
@@ -304,6 +308,249 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
 </div>
 </div>
 
+
+<!-- ══ RESET & CLASS PICK ══ -->
+<div id="page-reset" class="page">
+<div class="pg-head"><div class="pg-title">Reset &amp; Class Pick</div>
+<div class="pg-desc">Wipe a seeker's chronicle and restart them as a level 1 character. They will be prompted to pick a class on next login. Their essence reserves and presence data are preserved.</div></div>
+<div class="sk-bar"><span class="sk-lbl">Seeker</span>
+<select id="rst-sel"><option value="">— choose —</option></select>
+<button class="btn b-rune" onclick="loadRstPreview()">Load</button></div>
+<div id="rst-preview" style="display:none;">
+  <div class="panel" style="margin-bottom:0.8rem;">
+    <div class="ph">Current State</div>
+    <div id="rst-current" style="font-family:var(--ff-b);font-style:italic;font-size:0.82rem;color:var(--pale);"></div>
+  </div>
+  <div class="panel">
+    <div class="ph">Starting Class for Reset</div>
+    <div id="rst-classes-grid" class="g3" style="margin-bottom:0.9rem;"></div>
+    <input type="hidden" id="rst-chosen-class">
+    <div class="fld"><label>Starting Building Levels (JSON, e.g. {"alchemical-forge":1,"altar":1,"dormitorium":1,"scriptorium":1})</label>
+    <input type="text" id="rst-buildings" value='{"alchemical-forge":1,"altar":1,"dormitorium":1,"scriptorium":1}'></div>
+    <div class="fld"><label>Starting Resources (7 values: Solar Lunar Jovian Martial Saturnine Venusian Mercurial)</label>
+    <input type="text" id="rst-resources" value="847,312,154,98,41,203,189"></div>
+    <div style="margin-top:0.5rem;display:flex;gap:0.5rem;">
+      <button class="btn b-breach" onclick="resetPlayer()">↺ Reset to Level 1</button>
+      <button class="btn b-seal" onclick="document.getElementById('rst-preview').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ COMBAT SYSTEM ══ -->
+<div id="page-combatsys" class="page">
+<div class="pg-head"><div class="pg-title">Combat System</div>
+<div class="pg-desc">Defines how character stats translate into combat values. These formulae apply to all seekers and creatures. Edit the coefficients and save to Firebase — the game reads them at combat start.</div></div>
+<div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+  <button class="btn b-rune" onclick="loadCombatSystem()">↻ Refresh</button>
+  <button class="btn b-ward" onclick="saveCombatSystem()">✓ Save to Firebase</button>
+  <button class="btn b-seal" onclick="resetCombatDefaults()">Reset Defaults</button>
+</div>
+<div class="g2">
+  <div class="panel">
+    <div class="ph">Derived Stats Formulae</div>
+    <p style="font-family:var(--ff-b);font-style:italic;font-size:0.72rem;color:var(--mist);margin-bottom:0.9rem;line-height:1.6;">Each formula: result = stat × coefficient + flat bonus per level. Stats: FOR=Fortitude, WRA=Wrath, INT=Intuition, EMP=Empathy, END=Endurance, MEM=Memory, CUN=Cunning, GNO=Gnosis.</p>
+    <div id="combat-formulae-grid"></div>
+  </div>
+  <div class="panel">
+    <div class="ph">Damage Types</div>
+    <p style="font-family:var(--ff-b);font-style:italic;font-size:0.72rem;color:var(--mist);margin-bottom:0.7rem;">Define damage types and their default resistance stat.</p>
+    <div id="dmg-types-list"></div>
+    <div style="display:flex;gap:0.4rem;margin-top:0.5rem;">
+      <input type="text" id="new-dmg-name" placeholder="Blight" style="flex:1;">
+      <select id="new-dmg-resist" style="flex:1;">
+        <option value="fortitude">Fortitude</option><option value="endurance">Endurance</option>
+        <option value="intuition">Intuition</option><option value="empathy">Empathy</option>
+        <option value="memory">Memory</option><option value="cunning">Cunning</option>
+        <option value="wrath">Wrath</option><option value="gnosis">Gnosis</option>
+      </select>
+      <button class="btn b-seal" onclick="addDmgType()">+</button>
+    </div>
+    <div class="ph" style="margin-top:1rem;">Status Effects</div>
+    <div id="status-effects-list"></div>
+    <div style="display:flex;gap:0.4rem;margin-top:0.5rem;">
+      <input type="text" id="new-status-name" placeholder="Blight" style="flex:1;">
+      <input type="text" id="new-status-desc" placeholder="2 damage/turn, stacks" style="flex:2;">
+      <button class="btn b-seal" onclick="addStatusEffect()">+</button>
+    </div>
+  </div>
+</div>
+<div class="panel" style="margin-top:0.8rem;">
+  <div class="ph">Stat Preview Calculator</div>
+  <p style="font-family:var(--ff-b);font-style:italic;font-size:0.72rem;color:var(--mist);margin-bottom:0.7rem;">Enter stats to preview derived combat values in real time.</p>
+  <div class="g4" id="preview-stat-inputs"></div>
+  <div class="g4" id="preview-derived" style="margin-top:0.7rem;"></div>
+</div>
+</div>
+
+<!-- ══ SKILL & SPELL BUILDER ══ -->
+<div id="page-skillbuilder" class="page">
+<div class="pg-head"><div class="pg-title">Skill &amp; Spell Builder</div>
+<div class="pg-desc">Create skills and spells for classes and creatures. Define damage type, targeting, effects, DoTs, heals, and turn-order modifiers. All skills are stored in /world/skills and referenced by key.</div></div>
+<div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+  <button class="btn b-rune" onclick="loadAllSkills()">↻ Refresh</button>
+  <button class="btn b-seal" onclick="openSkillEd()">+ New Skill</button>
+</div>
+
+<!-- Filter tabs -->
+<div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.9rem;" id="skill-filter-tabs">
+  <button class="btn b-seal" style="padding:0.3rem 0.7rem;font-size:0.38rem;" onclick="filterSkills('all',this)">All</button>
+  <button class="btn" style="padding:0.3rem 0.7rem;font-size:0.38rem;border-color:var(--crimson-bright);color:var(--crimson-bright);" onclick="filterSkills('attack',this)">Attack</button>
+  <button class="btn" style="padding:0.3rem 0.7rem;font-size:0.38rem;border-color:var(--viridian-bright);color:var(--viridian-bright);" onclick="filterSkills('heal',this)">Heal</button>
+  <button class="btn" style="padding:0.3rem 0.7rem;font-size:0.38rem;border-color:var(--indigo-bright);color:var(--indigo-bright);" onclick="filterSkills('rite',this)">Rite</button>
+  <button class="btn" style="padding:0.3rem 0.7rem;font-size:0.38rem;border-color:var(--amber-bright);color:var(--amber-bright);" onclick="filterSkills('buff',this)">Buff</button>
+  <button class="btn" style="padding:0.3rem 0.7rem;font-size:0.38rem;border-color:var(--mist);color:var(--mist);" onclick="filterSkills('debuff',this)">Debuff</button>
+  <button class="btn" style="padding:0.3rem 0.7rem;font-size:0.38rem;border-color:var(--dm-bright);color:var(--dm-bright);" onclick="filterSkills('revive',this)">Revive</button>
+</div>
+
+<div id="skills-all-list"></div>
+
+<!-- SKILL EDITOR -->
+<div class="panel" id="skill-full-editor" style="display:none;margin-top:1rem;">
+  <div class="ph" id="skill-ed-title">New Skill</div>
+  <input type="hidden" id="skb-key">
+  <div class="g2">
+    <div class="fld"><label>Name</label><input type="text" id="skb-name" placeholder="Hermetic Strike"></div>
+    <div class="fld"><label>Category</label>
+      <select id="skb-cat">
+        <option value="attack">Attack</option><option value="heal">Heal</option>
+        <option value="rite">Rite</option><option value="buff">Buff / Aura</option>
+        <option value="debuff">Debuff</option><option value="revive">Revive</option>
+        <option value="utility">Utility</option>
+      </select>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="fld"><label>Class (leave blank = any)</label><input type="text" id="skb-class" placeholder="Hermeticist"></div>
+    <div class="fld"><label>Unlock Level</label><input type="number" id="skb-level" value="1" min="1"></div>
+  </div>
+  <div class="fld"><label>Description</label><textarea id="skb-desc" placeholder="Channels Solar essence into a focused strike…"></textarea></div>
+
+  <!-- DAMAGE -->
+  <div id="skb-damage-section">
+    <div class="ph" style="margin-top:0.5rem;">Damage</div>
+    <div class="g4">
+      <div class="fld"><label>Damage Type</label><select id="skb-dmgtype"><option value="none">None (no damage)</option></select></div>
+      <div class="fld"><label>Dice (e.g. 2d6)</label><input type="text" id="skb-dice" placeholder="2d6"></div>
+      <div class="fld"><label>Flat Bonus</label><input type="number" id="skb-flatdmg" value="0"></div>
+      <div class="fld"><label>Scaling Stat</label>
+        <select id="skb-scaleStat">
+          <option value="none">None</option>
+          <option value="wrath">Wrath</option><option value="cunning">Cunning</option>
+          <option value="gnosis">Gnosis</option><option value="fortitude">Fortitude</option>
+          <option value="intuition">Intuition</option>
+        </select>
+      </div>
+      <div class="fld"><label>Scale %</label><input type="number" id="skb-scaleAmt" value="50" min="0" max="200"></div>
+      <div class="fld"><label>Crit Multiplier</label><input type="number" id="skb-crit" value="1.5" step="0.1" min="1"></div>
+    </div>
+  </div>
+
+  <!-- TARGETING -->
+  <div class="ph" style="margin-top:0.5rem;">Targeting</div>
+  <div class="g4">
+    <div class="fld"><label>Target</label>
+      <select id="skb-target">
+        <option value="single-enemy">Single Enemy</option>
+        <option value="all-enemies">All Enemies</option>
+        <option value="random-enemy">Random Enemy</option>
+        <option value="single-ally">Single Ally</option>
+        <option value="all-allies">All Allies</option>
+        <option value="self">Self Only</option>
+      </select>
+    </div>
+    <div class="fld"><label>Hits</label><input type="number" id="skb-hits" value="1" min="1" max="10"></div>
+    <div class="fld"><label>Accuracy Modifier %</label><input type="number" id="skb-acc" value="0"></div>
+    <div class="fld"><label>Range (rank 1–4)</label><input type="text" id="skb-range" placeholder="1,2,3,4" value="1,2,3,4"></div>
+  </div>
+
+  <!-- COST -->
+  <div class="ph" style="margin-top:0.5rem;">Cost &amp; Cooldown</div>
+  <div class="g4">
+    <div class="fld"><label>Mana Cost</label><input type="number" id="skb-mana" value="0" min="0"></div>
+    <div class="fld"><label>Essence Cost Type</label>
+      <select id="skb-essType">
+        <option value="none">None</option>
+        <option value="0">☉ Solar</option><option value="1">☽ Lunar</option>
+        <option value="2">♃ Jovian</option><option value="3">♂ Martial</option>
+        <option value="4">♄ Saturnine</option><option value="5">♀ Venusian</option>
+        <option value="6">☿ Mercurial</option>
+      </select>
+    </div>
+    <div class="fld"><label>Essence Amount</label><input type="number" id="skb-essAmt" value="0" min="0"></div>
+    <div class="fld"><label>Cooldown (turns)</label><input type="number" id="skb-cooldown" value="0" min="0"></div>
+  </div>
+
+  <!-- EFFECTS -->
+  <div class="ph" style="margin-top:0.5rem;">Special Effects</div>
+  <div class="g2">
+    <div>
+      <div class="ph" style="font-size:0.38rem;margin-bottom:0.4rem;">DoT (Damage over Time)</div>
+      <div class="g4" style="margin-bottom:0.5rem;">
+        <div class="fld"><label>DoT Type</label><select id="skb-dotType"><option value="none">None</option></select></div>
+        <div class="fld"><label>DoT Dmg/turn</label><input type="number" id="skb-dotDmg" value="0" min="0"></div>
+        <div class="fld"><label>DoT Turns</label><input type="number" id="skb-dotTurns" value="0" min="0"></div>
+        <div class="fld"><label>Max Stacks</label><input type="number" id="skb-dotStacks" value="1" min="1"></div>
+      </div>
+      <div class="ph" style="font-size:0.38rem;margin-bottom:0.4rem;">Heal</div>
+      <div class="g4">
+        <div class="fld"><label>Heal Dice</label><input type="text" id="skb-healDice" placeholder="1d8"></div>
+        <div class="fld"><label>Heal Flat</label><input type="number" id="skb-healFlat" value="0"></div>
+        <div class="fld"><label>Stress Heal</label><input type="number" id="skb-stressHeal" value="0"></div>
+        <div class="fld"><label>Revive HP%</label><input type="number" id="skb-reviveHp" value="0" min="0" max="100"></div>
+      </div>
+    </div>
+    <div>
+      <div class="ph" style="font-size:0.38rem;margin-bottom:0.4rem;">Buffs &amp; Debuffs</div>
+      <div class="fld"><label>Stat Modified</label>
+        <select id="skb-buffStat">
+          <option value="none">None</option>
+          <option value="hp">HP</option><option value="mana">Mana</option>
+          <option value="dodge">Dodge %</option><option value="crit">Crit %</option>
+          <option value="shield">Shield</option><option value="initiative">Initiative</option>
+          <option value="damage">Damage %</option><option value="armour">Armour</option>
+          <option value="stress">Stress</option>
+        </select>
+      </div>
+      <div class="g2">
+        <div class="fld"><label>Amount (+/-)</label><input type="number" id="skb-buffAmt" value="0"></div>
+        <div class="fld"><label>Duration (turns)</label><input type="number" id="skb-buffTurns" value="1" min="1"></div>
+      </div>
+      <div class="ph" style="font-size:0.38rem;margin-bottom:0.4rem;">Turn Order</div>
+      <div class="g2">
+        <div class="fld"><label>Initiative Modifier</label><input type="number" id="skb-initMod" value="0" placeholder="+5 = act sooner"></div>
+        <div class="fld"><label>Apply to</label>
+          <select id="skb-initTarget">
+            <option value="self">Self</option><option value="target">Target</option>
+          </select>
+        </div>
+      </div>
+      <div class="fld"><label>Status Effect Applied</label><select id="skb-applyStatus"><option value="none">None</option></select></div>
+      <div class="fld"><label>Status Chance %</label><input type="number" id="skb-statusChance" value="100" min="0" max="100"></div>
+    </div>
+  </div>
+
+  <!-- ESSENCE COST for unlock -->
+  <div class="ph" style="margin-top:0.5rem;">Unlock Cost (Essence)</div>
+  <div class="g4">
+    <div class="fld"><label>☉ Solar</label><input type="number" id="skb-u0" value="0" min="0"></div>
+    <div class="fld"><label>☽ Lunar</label><input type="number" id="skb-u1" value="0" min="0"></div>
+    <div class="fld"><label>♃ Jovian</label><input type="number" id="skb-u2" value="0" min="0"></div>
+    <div class="fld"><label>♂ Martial</label><input type="number" id="skb-u3" value="0" min="0"></div>
+    <div class="fld"><label>♄ Saturnine</label><input type="number" id="skb-u4" value="0" min="0"></div>
+    <div class="fld"><label>♀ Venusian</label><input type="number" id="skb-u5" value="0" min="0"></div>
+    <div class="fld"><label>☿ Mercurial</label><input type="number" id="skb-u6" value="0" min="0"></div>
+    <div class="fld"><label>Condition</label><input type="text" id="skb-unlock" placeholder="Scriptorium Lv2"></div>
+  </div>
+
+  <div style="margin-top:0.8rem;display:flex;gap:0.5rem;">
+    <button class="btn b-ward" onclick="saveFullSkill()">✓ Seal Skill to Firebase</button>
+    <button class="btn b-rune" onclick="previewSkill()">Preview Formula</button>
+    <button class="btn b-seal" onclick="document.getElementById('skill-full-editor').style.display='none'">Cancel</button>
+  </div>
+  <div id="skill-preview-box" style="display:none;margin-top:0.7rem;"></div>
+</div>
+</div>
 </main>
 </div>
 <div id="dm-console"><div class="con-bar"><span class="con-lbl">Arcane Log</span><button class="con-clr" onclick="document.getElementById('dm-log').innerHTML=''">clear</button></div><div id="dm-log"></div></div>
@@ -325,6 +572,9 @@ function nav(n){
   if(['resources','grimoires','acolytes'].includes(n)) populateSels();
   if(n==='events'){populateSels();loadActiveEvents();}
   if(n==='exchanges') loadExchanges();
+  if(n==='reset'){populateSels();const s=document.getElementById('rst-sel');if(s&&!s.children.length||s.children.length===1){const ids=Object.keys(allPlayers);ids.forEach(id=>{const nm=allPlayers[id].presence?.name||allPlayers[id].save?.character?.name||id.slice(0,8);const o=document.createElement('option');o.value=id;o.textContent=nm;s.appendChild(o);});}}
+  if(n==='combatsys') loadCombatSystem();
+  if(n==='skillbuilder'){loadAllSkills();if(_combatSystem)populateSkillDmgTypes();else loadCombatSystem().then(populateSkillDmgTypes);}
   if(n==='broadcast') buildBcGrid();
   if(n==='worldmap') loadWorldEvents();
   if(n==='creatures') loadCreatures();
@@ -448,6 +698,563 @@ async function pushShift(){const deltas=RS.map((_,i)=>parseFloat(document.getEle
 
 loadAll();
 setInterval(loadAll,30000);
+
+// ══════════════════════════════════════════
+// RESET & CLASS PICK
+// ══════════════════════════════════════════
+async function loadRstPreview() {
+  const id = document.getElementById('rst-sel').value;
+  if (!id) return;
+  try {
+    const [save, classes] = await Promise.all([fbGet('saves/'+id), fbGet('world/classes')]);
+    const name = allPlayers[id]?.presence?.name || id.slice(0,8);
+    const cur = document.getElementById('rst-current');
+    if (save) {
+      cur.innerHTML = `<strong>${name}</strong> · ${save.character?.class||'?'} Lv.${save.character?.level||'?'} · ${(save.resources?.values||[]).map((v,i)=>['☉','☽','♃','♂','♄','♀','☿'][i]+Math.floor(v)).join(' ')}`;
+    } else {
+      cur.textContent = name + ' — no grimoire yet';
+    }
+    // Build class picker
+    const grid = document.getElementById('rst-classes-grid');
+    if (classes) {
+      grid.innerHTML = Object.entries(classes).map(([k,c]) => `
+        <div class="entity-card" id="rst-cls-${k}" style="cursor:pointer;transition:all 0.2s;"
+          onclick="pickRstClass('${k}','${c.name||k}')">
+          <div class="entity-name">${c.name||k}</div>
+          <div class="entity-sub">${c.role||''}</div>
+          ${c.stats ? `<div style="font-family:var(--ff-h);font-size:0.32rem;color:var(--ash);margin-top:0.3rem;">${Object.entries(c.stats).map(([s,v])=>s.slice(0,3).toUpperCase()+':'+v).join(' ')}</div>` : ''}
+        </div>`).join('');
+    } else {
+      grid.innerHTML = '<p style="color:var(--mist);font-style:italic;">No classes defined. Create them first.</p>';
+    }
+    document.getElementById('rst-chosen-class').value = '';
+    document.getElementById('rst-preview').style.display = 'block';
+    log('Loaded preview for '+name,'ok');
+  } catch(e) { log('Error: '+e.message,'err'); }
+}
+
+function pickRstClass(key, name) {
+  document.getElementById('rst-chosen-class').value = key;
+  document.querySelectorAll('[id^="rst-cls-"]').forEach(el => {
+    el.style.borderColor = el.id === 'rst-cls-'+key ? 'var(--dm-bright)' : '';
+    el.style.background = el.id === 'rst-cls-'+key ? 'rgba(123,47,255,0.12)' : '';
+  });
+  toast('Class selected: '+name);
+}
+
+async function resetPlayer() {
+  const id = document.getElementById('rst-sel').value;
+  const cls = document.getElementById('rst-chosen-class').value;
+  if (!id) { toast('Choose a seeker.'); return; }
+  if (!cls) { toast('Pick a class first.'); return; }
+  if (!confirm('Reset '+( allPlayers[id]?.presence?.name||id.slice(0,8))+' to Lv.1 '+cls+'? This cannot be undone.')) return;
+
+  let buildings = {'alchemical-forge':1,'altar':1,'dormitorium':1,'scriptorium':1};
+  try { buildings = JSON.parse(document.getElementById('rst-buildings').value); } catch(e) {}
+  const resRaw = document.getElementById('rst-resources').value.split(',').map(v=>parseFloat(v.trim())||0);
+  while (resRaw.length < 7) resRaw.push(0);
+
+  // Load class data for starting stats
+  let classData = null;
+  try { classData = await fbGet('world/classes/'+cls); } catch(e) {}
+  const stats = classData?.stats || {fortitude:10,wrath:8,intuition:12,empathy:10,endurance:10,memory:8,cunning:12,gnosis:0};
+
+  const freshSave = {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    playerId: id,
+    resources: { values: resRaw },
+    character: {
+      name: allPlayers[id]?.presence?.name || 'Seeker',
+      class: classData?.name || cls,
+      classKey: cls,
+      level: 1,
+      xp: 0,
+      stats,
+    },
+    acolytes: [],
+    lair: { buildings },
+    research: { active: null, progress: 0, queue: [] },
+    inventory: {},
+    availableAcolytes: {},
+  };
+
+  try {
+    await fbPut('saves/'+id, freshSave);
+    log('Reset: '+id.slice(0,8)+' → '+cls+' Lv.1','warn');
+    toast('↺ '+( classData?.name||cls)+' chronicle created.');
+    document.getElementById('rst-preview').style.display = 'none';
+    await loadAll();
+  } catch(e) { log('Error: '+e.message,'err'); }
+}
+
+// ══════════════════════════════════════════
+// COMBAT SYSTEM
+// ══════════════════════════════════════════
+const DEFAULT_COMBAT_SYSTEM = {
+  formulae: {
+    hp:        { label:'Max HP',           expr:'END×5 + FOR×2 + LVL×3',  coeffs:{endurance:5,fortitude:2}, perLevel:3, flat:0 },
+    mana:      { label:'Max Mana',         expr:'GNO×5 + MEM×2 + LVL×2',  coeffs:{gnosis:5,memory:2}, perLevel:2, flat:0 },
+    shield:    { label:'Shield',           expr:'FOR×2 + END×1',           coeffs:{fortitude:2,endurance:1}, perLevel:0, flat:0 },
+    initiative:{ label:'Initiative',       expr:'CUN×2 + SPD',             coeffs:{cunning:2,speed:1}, perLevel:0, flat:0 },
+    crit:      { label:'Crit Chance %',    expr:'CUN×1.5 + WRA×0.5',       coeffs:{cunning:1.5,wrath:0.5}, perLevel:0, flat:0, cap:60, min:5 },
+    dodge:     { label:'Dodge %',          expr:'CUN×1 + INT×0.5',         coeffs:{cunning:1,intuition:0.5}, perLevel:0, flat:0, cap:50, min:0 },
+    stressRes: { label:'Stress Resistance',expr:'EMP×2 + END×1',           coeffs:{empathy:2,endurance:1}, perLevel:0, flat:0 },
+    accuracy:  { label:'Accuracy %',       expr:'INT×1.5 + CUN×0.5 + 60',  coeffs:{intuition:1.5,cunning:0.5}, perLevel:0, flat:60 },
+  },
+  damageTypes: {
+    physical:  { name:'Physical',  resistStat:'fortitude',  color:'#c43030' },
+    fire:      { name:'Fire',      resistStat:'endurance',  color:'#d4890a' },
+    blight:    { name:'Blight',    resistStat:'empathy',    color:'#6b4c8b' },
+    lunar:     { name:'Lunar',     resistStat:'intuition',  color:'#8b8ba0' },
+    solar:     { name:'Solar',     resistStat:'gnosis',     color:'#c9a84c' },
+    void:      { name:'Void',      resistStat:'memory',     color:'#1a1a5c' },
+    stress:    { name:'Stress',    resistStat:'empathy',    color:'#c43030' },
+  },
+  statusEffects: {
+    blight:    { name:'Blight',    desc:'X damage per turn, stackable', stackable:true },
+    stun:      { name:'Stun',      desc:'Skip next turn',               stackable:false },
+    blind:     { name:'Blind',     desc:'-30% accuracy for N turns',    stackable:false },
+    burn:      { name:'Burn',      desc:'Fire damage per turn',         stackable:true },
+    bleed:     { name:'Bleed',     desc:'Physical damage per turn',     stackable:true },
+    weakened:  { name:'Weakened',  desc:'-25% damage dealt',            stackable:false },
+    shielded:  { name:'Shielded',  desc:'Absorbs next hit',             stackable:false },
+    inspired:  { name:'Inspired',  desc:'+20% damage for N turns',      stackable:false },
+  }
+};
+
+let _combatSystem = null;
+
+async function loadCombatSystem() {
+  try {
+    const d = await fbGet('world/combat');
+    _combatSystem = (d && !d.error) ? d : JSON.parse(JSON.stringify(DEFAULT_COMBAT_SYSTEM));
+    renderCombatSystem();
+    log('Combat system loaded','ok');
+  } catch(e) {
+    _combatSystem = JSON.parse(JSON.stringify(DEFAULT_COMBAT_SYSTEM));
+    renderCombatSystem();
+  }
+}
+
+function renderCombatSystem() {
+  if (!_combatSystem) return;
+  const cs = _combatSystem;
+
+  // Formulae grid
+  const fg = document.getElementById('combat-formulae-grid');
+  fg.innerHTML = Object.entries(cs.formulae).map(([key,f]) => `
+    <div style="border:1px solid var(--border);padding:0.55rem 0.7rem;margin-bottom:0.5rem;background:var(--deep);">
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">
+        <div style="font-family:var(--ff-h);font-size:0.58rem;color:var(--bone);flex:1;">${f.label}</div>
+        ${f.cap!==undefined?`<span style="font-family:var(--ff-h);font-size:0.35rem;color:var(--ash);">cap:${f.cap}%</span>`:''}
+      </div>
+      <div style="font-family:monospace;font-size:0.62rem;color:var(--dm-bright);margin-bottom:0.4rem;">${f.expr}</div>
+      <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">${
+        Object.entries(f.coeffs).map(([stat,coeff]) => `
+          <div style="display:flex;align-items:center;gap:0.25rem;">
+            <span style="font-family:var(--ff-h);font-size:0.35rem;color:var(--ash);">${stat.slice(0,3).toUpperCase()}×</span>
+            <input type="number" step="0.5" value="${coeff}" style="width:44px;background:var(--abyss);border:1px solid var(--stone);color:var(--bone);font-family:var(--ff-h);font-size:0.52rem;text-align:center;padding:0.12rem;" onchange="_combatSystem.formulae['${key}'].coeffs['${stat}']=parseFloat(this.value)||0;updatePreview();">
+          </div>`).join('')}
+        <div style="display:flex;align-items:center;gap:0.25rem;">
+          <span style="font-family:var(--ff-h);font-size:0.35rem;color:var(--ash);">LVL×</span>
+          <input type="number" step="0.5" value="${f.perLevel}" style="width:44px;background:var(--abyss);border:1px solid var(--stone);color:var(--bone);font-family:var(--ff-h);font-size:0.52rem;text-align:center;padding:0.12rem;" onchange="_combatSystem.formulae['${key}'].perLevel=parseFloat(this.value)||0;updatePreview();">
+        </div>
+        <div style="display:flex;align-items:center;gap:0.25rem;">
+          <span style="font-family:var(--ff-h);font-size:0.35rem;color:var(--ash);">+flat</span>
+          <input type="number" value="${f.flat||0}" style="width:44px;background:var(--abyss);border:1px solid var(--stone);color:var(--bone);font-family:var(--ff-h);font-size:0.52rem;text-align:center;padding:0.12rem;" onchange="_combatSystem.formulae['${key}'].flat=parseFloat(this.value)||0;updatePreview();">
+        </div>
+      </div>
+    </div>`).join('');
+
+  // Damage types
+  renderDmgTypes();
+  renderStatusEffects();
+
+  // Preview inputs
+  const statKeys = ['fortitude','wrath','intuition','empathy','endurance','memory','cunning','gnosis','speed'];
+  const labels   = {fortitude:'FOR',wrath:'WRA',intuition:'INT',empathy:'EMP',endurance:'END',memory:'MEM',cunning:'CUN',gnosis:'GNO',speed:'SPD'};
+  document.getElementById('preview-stat-inputs').innerHTML = statKeys.map(s =>
+    `<div class="fld"><label>${labels[s]||s}</label><input type="number" id="prev-${s}" value="10" min="1" max="30" oninput="updatePreview()"></div>`
+  ).join('') + `<div class="fld"><label>Level</label><input type="number" id="prev-level" value="1" min="1" oninput="updatePreview()"></div>`;
+  updatePreview();
+
+  // Populate damage type selects in skill builder
+  populateSkillDmgTypes();
+}
+
+function renderDmgTypes() {
+  const el = document.getElementById('dmg-types-list');
+  if (!el || !_combatSystem) return;
+  el.innerHTML = Object.entries(_combatSystem.damageTypes||{}).map(([k,d]) =>
+    `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+      <div style="width:10px;height:10px;background:${d.color};border-radius:50%;flex-shrink:0;"></div>
+      <span style="font-family:var(--ff-h);font-size:0.55rem;color:var(--bone);flex:1;">${d.name}</span>
+      <span style="font-family:var(--ff-h);font-size:0.35rem;color:var(--ash);">resists via ${d.resistStat}</span>
+      <button onclick="delDmgType('${k}')" class="btn b-breach" style="padding:0.15rem 0.4rem;font-size:0.32rem;">✗</button>
+    </div>`
+  ).join('');
+}
+
+function renderStatusEffects() {
+  const el = document.getElementById('status-effects-list');
+  if (!el || !_combatSystem) return;
+  el.innerHTML = Object.entries(_combatSystem.statusEffects||{}).map(([k,s]) =>
+    `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+      <span style="font-family:var(--ff-h);font-size:0.55rem;color:var(--pale);flex:1;">${s.name} <span style="color:var(--ash);font-size:0.4rem;">${s.stackable?'·stackable':''}</span></span>
+      <span style="font-family:var(--ff-b);font-style:italic;font-size:0.6rem;color:var(--mist);flex:2;">${s.desc}</span>
+      <button onclick="delStatus('${k}')" class="btn b-breach" style="padding:0.15rem 0.4rem;font-size:0.32rem;">✗</button>
+    </div>`
+  ).join('');
+  // Also update skill builder status select
+  const ss = document.getElementById('skb-applyStatus');
+  if (ss) {
+    ss.innerHTML = '<option value="none">None</option>' +
+      Object.entries(_combatSystem.statusEffects||{}).map(([k,s])=>`<option value="${k}">${s.name}</option>`).join('');
+  }
+  const ds = document.getElementById('skb-dotType');
+  if (ds) {
+    ds.innerHTML = '<option value="none">None</option>' +
+      Object.entries(_combatSystem.statusEffects||{}).map(([k,s])=>`<option value="${k}">${s.name}</option>`).join('');
+  }
+}
+
+function populateSkillDmgTypes() {
+  const el = document.getElementById('skb-dmgtype');
+  if (!el || !_combatSystem) return;
+  el.innerHTML = '<option value="none">None (no damage)</option>' +
+    Object.entries(_combatSystem.damageTypes||{}).map(([k,d])=>`<option value="${k}">${d.name}</option>`).join('');
+}
+
+function addDmgType() {
+  const name = document.getElementById('new-dmg-name').value.trim();
+  const resist = document.getElementById('new-dmg-resist').value;
+  if (!name || !_combatSystem) return;
+  const key = name.toLowerCase().replace(/\s+/g,'-');
+  _combatSystem.damageTypes[key] = { name, resistStat:resist, color:'#888' };
+  document.getElementById('new-dmg-name').value = '';
+  renderDmgTypes(); populateSkillDmgTypes();
+}
+function delDmgType(key) {
+  if (!_combatSystem) return;
+  delete _combatSystem.damageTypes[key];
+  renderDmgTypes(); populateSkillDmgTypes();
+}
+function addStatusEffect() {
+  const name = document.getElementById('new-status-name').value.trim();
+  const desc = document.getElementById('new-status-desc').value.trim();
+  if (!name || !_combatSystem) return;
+  const key = name.toLowerCase().replace(/\s+/g,'-');
+  _combatSystem.statusEffects[key] = { name, desc, stackable:false };
+  document.getElementById('new-status-name').value = '';
+  document.getElementById('new-status-desc').value = '';
+  renderStatusEffects();
+}
+function delStatus(key) {
+  if (!_combatSystem) return;
+  delete _combatSystem.statusEffects[key];
+  renderStatusEffects();
+}
+
+function computeDerived(stats, level) {
+  if (!_combatSystem) return {};
+  const s = stats;
+  const out = {};
+  for (const [key, f] of Object.entries(_combatSystem.formulae)) {
+    let val = (f.flat||0) + (f.perLevel||0)*level;
+    for (const [stat, coeff] of Object.entries(f.coeffs)) {
+      val += (s[stat]||0) * coeff;
+    }
+    if (f.min !== undefined) val = Math.max(f.min, val);
+    if (f.cap !== undefined) val = Math.min(f.cap, val);
+    out[key] = Math.round(val * 10) / 10;
+  }
+  return out;
+}
+
+function updatePreview() {
+  if (!_combatSystem) return;
+  const stats = {};
+  ['fortitude','wrath','intuition','empathy','endurance','memory','cunning','gnosis','speed'].forEach(s => {
+    stats[s] = parseInt(document.getElementById('prev-'+s)?.value)||10;
+  });
+  const level = parseInt(document.getElementById('prev-level')?.value)||1;
+  const derived = computeDerived(stats, level);
+  const el = document.getElementById('preview-derived');
+  if (!el) return;
+  const COLORS = {hp:'var(--crimson-bright)',mana:'var(--indigo-bright)',shield:'var(--amber-bright)',
+    initiative:'var(--viridian-bright)',crit:'var(--gold)',dodge:'var(--pale)',
+    stressRes:'var(--mist)',accuracy:'var(--bone)'};
+  el.innerHTML = Object.entries(derived).map(([k,v]) => {
+    const f = _combatSystem.formulae[k];
+    return `<div class="estat"><div class="estat-k">${f.label}</div><div class="estat-v" style="color:${COLORS[k]||'var(--bone)'};">${v}${k==='crit'||k==='dodge'||k==='accuracy'?'%':''}</div></div>`;
+  }).join('');
+}
+
+async function saveCombatSystem() {
+  if (!_combatSystem) return;
+  try {
+    await fbPut('world/combat', _combatSystem);
+    log('Combat system sealed.','ok');
+    toast('✦ Combat system saved.');
+  } catch(e) { log('Error: '+e.message,'err'); }
+}
+
+function resetCombatDefaults() {
+  if (!confirm('Reset combat system to defaults?')) return;
+  _combatSystem = JSON.parse(JSON.stringify(DEFAULT_COMBAT_SYSTEM));
+  renderCombatSystem();
+  toast('Reset to defaults.');
+}
+
+// ══════════════════════════════════════════
+// SKILL & SPELL BUILDER
+// ══════════════════════════════════════════
+let _allSkills = {};
+
+async function loadAllSkills() {
+  try {
+    const d = await fbGet('world/skills');
+    _allSkills = d || {};
+    renderAllSkills(_allSkills);
+    log('Skills loaded: '+Object.keys(_allSkills).length,'ok');
+  } catch(e) { log('Error: '+e.message,'err'); }
+}
+
+function filterSkills(cat, btn) {
+  document.querySelectorAll('#skill-filter-tabs button').forEach(b => b.style.opacity='0.5');
+  if (btn) btn.style.opacity='1';
+  const filtered = cat==='all' ? _allSkills : Object.fromEntries(Object.entries(_allSkills).filter(([,s])=>s.category===cat||s.cat===cat||s.type===cat));
+  renderAllSkills(filtered);
+}
+
+function renderAllSkills(skills) {
+  const el = document.getElementById('skills-all-list');
+  if (!skills || !Object.keys(skills).length) {
+    el.innerHTML='<p style="color:var(--mist);font-style:italic;">No skills. Create the first one.</p>';return;
+  }
+  const CAT_COLOR = {attack:'var(--crimson-bright)',heal:'var(--viridian-bright)',rite:'var(--indigo-bright)',buff:'var(--amber-bright)',debuff:'var(--mist)',revive:'var(--dm-bright)',utility:'var(--gold)'};
+  el.innerHTML = Object.entries(skills).map(([k,s]) => {
+    const cat = s.category||s.cat||s.type||'utility';
+    const dmgLine = s.damage?.type && s.damage.type!=='none' ? `<span style="font-family:var(--ff-h);font-size:0.35rem;color:${CAT_COLOR[cat]||'var(--gold)'};">${s.damage.dice||''}${s.damage.flat?'+'+s.damage.flat:''} ${s.damage.type}</span>` : '';
+    const targetLine = s.targeting?.target ? `<span style="font-family:var(--ff-h);font-size:0.35rem;color:var(--ash);">→ ${s.targeting.target}</span>` : '';
+    return `<div class="entity-card" style="border-left:3px solid ${CAT_COLOR[cat]||'var(--gold)'};">
+      <div style="display:flex;align-items:flex-start;gap:0.5rem;">
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.15rem;">
+            <span class="bdg" style="border-color:${CAT_COLOR[cat]||'var(--gold)'};color:${CAT_COLOR[cat]||'var(--gold)'};">${cat}</span>
+            <span class="entity-name" style="font-size:0.7rem;">${s.name||k}</span>
+            ${s.classKey?`<span style="font-family:var(--ff-h);font-size:0.35rem;color:var(--ash);">${s.classKey}</span>`:''}
+            <span style="font-family:var(--ff-h);font-size:0.35rem;color:var(--ash);">Lv.${s.unlockLevel||1}</span>
+          </div>
+          <div style="font-family:var(--ff-b);font-style:italic;font-size:0.68rem;color:var(--mist);">${s.desc||''}</div>
+          <div style="display:flex;gap:0.5rem;margin-top:0.3rem;flex-wrap:wrap;">${dmgLine}${targetLine}
+            ${s.cost?.mana?`<span style="font-family:var(--ff-h);font-size:0.35rem;color:var(--indigo-bright);">${s.cost.mana} mana</span>`:''}
+            ${s.effects?.dot?.type&&s.effects.dot.type!=='none'?`<span style="font-family:var(--ff-h);font-size:0.35rem;color:var(--crimson-bright);">DoT:${s.effects.dot.type}</span>`:''}
+            ${s.effects?.buff?.stat&&s.effects.buff.stat!=='none'?`<span style="font-family:var(--ff-h);font-size:0.35rem;color:var(--amber-bright);">${s.effects.buff.amt>0?'+':''}${s.effects.buff.amt} ${s.effects.buff.stat}</span>`:''}
+          </div>
+        </div>
+        <div style="display:flex;gap:0.3rem;">
+          <button class="btn b-seal" style="padding:0.25rem 0.5rem;font-size:0.35rem;" onclick="editFullSkill('${k}')">Edit</button>
+          <button class="btn b-breach" style="padding:0.25rem 0.5rem;font-size:0.35rem;" onclick="delFullSkill('${k}')">✗</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openSkillEd() {
+  document.getElementById('skill-full-editor').style.display='block';
+  document.getElementById('skill-ed-title').textContent='New Skill';
+  document.getElementById('skb-key').value='';
+  ['skb-name','skb-class','skb-dice','skb-flatdmg','skb-range','skb-healDice'].forEach(id=>{
+    const e=document.getElementById(id); if(e) e.value='';
+  });
+  ['skb-level','skb-hits','skb-acc','skb-mana','skb-essAmt','skb-cooldown',
+   'skb-dotDmg','skb-dotTurns','skb-dotStacks','skb-healFlat','skb-stressHeal',
+   'skb-reviveHp','skb-buffAmt','skb-buffTurns','skb-initMod','skb-statusChance',
+   'skb-u0','skb-u1','skb-u2','skb-u3','skb-u4','skb-u5','skb-u6'].forEach(id=>{
+    const e=document.getElementById(id);
+    if(e) e.value={'skb-level':1,'skb-hits':1,'skb-dotStacks':1,'skb-buffTurns':1,'skb-statusChance':100,'skb-crit':1.5}[id]||0;
+  });
+  document.getElementById('skb-crit').value='1.5';
+  document.getElementById('skb-cat').value='attack';
+  document.getElementById('skb-target').value='single-enemy';
+  document.getElementById('skb-scaleStat').value='none';
+  document.getElementById('skb-buffStat').value='none';
+  document.getElementById('skb-initTarget').value='self';
+  document.getElementById('skb-essType').value='none';
+  if(document.getElementById('skb-dotType')) document.getElementById('skb-dotType').value='none';
+  if(document.getElementById('skb-applyStatus')) document.getElementById('skb-applyStatus').value='none';
+  document.getElementById('skb-dmgtype').value='none';
+  document.getElementById('skb-range').value='1,2,3,4';
+  document.getElementById('skill-preview-box').style.display='none';
+  document.getElementById('skill-full-editor').scrollIntoView({behavior:'smooth'});
+}
+
+async function editFullSkill(key) {
+  try {
+    const s = await fbGet('world/skills/'+key);
+    openSkillEd();
+    document.getElementById('skill-ed-title').textContent='Edit: '+s.name;
+    document.getElementById('skb-key').value=key;
+    document.getElementById('skb-name').value=s.name||'';
+    document.getElementById('skb-cat').value=s.category||s.cat||'attack';
+    document.getElementById('skb-class').value=s.classKey||s.classReq||'';
+    document.getElementById('skb-level').value=s.unlockLevel||1;
+    document.getElementById('skb-desc').value=s.desc||'';
+    if(s.damage){
+      document.getElementById('skb-dmgtype').value=s.damage.type||'none';
+      document.getElementById('skb-dice').value=s.damage.dice||'';
+      document.getElementById('skb-flatdmg').value=s.damage.flat||0;
+      document.getElementById('skb-scaleStat').value=s.damage.scaleStat||'none';
+      document.getElementById('skb-scaleAmt').value=s.damage.scaleAmt||50;
+      document.getElementById('skb-crit').value=s.damage.critMult||1.5;
+    }
+    if(s.targeting){
+      document.getElementById('skb-target').value=s.targeting.target||'single-enemy';
+      document.getElementById('skb-hits').value=s.targeting.hits||1;
+      document.getElementById('skb-acc').value=s.targeting.accuracyMod||0;
+      document.getElementById('skb-range').value=(s.targeting.range||[1,2,3,4]).join(',');
+    }
+    if(s.cost){
+      document.getElementById('skb-mana').value=s.cost.mana||0;
+      document.getElementById('skb-essType').value=s.cost.essenceType||'none';
+      document.getElementById('skb-essAmt').value=s.cost.essenceAmt||0;
+      document.getElementById('skb-cooldown').value=s.cost.cooldown||0;
+    }
+    if(s.effects?.dot){
+      if(document.getElementById('skb-dotType')) document.getElementById('skb-dotType').value=s.effects.dot.type||'none';
+      document.getElementById('skb-dotDmg').value=s.effects.dot.dmg||0;
+      document.getElementById('skb-dotTurns').value=s.effects.dot.turns||0;
+      document.getElementById('skb-dotStacks').value=s.effects.dot.maxStacks||1;
+    }
+    if(s.effects?.heal){
+      document.getElementById('skb-healDice').value=s.effects.heal.dice||'';
+      document.getElementById('skb-healFlat').value=s.effects.heal.flat||0;
+      document.getElementById('skb-stressHeal').value=s.effects.heal.stressHeal||0;
+      document.getElementById('skb-reviveHp').value=s.effects.heal.reviveHpPct||0;
+    }
+    if(s.effects?.buff){
+      document.getElementById('skb-buffStat').value=s.effects.buff.stat||'none';
+      document.getElementById('skb-buffAmt').value=s.effects.buff.amt||0;
+      document.getElementById('skb-buffTurns').value=s.effects.buff.turns||1;
+    }
+    if(s.effects?.turnOrder){
+      document.getElementById('skb-initMod').value=s.effects.turnOrder.initiativeMod||0;
+      document.getElementById('skb-initTarget').value=s.effects.turnOrder.applyTo||'self';
+    }
+    if(s.effects?.status){
+      if(document.getElementById('skb-applyStatus')) document.getElementById('skb-applyStatus').value=s.effects.status.effect||'none';
+      document.getElementById('skb-statusChance').value=s.effects.status.chance||100;
+    }
+    const unlockCost=s.unlockCost||[];
+    for(let i=0;i<7;i++){const e=document.getElementById('skb-u'+i);if(e)e.value=unlockCost[i]||0;}
+    document.getElementById('skb-unlock').value=s.unlockCondition||'';
+  } catch(e) { log('Error: '+e.message,'err'); }
+}
+
+async function saveFullSkill() {
+  const key = document.getElementById('skb-key').value ||
+    (document.getElementById('skb-name').value.toLowerCase().replace(/\s+/g,'-'));
+  const unlockCost = Array.from({length:7},(_,i)=>parseInt(document.getElementById('skb-u'+i)?.value)||0);
+  const d = {
+    name:         document.getElementById('skb-name').value,
+    category:     document.getElementById('skb-cat').value,
+    classKey:     document.getElementById('skb-class').value,
+    unlockLevel:  parseInt(document.getElementById('skb-level').value)||1,
+    desc:         document.getElementById('skb-desc').value,
+    damage: {
+      type:       document.getElementById('skb-dmgtype').value,
+      dice:       document.getElementById('skb-dice').value,
+      flat:       parseInt(document.getElementById('skb-flatdmg').value)||0,
+      scaleStat:  document.getElementById('skb-scaleStat').value,
+      scaleAmt:   parseInt(document.getElementById('skb-scaleAmt').value)||50,
+      critMult:   parseFloat(document.getElementById('skb-crit').value)||1.5,
+    },
+    targeting: {
+      target:     document.getElementById('skb-target').value,
+      hits:       parseInt(document.getElementById('skb-hits').value)||1,
+      accuracyMod:parseInt(document.getElementById('skb-acc').value)||0,
+      range:      document.getElementById('skb-range').value.split(',').map(v=>parseInt(v.trim())).filter(Boolean),
+    },
+    cost: {
+      mana:       parseInt(document.getElementById('skb-mana').value)||0,
+      essenceType:document.getElementById('skb-essType').value,
+      essenceAmt: parseInt(document.getElementById('skb-essAmt').value)||0,
+      cooldown:   parseInt(document.getElementById('skb-cooldown').value)||0,
+    },
+    effects: {
+      dot: {
+        type:     document.getElementById('skb-dotType')?.value||'none',
+        dmg:      parseInt(document.getElementById('skb-dotDmg').value)||0,
+        turns:    parseInt(document.getElementById('skb-dotTurns').value)||0,
+        maxStacks:parseInt(document.getElementById('skb-dotStacks').value)||1,
+      },
+      heal: {
+        dice:     document.getElementById('skb-healDice').value,
+        flat:     parseInt(document.getElementById('skb-healFlat').value)||0,
+        stressHeal:parseInt(document.getElementById('skb-stressHeal').value)||0,
+        reviveHpPct:parseInt(document.getElementById('skb-reviveHp').value)||0,
+      },
+      buff: {
+        stat:     document.getElementById('skb-buffStat').value,
+        amt:      parseInt(document.getElementById('skb-buffAmt').value)||0,
+        turns:    parseInt(document.getElementById('skb-buffTurns').value)||1,
+      },
+      turnOrder: {
+        initiativeMod: parseInt(document.getElementById('skb-initMod').value)||0,
+        applyTo:       document.getElementById('skb-initTarget').value,
+      },
+      status: {
+        effect:   document.getElementById('skb-applyStatus')?.value||'none',
+        chance:   parseInt(document.getElementById('skb-statusChance').value)||100,
+      },
+    },
+    unlockCost,
+    unlockCondition: document.getElementById('skb-unlock').value,
+  };
+  try {
+    await fbPut('world/skills/'+key, d);
+    log('Skill sealed: '+d.name,'ok');
+    toast('✦ '+d.name+' sealed.');
+    document.getElementById('skill-full-editor').style.display='none';
+    loadAllSkills();
+  } catch(e) { log('Error: '+e.message,'err'); }
+}
+
+function previewSkill() {
+  const box = document.getElementById('skill-preview-box');
+  box.style.display='block';
+  const dmgType = document.getElementById('skb-dmgtype').value;
+  const dice = document.getElementById('skb-dice').value;
+  const flat = parseInt(document.getElementById('skb-flatdmg').value)||0;
+  const hits = parseInt(document.getElementById('skb-hits').value)||1;
+  const target = document.getElementById('skb-target').value;
+  const mana = parseInt(document.getElementById('skb-mana').value)||0;
+  const dot = document.getElementById('skb-dotType')?.value;
+  const dotDmg = parseInt(document.getElementById('skb-dotDmg').value)||0;
+  const dotTurns = parseInt(document.getElementById('skb-dotTurns').value)||0;
+  const heal = document.getElementById('skb-healDice').value;
+  const buffStat = document.getElementById('skb-buffStat').value;
+  const buffAmt = parseInt(document.getElementById('skb-buffAmt').value)||0;
+  const initMod = parseInt(document.getElementById('skb-initMod').value)||0;
+  let lines = [];
+  if (dmgType!=='none' && dice) lines.push(`⚔ <strong>${hits>1?hits+'× ':''}</strong>${dice}${flat?'+'+flat:''} <span style="color:var(--crimson-bright);">${dmgType}</span> damage → ${target}`);
+  if (mana) lines.push(`💧 Costs ${mana} mana`);
+  if (dot && dot!=='none' && dotDmg && dotTurns) lines.push(`☠ Applies ${dot}: ${dotDmg} dmg/turn for ${dotTurns} turns`);
+  if (heal) lines.push(`✦ Heals ${heal} HP → ${target}`);
+  if (buffStat!=='none' && buffAmt) lines.push(`${buffAmt>0?'↑':'↓'} ${buffStat} ${buffAmt>0?'+':''}${buffAmt} for ${document.getElementById('skb-buffTurns').value} turns`);
+  if (initMod) lines.push(`⚡ Initiative ${initMod>0?'+':''}${initMod} to ${document.getElementById('skb-initTarget').value}`);
+  box.innerHTML = `<div style="background:var(--deep);border:1px solid var(--border);padding:0.65rem 0.8rem;font-family:var(--ff-b);font-style:italic;font-size:0.8rem;line-height:1.8;color:var(--pale);">${lines.join('<br>')||'No effects defined yet.'}</div>`;
+}
+
+async function delFullSkill(key) {
+  if (!confirm('Delete skill '+key+'?')) return;
+  try { await fbDel('world/skills/'+key); log('Deleted.','warn'); loadAllSkills(); }
+  catch(e) { log('Error: '+e.message,'err'); }
+}
+
 </script>
 </body>
 </html>
