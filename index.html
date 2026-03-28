@@ -1959,6 +1959,26 @@
   .pm-btn:active { background:rgba(255,255,255,0.04); }
 
   /* EXCHANGE MODAL */
+
+  /* Incoming exchange popup */
+  #incoming-exchange-modal { position:fixed;inset:0;z-index:900;background:rgba(5,4,7,0.85);display:none;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(4px); }
+  #incoming-exchange-modal.open { display:flex; }
+  .incoming-modal-inner { background:var(--abyss);border:1px solid var(--gold-dim);width:100%;max-width:380px;padding:1.6rem 1.4rem;animation:slide-up 0.35s cubic-bezier(0.16,1,0.3,1);position:relative; }
+  .incoming-modal-sigil { font-size:1.6rem;text-align:center;margin-bottom:0.5rem;animation:pulse-sigil 3s ease-in-out infinite; }
+  .incoming-modal-title { font-family:var(--ff-heading);font-size:0.55rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);text-align:center;margin-bottom:0.2rem; }
+  .incoming-modal-from { font-family:var(--ff-title);font-size:1.4rem;color:var(--bone);text-align:center;margin-bottom:0.1rem; }
+  .incoming-modal-coven { font-family:var(--ff-body);font-style:italic;font-size:0.75rem;color:var(--text-secondary);text-align:center;margin-bottom:1.2rem; }
+  .incoming-modal-divider { border:none;border-top:1px solid var(--border);margin:0.8rem 0; }
+  .incoming-modal-row { display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.5rem; }
+  .incoming-modal-label { font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary); }
+  .incoming-modal-value { font-family:var(--ff-body);font-style:italic;font-size:0.9rem;color:var(--bone); }
+  .incoming-modal-actions { display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-top:1.2rem; }
+  .incoming-modal-btn { font-family:var(--ff-heading);font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.9rem;border:none;cursor:pointer;transition:all 0.2s; }
+  .incoming-modal-btn.accept { background:rgba(45,122,95,0.15);border:1px solid var(--viridian-bright);color:var(--viridian-bright); }
+  .incoming-modal-btn.accept:active { background:rgba(45,122,95,0.35); }
+  .incoming-modal-btn.decline { background:rgba(196,48,48,0.1);border:1px solid var(--crimson-bright);color:var(--crimson-bright); }
+  .incoming-modal-btn.decline:active { background:rgba(196,48,48,0.25); }
+  .incoming-modal-timer { font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.08em;color:var(--text-secondary);text-align:center;margin-top:0.8rem; }
   #exchange-modal { position:fixed;inset:0;z-index:700;background:rgba(5,4,7,0.97);display:none;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem; }
   #exchange-modal.open { display:flex; }
   .exchange-title { font-family:var(--ff-title);font-size:1.6rem;color:var(--gold);letter-spacing:2px;margin-bottom:0.3rem;text-align:center; }
@@ -2043,7 +2063,7 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.11</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.13</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
@@ -4245,6 +4265,8 @@
     } catch(e) { toast('POLL ERROR: ' + e.message); }
   }
 
+  const _resolvedExchanges = new Set();
+
   async function pollIncomingExchanges() {
     const myId = getOrCreatePlayerId();
     try {
@@ -4252,20 +4274,37 @@
       if (!res.ok) return;
       const all = await res.json();
       if (!all) return;
+      if (all.error) return;
       const now = Date.now();
-      Object.entries(all).forEach(([exchId, ex]) => {
-        if (!ex) return;
-        // Treat missing status as 'pending' (older clients may omit it)
-        const isForMe = (ex.to||'').toLowerCase() === myId.toLowerCase();
+      for (const [exchId, ex] of Object.entries(all)) {
+        if (!ex) continue;
+        const isForMe   = (ex.to||'').toLowerCase()   === myId.toLowerCase();
+        const iFromMe   = (ex.from||'').toLowerCase() === myId.toLowerCase();
         const isPending = !ex.status || ex.status === 'pending';
         const notExpired = (ex.expires||0) > now;
-        const notFromMe = (ex.from||'').toLowerCase() !== myId.toLowerCase();
         const alreadyShown = document.getElementById('exch-' + exchId);
-        // Show if pending, not expired, not sent by me, and either addressed to me or has no valid target
-        if (isPending && notExpired && notFromMe && !alreadyShown && (isForMe || !ex.to)) {
+
+        // RECEIVER: show popup for pending incoming exchanges addressed to me
+        if (isPending && notExpired && !iFromMe && !alreadyShown && (isForMe || !ex.to)) {
           showExchangeNotification(exchId, ex);
         }
-      });
+
+        // SENDER: detect when my outgoing exchange was accepted by the other player
+        if (iFromMe && ex.status === 'accepted' && !_resolvedExchanges.has(exchId)) {
+          _resolvedExchanges.add(exchId);
+          // Deduct what I offered, receive what I requested
+          for (const [r, amt] of Object.entries(ex.offer||{}))   values[parseInt(r)] -= amt;
+          for (const [r, amt] of Object.entries(ex.request||{})) values[parseInt(r)] += amt;
+          // Clamp to zero — can't go negative
+          values = values.map(v => Math.max(0, v));
+          document.querySelectorAll('.resource-pill .res-value').forEach((el,i) => { el.textContent = Math.floor(values[i]); });
+          toast('✦ Your exchange was accepted. Essences transferred.');
+          // Persist to Firebase
+          try { await fbWrite(myId, collectGameState()); } catch(e) { console.error('Save after sender resolution failed:', e); }
+          // Clean up exchange entry
+          try { fetch(`${FB_URL}/exchanges/${exchId}.json`, {method:'DELETE'}); } catch(e) {}
+        }
+      }
     } catch(e) { console.error('pollExchanges error:', e); }
   }
 
@@ -4286,17 +4325,18 @@
         const isPending = !ex.status || ex.status === 'pending';
         const expired = (ex.expires||0) < now;
         toast('ID:' + id.slice(0,8) + ' from=' + (ex.fromName||'?') + ' status=' + (ex.status||'(none)') + ' toMe=' + isForMe + ' pending=' + isPending + ' expired=' + expired);
-        toast('myId=' + myId + ' to=' + (ex.to||'none'));
       });
     } catch(e) { toast('Error: ' + e.message); }
   }
+
+  let _iemTimerInterval = null;
 
   function showExchangeNotification(exchId, ex) {
     const offerText = Object.entries(ex.offer||{}).map(([r,a]) => RES_SYMBOLS[r]+' '+a+' '+RES_NAMES[r]).join(', ') || 'nothing';
     const reqText  = Object.entries(ex.request||{}).map(([r,a]) => RES_SYMBOLS[r]+' '+a+' '+RES_NAMES[r]).join(', ') || 'nothing';
     const exData = JSON.stringify(ex).replace(/"/g,'&quot;');
 
-    // Persistent card in Journal inbox — stays until accepted/declined
+    // Persistent card in Journal inbox
     const inbox = document.getElementById('exchange-inbox');
     if (inbox && !document.getElementById('exch-' + exchId)) {
       inbox.style.display = 'block';
@@ -4323,8 +4363,58 @@
       inbox.prepend(card);
     }
 
-    // Also show a non-auto-dismissing toast notification
-    toast('⟺ Exchange proposal from ' + ex.fromName + ' — check your Journal.');
+    // Show full-screen incoming exchange popup
+    openIncomingExchangeModal(exchId, ex, offerText, reqText);
+  }
+
+  function openIncomingExchangeModal(exchId, ex, offerText, reqText) {
+    if (!offerText) offerText = Object.entries(ex.offer||{}).map(([r,a]) => RES_SYMBOLS[r]+' '+a+' '+RES_NAMES[r]).join(', ') || 'nothing';
+    if (!reqText)  reqText  = Object.entries(ex.request||{}).map(([r,a]) => RES_SYMBOLS[r]+' '+a+' '+RES_NAMES[r]).join(', ') || 'nothing';
+
+    document.getElementById('iem-from').textContent = ex.fromName || 'Unknown Seeker';
+    document.getElementById('iem-coven').textContent = 'Coven of ' + (ex.fromCoven || 'Unknown');
+    document.getElementById('iem-offer').textContent = offerText;
+    document.getElementById('iem-request').textContent = reqText;
+
+    // Accept button
+    const acceptBtn = document.getElementById('iem-accept-btn');
+    acceptBtn.onclick = () => {
+      closeIncomingExchangeModal();
+      acceptExchange(exchId, ex);
+    };
+
+    // Decline button
+    const declineBtn = document.getElementById('iem-decline-btn');
+    declineBtn.onclick = () => {
+      closeIncomingExchangeModal();
+      declineExchange(exchId);
+    };
+
+    // Countdown timer
+    if (_iemTimerInterval) clearInterval(_iemTimerInterval);
+    const timerEl = document.getElementById('iem-timer');
+    function updateTimer() {
+      const msLeft = (ex.expires||0) - Date.now();
+      if (msLeft <= 0) {
+        timerEl.textContent = 'This proposal has expired.';
+        acceptBtn.disabled = true;
+        acceptBtn.style.opacity = '0.4';
+        clearInterval(_iemTimerInterval);
+        return;
+      }
+      const mins = Math.floor(msLeft / 60000);
+      const secs = Math.floor((msLeft % 60000) / 1000);
+      timerEl.textContent = 'Expires in ' + mins + 'm ' + secs + 's';
+    }
+    updateTimer();
+    _iemTimerInterval = setInterval(updateTimer, 1000);
+
+    document.getElementById('incoming-exchange-modal').classList.add('open');
+  }
+
+  function closeIncomingExchangeModal() {
+    document.getElementById('incoming-exchange-modal').classList.remove('open');
+    if (_iemTimerInterval) { clearInterval(_iemTimerInterval); _iemTimerInterval = null; }
   }
 
   async function acceptExchange(exchId, ex) {
@@ -4349,8 +4439,11 @@
     document.getElementById('exch-' + exchId)?.remove();
     const inbox = document.getElementById('exchange-inbox');
     if (inbox && !inbox.children.length) inbox.style.display = 'none';
+    closeIncomingExchangeModal();
     toast('✦ Exchange accepted. Essences transferred.');
     publishProfile();
+    // Persist updated resources to Firebase so they survive reload
+    try { await fbWrite(myId, collectGameState()); } catch(e) { console.error('Save after accept failed:', e); }
   }
 
   async function declineExchange(exchId) {
@@ -4365,11 +4458,35 @@
     document.getElementById('exch-' + exchId)?.remove();
     const inbox2 = document.getElementById('exchange-inbox');
     if (inbox2 && !inbox2.children.length) inbox2.style.display = 'none';
+    closeIncomingExchangeModal();
     toast('Exchange declined.');
   }
 
   setInterval(pollIncomingExchanges, 5000);
   setTimeout(pollIncomingExchanges, 2000);
 </script>
+
+<div id="incoming-exchange-modal">
+  <div class="incoming-modal-inner">
+    <div class="incoming-modal-sigil">⟺</div>
+    <div class="incoming-modal-title">Exchange Proposal</div>
+    <div class="incoming-modal-from" id="iem-from"></div>
+    <div class="incoming-modal-coven" id="iem-coven"></div>
+    <hr class="incoming-modal-divider">
+    <div class="incoming-modal-row">
+      <span class="incoming-modal-label">They Offer</span>
+      <span class="incoming-modal-value" id="iem-offer"></span>
+    </div>
+    <div class="incoming-modal-row">
+      <span class="incoming-modal-label">They Request</span>
+      <span class="incoming-modal-value" id="iem-request"></span>
+    </div>
+    <div class="incoming-modal-actions">
+      <button class="incoming-modal-btn accept" id="iem-accept-btn">✓ Accept</button>
+      <button class="incoming-modal-btn decline" id="iem-decline-btn">✗ Decline</button>
+    </div>
+    <div class="incoming-modal-timer" id="iem-timer"></div>
+  </div>
+</div>
 </body>
 </html>
