@@ -2063,7 +2063,7 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.14</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.15</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
@@ -2794,6 +2794,16 @@
       startAutoSave();
       playerName = localStorage.getItem('llair_name') || '';
       playerCoven = localStorage.getItem('llair_coven') || '';
+      // Auto-load saved state from Firebase on every startup
+      setTimeout(async () => {
+        try {
+          const id = getOrCreatePlayerId();
+          const json = await fbRead(id);
+          if (json && applyGameState(json)) {
+            toast('Chronicle restored from the ether.');
+          }
+        } catch(e) { console.error('Auto-load failed:', e); }
+      }, 800);
       setTimeout(restoreBorrowedAcolytes, 1000);
       if (!playerName) {
         setTimeout(() => document.getElementById('identity-modal').classList.add('open'), 1800);
