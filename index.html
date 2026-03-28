@@ -4192,18 +4192,47 @@
   async function pollIncomingExchanges() {
     const myId = getOrCreatePlayerId();
     try {
-      const res = await fetch(`${FB_URL}/exchanges.json`);
+      const res = await fetch(`${FB_URL}/exchanges.json?cb=` + Date.now());
       if (!res.ok) return;
       const all = await res.json();
       if (!all) return;
       const now = Date.now();
       Object.entries(all).forEach(([exchId, ex]) => {
-        if (ex.to !== myId || ex.status !== 'pending' || ex.expires < now) return;
-        // Check if already shown
-        if (document.getElementById('exch-' + exchId)) return;
-        showExchangeNotification(exchId, ex);
+        if (!ex || !ex.status) return;
+        // Show if: pending AND (sent to me OR sent TO anyone and I am not the sender)
+        const isForMe = ex.to === myId;
+        const isPending = ex.status === 'pending';
+        const notExpired = ex.expires > now;
+        const notFromMe = ex.from !== myId;
+        const alreadyShown = document.getElementById('exch-' + exchId);
+        if (isPending && notExpired && notFromMe && !alreadyShown) {
+          // Show if to==myId OR if to field seems wrong (fallback: show all pending not from me)
+          if (isForMe || ex.to === undefined) {
+            showExchangeNotification(exchId, ex);
+          } else {
+            // Debug: check if there's an ID mismatch
+            console.log('Exchange ' + exchId.slice(0,8) + ': to=' + (ex.to||'').slice(0,8) + ' myId=' + myId.slice(0,8) + ' match=' + isForMe);
+          }
+        }
       });
-    } catch(e) {}
+    } catch(e) { console.error('pollExchanges error:', e); }
+  }
+
+  // Debug: check exchanges in Firebase manually
+  async function debugExchanges() {
+    const myId = getOrCreatePlayerId();
+    try {
+      const res = await fetch(`${FB_URL}/exchanges.json?cb=` + Date.now());
+      const all = await res.json();
+      if (!all) { toast('No exchanges in Firebase'); return; }
+      const entries = Object.entries(all);
+      toast('Exchanges in Firebase: ' + entries.length);
+      entries.forEach(([id, ex]) => {
+        if (!ex) return;
+        const isForMe = ex.to === myId;
+        toast((isForMe ? '→ FOR ME: ' : '← SENT: ') + (ex.fromName||'?') + ' → ' + ex.status + ' | to match: ' + isForMe);
+      });
+    } catch(e) { toast('Error: ' + e.message); }
   }
 
   function showExchangeNotification(exchId, ex) {
