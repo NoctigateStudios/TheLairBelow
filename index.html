@@ -2090,7 +2090,7 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.27</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.28</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
@@ -2291,6 +2291,13 @@
             </div>
           </div>
           <div class="aether-bar"><div class="aether-fill" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <div class="section-label" id="char-skills-label">Combat Skills</div>
+      <div id="char-skills-list">
+        <div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);padding:0.4rem 0;">
+          No skills unlocked yet.
         </div>
       </div>
 
@@ -3570,6 +3577,8 @@
       _acolytesData = state.acolytes;
       renderAcolyteCards(state.acolytes);
     }
+    // Render combat skills for this character's class and level
+    renderCharacterSkills();
 
     // Available acolytes
     if (state.availableAcolytes) {
@@ -3598,6 +3607,68 @@
 
     return true;
   }
+
+  async function renderCharacterSkills() {
+    const el = document.getElementById('char-skills-list');
+    const lbl = document.getElementById('char-skills-label');
+    if (!el || !_characterData) return;
+
+    // Load world skills once and cache
+    if (!_cachedWorldSkills) {
+      try {
+        const res = await fetch(`${FB_URL}/world/skills.json?cb=` + Date.now());
+        if (res.ok) { const d = await res.json(); if (d && !d.error) _cachedWorldSkills = d; }
+      } catch(e) {}
+    }
+    if (!_cachedWorldSkills) return;
+
+    const charLevel  = _characterData.level || 1;
+    const charClass  = (_characterData.classKey || '').toLowerCase();
+    const startingKeys = _characterData.startingSkills || [];
+
+    // A skill is available if:
+    // 1. It matches the character's class (or has no class requirement), AND
+    // 2. Its unlockLevel <= current level, AND
+    // 3. Its category is NOT 'rite' (rites go to Arcana)
+    const available = Object.entries(_cachedWorldSkills).filter(([k, s]) => {
+      if (!s) return false;
+      const cat = s.category || s.cat || s.type || '';
+      if (cat === 'rite') return false; // rites shown in Arcana, not here
+      const classOk = !s.classKey || s.classKey.toLowerCase() === charClass || s.classKey === '';
+      const levelOk = (s.unlockLevel || 1) <= charLevel;
+      return classOk && levelOk;
+    });
+
+    if (lbl) lbl.textContent = 'Combat Skills (' + available.length + ')';
+
+    if (!available.length) {
+      el.innerHTML = '<div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);padding:0.4rem 0;">No skills unlocked yet.</div>';
+      return;
+    }
+
+    const CAT_COLOR = {attack:'var(--crimson-bright)',heal:'var(--viridian-bright)',buff:'var(--amber-bright)',debuff:'var(--mist)',revive:'var(--dm-bright)',utility:'var(--gold)'};
+    el.innerHTML = available.map(([k, s]) => {
+      const cat = s.category || s.cat || 'utility';
+      const col = CAT_COLOR[cat] || 'var(--gold)';
+      const dmg = s.damage?.type && s.damage.type !== 'none'
+        ? `<span style="font-family:var(--ff-heading);font-size:0.38rem;color:${col};">${s.damage.dice||''}${s.damage.flat?'+'+s.damage.flat:''} ${s.damage.type}</span>` : '';
+      const cost = s.cost?.mana
+        ? `<span style="font-family:var(--ff-heading);font-size:0.38rem;color:var(--indigo-bright);">${s.cost.mana} mana</span>` : '';
+      const target = s.targeting?.target
+        ? `<span style="font-family:var(--ff-heading);font-size:0.38rem;color:var(--ash);">→ ${s.targeting.target.replace('-',' ')}</span>` : '';
+      return `<div style="border-left:2px solid ${col};padding:0.5rem 0.7rem;margin-bottom:0.45rem;background:rgba(255,255,255,0.01);">
+        <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.15rem;">
+          <span style="font-family:var(--ff-heading);font-size:0.38rem;letter-spacing:0.1em;text-transform:uppercase;color:${col};">${cat}</span>
+          <span style="font-family:var(--ff-heading);font-size:0.65rem;color:var(--bone);">${s.name||k}</span>
+          <span style="font-family:var(--ff-heading);font-size:0.32rem;color:var(--ash);margin-left:auto;">Lv.${s.unlockLevel||1}</span>
+        </div>
+        <div style="font-family:var(--ff-body);font-style:italic;font-size:0.72rem;color:var(--mist);">${s.desc||''}</div>
+        <div style="display:flex;gap:0.5rem;margin-top:0.25rem;flex-wrap:wrap;">${dmg}${cost}${target}</div>
+      </div>`;
+    }).join('');
+  }
+
+  let _cachedWorldSkills = null;
 
   function renderAcolyteCards(acolytes) {
     const section = document.querySelector('#panel-company .section-label[data-section="acolytes"]');
@@ -4936,14 +5007,114 @@
     document.querySelectorAll('.resource-pill .res-value').forEach((el, i) => {
       el.textContent = Math.floor(values[i]);
     });
-    if (ev.rewardXp) {
-      // XP would update character data — store for next save
-      if (_characterData) _characterData.xp = (_characterData.xp || 0) + (ev.rewardXp || 0);
+    if (ev.rewardXp && ev.rewardXp > 0) {
+      if (_characterData) {
+        _characterData.xp = (_characterData.xp || 0) + ev.rewardXp;
+        gained.push('✦ +' + ev.rewardXp + ' XP');
+        checkLevelUp();
+      }
     }
     if (gained.length) toast('✦ Received: ' + gained.join(' · '));
     // Persist
     const myId = getOrCreatePlayerId();
     fbWrite(myId, collectGameState()).catch(() => {});
+  }
+
+  // XP thresholds per level: level N requires N*1000 XP (cumulative)
+  // e.g. Lv1→2: 1000, Lv2→3: 2000, Lv3→4: 3000 ...
+  function xpForNextLevel(level) { return level * 1000; }
+
+  function checkLevelUp() {
+    if (!_characterData) return;
+    let levelled = false;
+    while (true) {
+      const currentLevel = _characterData.level || 1;
+      const needed = xpForNextLevel(currentLevel);
+      if (_characterData.xp >= needed && currentLevel < 20) {
+        _characterData.xp -= needed;
+        _characterData.level = currentLevel + 1;
+        levelled = true;
+        // Raise stats on level-up: +1 to two primary stats based on class
+        applyLevelUpStatGains(_characterData);
+      } else { break; }
+    }
+    if (levelled) {
+      refreshCharacterBar();
+      const lvl = _characterData.level;
+      showLevelUpModal(lvl);
+      const myId = getOrCreatePlayerId();
+      fbWrite(myId, collectGameState()).catch(() => {});
+    } else {
+      refreshCharacterBar();
+    }
+  }
+
+  function applyLevelUpStatGains(char) {
+    // Each level up: +1 to two stats based on class key
+    const classGains = {
+      'hermeticist':  ['cunning','gnosis'],
+      'flagellant':   ['fortitude','endurance'],
+      'plague-scribe':['memory','cunning'],
+    };
+    const key = (char.classKey || '').toLowerCase();
+    const gains = classGains[key] || ['fortitude','cunning'];
+    if (!char.stats) return;
+    gains.forEach(stat => { char.stats[stat] = (char.stats[stat] || 0) + 1; });
+  }
+
+  function refreshCharacterBar() {
+    if (!_characterData) return;
+    const c = _characterData;
+    const needed = xpForNextLevel(c.level || 1);
+    const pct = Math.min(100, Math.round(((c.xp || 0) / needed) * 100));
+    const el = document.querySelector('#panel-company .char-name');
+    if (el) el.textContent = c.name || playerName || '—';
+    const elCls = document.querySelector('#panel-company .char-class');
+    if (elCls) elCls.textContent = (c.class || '—') + ' · Level ' + (c.level || 1);
+    const xpFill = document.querySelector('#panel-company .char-xp-fill');
+    if (xpFill) xpFill.style.width = pct + '%';
+    const xpLbl = document.querySelector('#panel-company .char-xp-label');
+    if (xpLbl) xpLbl.textContent = (c.xp || 0).toLocaleString() + ' / ' + needed.toLocaleString() + ' XP';
+    // Also refresh stats
+    if (c.stats) {
+      document.querySelectorAll('#panel-company .stat-val').forEach(sv => {
+        const row = sv.closest('.stat-row');
+        const key = row?.querySelector('.stat-name')?.dataset?.codex;
+        if (key && c.stats[key] !== undefined) {
+          if (key === 'gnosis') {
+            sv.textContent = c.stats[key] + ' / 30';
+            const bar = row.closest('.stat-block')?.querySelector('.aether-fill');
+            if (bar) bar.style.width = Math.min(100, Math.round((c.stats[key]/30)*100)) + '%';
+          } else {
+            sv.textContent = c.stats[key];
+          }
+        }
+      });
+    }
+    // Re-render skills for the new level
+    renderCharacterSkills();
+  }
+
+  function showLevelUpModal(newLevel) {
+    // Reuse the DM event modal for the level-up announcement
+    const sigils = { story:'✦' };
+    document.getElementById('dm-evt-sigil').textContent = '✦';
+    document.getElementById('dm-evt-type').textContent = 'LEVEL UP';
+    document.getElementById('dm-evt-type').className = 'dm-event-type discovery';
+    document.getElementById('dm-evt-title').textContent = 'You have reached Level ' + newLevel;
+    document.getElementById('dm-evt-body').textContent =
+      'The lair recognises your growth. Your stats increase. New skills may become available.';
+    const actionsEl = document.getElementById('dm-evt-actions');
+    actionsEl.innerHTML = '';
+    // Clean up any stale reward lines
+    document.querySelectorAll('.dm-event-rwd').forEach(e => e.remove());
+    const btn = document.createElement('button');
+    btn.className = 'dm-event-btn primary';
+    btn.textContent = 'Ascend';
+    btn.onclick = () => closeDmEventModal();
+    actionsEl.appendChild(btn);
+    document.getElementById('dm-event-modal').classList.add('open');
+    _dmEventShowing = true;
   }
 
   function closeDmEventModal() {

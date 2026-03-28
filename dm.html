@@ -228,7 +228,7 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
 <div class="fld"><label>♄ Saturnine</label><input type="number" id="evt-r4" value="0" min="0"></div>
 <div class="fld"><label>♀ Venusian</label><input type="number" id="evt-r5" value="0" min="0"></div>
 <div class="fld"><label>☿ Mercurial</label><input type="number" id="evt-r6" value="0" min="0"></div>
-<div class="fld"><label>XP</label><input type="number" id="evt-rxp" value="0" min="0"></div>
+<div class="fld"><label>XP Reward</label><input type="number" id="evt-rxp" value="0" min="0" placeholder="0"><div style="font-family:var(--ff-h);font-size:0.32rem;color:var(--ash);margin-top:0.15rem;">Triggers level-up if threshold reached</div></div>
 </div>
 <div class="fld"><label>Anchor Location</label><div class="g2"><input type="number" id="evt-lat" step="0.0001" placeholder="lat"><input type="number" id="evt-lng" step="0.0001" placeholder="lng"></div></div>
 <div class="fld"><label>Marker Name</label><input type="text" id="evt-marker" placeholder="The Weeping Eye"></div></div>
@@ -326,7 +326,10 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
   </label>
 </div>
 <button class="btn b-rune" onclick="pushBC()">✦ Proclaim to All</button></div>
-<div class="panel"><div class="ph">Planetary Shift</div><p style="font-family:var(--ff-b);font-style:italic;font-size:0.78rem;color:var(--mist);margin-bottom:0.75rem;line-height:1.6;">Add or remove essence from every seeker. Negative values drain. The lair does not ask permission.</p><div class="ess-grid" id="bc-grid"></div><button class="btn b-seal" style="margin-top:0.4rem;width:100%;" onclick="pushShift()">Apply Shift to All Seekers</button></div>
+<div class="panel"><div class="ph">Planetary Shift</div><p style="font-family:var(--ff-b);font-style:italic;font-size:0.78rem;color:var(--mist);margin-bottom:0.75rem;line-height:1.6;">Add or remove essence from every seeker. Negative values drain. The lair does not ask permission.</p><div class="ess-grid" id="bc-grid"></div><div class="fld" style="margin-top:0.5rem;"><label>XP Grant to All Seekers</label>
+<input type="number" id="bc-xp" value="0" min="0" placeholder="0">
+<div style="font-family:var(--ff-h);font-size:0.32rem;color:var(--ash);margin-top:0.15rem;">Added to each seeker's XP — triggers level-up on their next login</div></div>
+<button class="btn b-seal" style="margin-top:0.4rem;width:100%;" onclick="pushShift()">Apply Shift to All Seekers</button></div>
 </div>
 </div>
 
@@ -408,7 +411,7 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
 <!-- ══ SKILL & SPELL BUILDER ══ -->
 <div id="page-skillbuilder" class="page">
 <div class="pg-head"><div class="pg-title">Skill &amp; Spell Builder</div>
-<div class="pg-desc">Create skills and spells for classes and creatures. Define damage type, targeting, effects, DoTs, heals, and turn-order modifiers. All skills are stored in /world/skills and referenced by key.</div></div>
+<div class="pg-desc">Create combat skills and out-of-combat rites. <strong style="color:var(--crimson-bright);">Combat skills</strong> (Attack, Heal, Buff, Debuff, Revive, Utility) appear in the player's Company panel under their class, unlocking by level. <strong style="color:var(--indigo-bright);">Rites</strong> appear in the Arcana panel and are performed at the Altar outside combat. Both are stored in /world/skills and filtered by category.</div></div>
 <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
   <button class="btn b-rune" onclick="loadAllSkills()">↻ Refresh</button>
   <button class="btn b-seal" onclick="openSkillEd()">+ New Skill</button>
@@ -435,10 +438,17 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
     <div class="fld"><label>Name</label><input type="text" id="skb-name" placeholder="Hermetic Strike"></div>
     <div class="fld"><label>Category</label>
       <select id="skb-cat">
-        <option value="attack">Attack</option><option value="heal">Heal</option>
-        <option value="rite">Rite</option><option value="buff">Buff / Aura</option>
-        <option value="debuff">Debuff</option><option value="revive">Revive</option>
-        <option value="utility">Utility</option>
+        <optgroup label="── Combat Skills (shown in Company panel) ──">
+          <option value="attack">Attack — deals damage</option>
+          <option value="heal">Heal — restores HP / Stress</option>
+          <option value="buff">Buff / Aura — boosts an ally</option>
+          <option value="debuff">Debuff — weakens an enemy</option>
+          <option value="revive">Revive — brings back fallen ally</option>
+          <option value="utility">Utility — other combat effect</option>
+        </optgroup>
+        <optgroup label="── Rites (shown in Arcana panel, out-of-combat) ──">
+          <option value="rite">Rite — performed at the Altar</option>
+        </optgroup>
       </select>
     </div>
   </div>
@@ -763,7 +773,32 @@ async function delSkl(key){if(!confirm('Delete '+key+'?'))return;try{await fbDel
 // BROADCAST
 function buildBcGrid(){document.getElementById('bc-grid').innerHTML=RS.map((s,i)=>`<div class="ess-cell"><span class="es">${s}</span><span class="en">${RN[i]}</span><input class="ei" type="number" id="bcr${i}" value="0" step="1"></div>`).join('');}
 async function pushBC(){const msg=document.getElementById('bc-msg').value.trim();if(!msg){toast('Enter a proclamation.');return;}const ids=Object.keys(allPlayers);if(!ids.length){toast('No seekers loaded.');return;}try{const ts=Date.now();const pinned=document.getElementById('bc-pinned')?.checked||false;await Promise.all(ids.map(id=>fbPut('broadcasts/'+id+'/msg-'+ts,{message:msg,createdAt:ts,read:false,pinned})));log('Proclaimed to '+ids.length+'.','ok');toast('✦ Proclaimed.');}catch(e){log('Error: '+e.message,'err');}}
-async function pushShift(){const deltas=RS.map((_,i)=>parseFloat(document.getElementById('bcr'+i).value)||0);if(deltas.every(d=>d===0)){toast('All deltas are 0.');return;}const ids=Object.keys(allPlayers);try{log('Applying shift…','info');let n=0;for(const id of ids){const s=await fbGet('saves/'+id);if(!s)continue;const vals=s.resources?.values||Array(7).fill(0);const nv=vals.map((v,i)=>Math.max(0,(v||0)+deltas[i]));await fbPatch('saves/'+id,{resources:{values:nv}});n++;}log('Shift applied to '+n+'.','ok');toast('✓ Shift applied to '+n+'.');await loadAll();}catch(e){log('Error: '+e.message,'err');}}
+async function pushShift(){
+  const deltas=RS.map((_,i)=>parseFloat(document.getElementById('bcr'+i).value)||0);
+  const xpGrant=parseInt(document.getElementById('bc-xp')?.value)||0;
+  if(deltas.every(d=>d===0)&&xpGrant===0){toast('All deltas are 0 and XP is 0.');return;}
+  const ids=Object.keys(allPlayers);
+  try{
+    log('Applying shift…','info');
+    let n=0;
+    for(const id of ids){
+      const s=await fbGet('saves/'+id);if(!s)continue;
+      const patch={};
+      if(deltas.some(d=>d!==0)){
+        const vals=s.resources?.values||Array(7).fill(0);
+        patch.resources={values:vals.map((v,i)=>Math.max(0,(v||0)+deltas[i]))};
+      }
+      if(xpGrant>0){
+        const char=s.character||{};
+        patch.character={...char, xp:(char.xp||0)+xpGrant};
+      }
+      await fbPatch('saves/'+id,patch);n++;
+    }
+    log('Shift applied to '+n+'.','ok');
+    toast('✓ Applied to '+n+' seeker(s).');
+    await loadAll();
+  }catch(e){log('Error: '+e.message,'err');}
+}
 
 loadAll();
 setInterval(loadAll,30000);
