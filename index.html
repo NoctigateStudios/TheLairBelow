@@ -2142,7 +2142,7 @@
         <div style="display:flex;gap:0.4rem;">
           <button onclick="debugPresence()" style="background:none;border:1px solid var(--gold-dim);color:var(--gold);font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.08em;padding:0.25rem 0.5rem;cursor:pointer;">⬡ SCAN</button>
           <button onclick="debugExchanges()" style="background:none;border:1px solid var(--gold-dim);color:var(--gold);font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.08em;padding:0.25rem 0.5rem;cursor:pointer;">⟺ CHK</button>
-          <button onclick="pollIncomingExchanges()" onclick="pollIncomingExchanges()" style="background:none;border:1px solid rgba(45,122,95,0.6);color:var(--viridian-bright);font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.08em;padding:0.25rem 0.5rem;cursor:pointer;">↻ POLL</button>
+          <button onclick="manualPoll()" style="background:none;border:1px solid rgba(45,122,95,0.6);color:var(--viridian-bright);font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.08em;padding:0.25rem 0.5rem;cursor:pointer;">↻ POLL</button>
         </div>
       </div>
 
@@ -4209,6 +4209,32 @@
 
   const _pendingExchanges = {};
 
+  async function manualPoll() {
+    const myId = getOrCreatePlayerId();
+    toast('Polling... my ID: ' + myId.slice(0,8));
+    try {
+      const res = await fetch(`${FB_URL}/exchanges.json?t=` + Date.now());
+      const all = await res.json();
+      if (!all) { toast('No exchanges in Firebase'); return; }
+      const entries = Object.entries(all);
+      toast('Found ' + entries.length + ' exchange(s)');
+      const now = Date.now();
+      entries.forEach(([id, ex]) => {
+        if (!ex) return;
+        const toMatch = (ex.to||'').toLowerCase() === myId.toLowerCase();
+        const fromMatch = (ex.from||'').toLowerCase() === myId.toLowerCase();
+        toast('Exchange: from=' + (ex.fromName||'?') + ' status=' + ex.status + ' toMe=' + toMatch + ' fromMe=' + fromMatch + ' expired=' + ((ex.expires||0) < now));
+        if (toMatch && ex.status === 'pending' && (ex.expires||0) > now) {
+          // Clear old card and re-show
+          const old = document.getElementById('exch-' + id);
+          if (old) old.remove();
+          showExchangeNotification(id, ex);
+          toast('✓ Showing notification!');
+        }
+      });
+    } catch(e) { toast('POLL ERROR: ' + e.message); }
+  }
+
   async function pollIncomingExchanges() {
     const myId = getOrCreatePlayerId();
     try {
@@ -4219,12 +4245,6 @@
       const now = Date.now();
       Object.entries(all).forEach(([exchId, ex]) => {
         if (!ex || !ex.status) return;
-        // Clean up accepted/declined exchanges from inbox
-        if (ex.status === 'accepted' || ex.status === 'declined') {
-          const card = document.getElementById('exch-' + exchId);
-          if (card) { card.remove(); }
-          return;
-        }
         // Show if: pending AND (sent to me OR sent TO anyone and I am not the sender)
         const isForMe = (ex.to||'').toLowerCase() === myId.toLowerCase();
         const isPending = ex.status === 'pending';
@@ -4242,10 +4262,6 @@
   // Debug: check exchanges in Firebase manually
   async function debugExchanges() {
     const myId = getOrCreatePlayerId();
-    // Clear any shown exchange cards so they can reappear
-    document.querySelectorAll('[id^="exch-"]').forEach(el => el.remove());
-    const inbox = document.getElementById('exchange-inbox');
-    if (inbox) inbox.style.display = 'none';
     try {
       const res = await fetch(`${FB_URL}/exchanges.json?cb=` + Date.now());
       const all = await res.json();
