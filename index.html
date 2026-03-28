@@ -564,6 +564,8 @@
   .llair-mission.story   { background: var(--indigo-bright); box-shadow: 0 0 10px var(--indigo-bright); border-color: rgba(61,61,170,0.5); }
   .llair-mission.gather  { background: var(--viridian-bright); box-shadow: 0 0 10px var(--viridian-bright); border-color: rgba(45,122,95,0.5); }
   .llair-mission.recruit { background: var(--amber-bright); box-shadow: 0 0 10px var(--amber-bright); border-color: rgba(212,137,10,0.5); }
+  .llair-mission.dm-placed { width:18px!important;height:18px!important;border-width:2px;animation:pulse-ring 1.8s ease-in-out infinite; }
+  @keyframes pulse-ring { 0%,100%{box-shadow:0 0 6px 0px currentColor} 50%{box-shadow:0 0 14px 4px currentColor} }
 
   /* Leaflet popup styling */
   .leaflet-popup-content-wrapper {
@@ -1963,83 +1965,47 @@
   /* Incoming exchange popup */
   #incoming-exchange-modal { position:fixed;inset:0;z-index:900;background:rgba(5,4,7,0.85);display:none;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(4px); }
   #incoming-exchange-modal.open { display:flex; }
-  .incoming-modal-inner {
-    background: var(--deep);
-    border: 1px solid rgba(201,168,76,0.3);
-    border-top: 2px solid var(--gold-dim);
-    width:100%;max-width:360px;
-    padding:1.8rem 1.4rem 1.4rem;
-    animation:slide-up 0.35s cubic-bezier(0.16,1,0.3,1);
-    position:relative;
-  }
-  .incoming-modal-inner::before {
-    content:'';
-    position:absolute;
-    top:0;left:0;right:0;
-    height:60px;
-    background: linear-gradient(180deg, rgba(201,168,76,0.04) 0%, transparent 100%);
-    pointer-events:none;
-  }
-  .incoming-modal-sigil { font-size:1.2rem;text-align:center;margin-bottom:0.8rem;color:var(--gold-dim);letter-spacing:0.3em;opacity:0.7; }
-  .incoming-modal-title { font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--mist);text-align:center;margin-bottom:1rem; }
-  .incoming-modal-from { font-family:var(--ff-title);font-size:1.5rem;color:var(--gold);text-align:center;margin-bottom:0.2rem;text-shadow:0 0 20px rgba(201,168,76,0.2); }
-  .incoming-modal-coven { font-family:var(--ff-body);font-style:italic;font-size:0.78rem;color:var(--mist);text-align:center;margin-bottom:1.4rem; }
-  .incoming-modal-divider { border:none;border-top:1px solid rgba(201,168,76,0.1);margin:0.6rem 0; }
-  .incoming-modal-row { display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.6rem;padding:0 0.2rem; }
-  .incoming-modal-label { font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ash); }
-  .incoming-modal-value { font-family:var(--ff-body);font-style:italic;font-size:0.88rem;color:var(--pale); }
-  .incoming-modal-actions { display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:1.4rem; }
-  .incoming-modal-btn { font-family:var(--ff-heading);font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.85rem 0.5rem;border:1px solid;background:transparent;cursor:pointer;transition:all 0.2s; }
-  .incoming-modal-btn.accept { border-color:rgba(45,122,95,0.5);color:var(--viridian-bright); }
-  .incoming-modal-btn.accept:active { background:rgba(45,122,95,0.12); }
-  .incoming-modal-btn.decline { border-color:rgba(139,26,26,0.5);color:var(--crimson-bright); }
-  .incoming-modal-btn.decline:active { background:rgba(139,26,26,0.1); }
-  .incoming-modal-timer { font-family:var(--ff-body);font-style:italic;font-size:0.68rem;color:var(--ash);text-align:center;margin-top:0.9rem; }
+  .incoming-modal-inner { background:var(--abyss);border:1px solid var(--gold-dim);width:100%;max-width:380px;padding:1.6rem 1.4rem;animation:slide-up 0.35s cubic-bezier(0.16,1,0.3,1);position:relative; }
+  .incoming-modal-sigil { font-size:1.6rem;text-align:center;margin-bottom:0.5rem;animation:pulse-sigil 3s ease-in-out infinite; }
+  .incoming-modal-title { font-family:var(--ff-heading);font-size:0.55rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);text-align:center;margin-bottom:0.2rem; }
+  .incoming-modal-from { font-family:var(--ff-title);font-size:1.4rem;color:var(--bone);text-align:center;margin-bottom:0.1rem; }
+  .incoming-modal-coven { font-family:var(--ff-body);font-style:italic;font-size:0.75rem;color:var(--text-secondary);text-align:center;margin-bottom:1.2rem; }
+  .incoming-modal-divider { border:none;border-top:1px solid var(--border);margin:0.8rem 0; }
+  .incoming-modal-row { display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.5rem; }
+  .incoming-modal-label { font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary); }
+  .incoming-modal-value { font-family:var(--ff-body);font-style:italic;font-size:0.9rem;color:var(--bone); }
+  .incoming-modal-actions { display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-top:1.2rem; }
+  .incoming-modal-btn { font-family:var(--ff-heading);font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.9rem;border:none;cursor:pointer;transition:all 0.2s; }
+  .incoming-modal-btn.accept { background:rgba(45,122,95,0.15);border:1px solid var(--viridian-bright);color:var(--viridian-bright); }
+  .incoming-modal-btn.accept:active { background:rgba(45,122,95,0.35); }
+  .incoming-modal-btn.decline { background:rgba(196,48,48,0.1);border:1px solid var(--crimson-bright);color:var(--crimson-bright); }
+  .incoming-modal-btn.decline:active { background:rgba(196,48,48,0.25); }
+  .incoming-modal-timer { font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.08em;color:var(--text-secondary);text-align:center;margin-top:0.8rem; }
   /* DM Story Event popup */
-  #dm-event-modal { position:fixed;inset:0;z-index:950;background:rgba(5,4,7,0.92);display:none;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(3px); }
+  #dm-event-modal { position:fixed;inset:0;z-index:950;background:rgba(5,4,7,0.88);display:none;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(4px); }
   #dm-event-modal.open { display:flex; }
-  .dm-event-inner {
-    background: var(--deep);
-    border-left: 3px solid var(--gold-dim);
-    border-right: none;
-    border-top: 1px solid rgba(201,168,76,0.15);
-    border-bottom: 1px solid rgba(201,168,76,0.15);
-    width:100%;max-width:370px;
-    padding:2rem 1.6rem 1.5rem;
-    animation:slide-up 0.4s cubic-bezier(0.16,1,0.3,1);
-    position:relative;
-  }
-  .dm-event-inner::after {
-    content:'⋆ ✦ ⋆';
-    position:absolute;
-    top:-0.6rem;left:50%;transform:translateX(-50%);
-    font-size:0.5rem;letter-spacing:0.4em;
-    color:var(--gold-dim);
-    background:var(--deep);
-    padding:0 0.5rem;
-  }
-  .dm-event-sigil { font-size:0.9rem;text-align:left;margin-bottom:0.5rem;color:var(--gold-dim);letter-spacing:0.2em; }
-  .dm-event-type { font-family:var(--ff-heading);font-size:0.38rem;letter-spacing:0.3em;text-transform:uppercase;text-align:left;margin-bottom:0.5rem; }
+  .dm-event-inner { background:var(--abyss);border:1px solid var(--border-bright);width:100%;max-width:390px;padding:1.8rem 1.5rem 1.4rem;animation:slide-up 0.35s cubic-bezier(0.16,1,0.3,1);position:relative; }
+  .dm-event-sigil { font-size:1.4rem;text-align:center;margin-bottom:0.4rem; }
+  .dm-event-type { font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.25em;text-transform:uppercase;text-align:center;margin-bottom:0.6rem; }
   .dm-event-type.urgent    { color:var(--crimson-bright); }
-  .dm-event-type.story     { color:rgba(100,100,200,0.8); }
+  .dm-event-type.story     { color:var(--indigo-bright); }
   .dm-event-type.discovery { color:var(--viridian-bright); }
-  .dm-event-type.neutral   { color:var(--mist); }
-  .dm-event-title { font-family:var(--ff-heading);font-size:0.82rem;color:var(--bone);text-align:left;margin-bottom:1rem;letter-spacing:0.03em;line-height:1.3; }
-  .dm-event-body  { font-family:var(--ff-body);font-style:italic;font-size:0.88rem;color:var(--pale);line-height:1.8;margin-bottom:1.4rem;text-align:left;border-left:1px solid rgba(201,168,76,0.12);padding-left:0.8rem; }
-  .dm-event-actions { display:flex;gap:0.5rem; }
-  .dm-event-btn { flex:1;font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.7rem 0.5rem;border:1px solid rgba(201,168,76,0.25);background:transparent;color:var(--gold-dim);cursor:pointer;transition:all 0.2s; }
-  .dm-event-btn:hover { border-color:var(--gold-dim);color:var(--gold); }
-  .dm-event-btn:active { background:rgba(201,168,76,0.06); }
-  .dm-event-btn.primary { border-color:rgba(201,168,76,0.4);color:var(--gold); }
+  .dm-event-type.neutral   { color:var(--text-secondary); }
+  .dm-event-title { font-family:var(--ff-heading);font-size:0.9rem;color:var(--gold);text-align:center;margin-bottom:1rem;letter-spacing:0.04em; }
+  .dm-event-body  { font-family:var(--ff-body);font-style:italic;font-size:0.88rem;color:var(--pale);line-height:1.75;margin-bottom:1.2rem;text-align:center; }
+  .dm-event-actions { display:flex;gap:0.6rem; }
+  .dm-event-btn { flex:1;font-family:var(--ff-heading);font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.75rem;border:1px solid var(--border-bright);background:transparent;color:var(--gold);cursor:pointer;transition:all 0.2s; }
+  .dm-event-btn:active { background:rgba(201,168,76,0.1); }
+  .dm-event-btn.primary { border-color:var(--gold-dim);color:var(--gold); }
 
   /* DM Broadcast banner */
-  #dm-broadcast-banner { position:fixed;top:0;left:0;right:0;z-index:960;background:rgba(10,8,15,0.97);border-bottom:1px solid rgba(201,168,76,0.2);padding:0.8rem 1.2rem;display:none;align-items:flex-start;gap:0.9rem;backdrop-filter:blur(4px); }
-  #dm-broadcast-banner.show { display:flex;animation:slide-down 0.35s cubic-bezier(0.16,1,0.3,1); }
+  #dm-broadcast-banner { position:fixed;top:0;left:0;right:0;z-index:960;background:rgba(61,61,170,0.95);border-bottom:1px solid var(--indigo-bright);padding:0.9rem 1.4rem;display:none;align-items:center;gap:1rem;backdrop-filter:blur(4px); }
+  #dm-broadcast-banner.show { display:flex;animation:slide-down 0.4s cubic-bezier(0.16,1,0.3,1); }
   @keyframes slide-down { from { transform:translateY(-100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
-  .broadcast-icon { font-size:0.8rem;flex-shrink:0;color:var(--gold-dim);margin-top:0.15rem;letter-spacing:0.2em; }
-  .broadcast-text { font-family:var(--ff-body);font-style:italic;font-size:0.85rem;color:var(--pale);flex:1;line-height:1.6; }
-  .broadcast-dismiss { font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--ash);background:transparent;border:1px solid var(--stone);padding:0.35rem 0.7rem;cursor:pointer;flex-shrink:0;margin-top:0.1rem;transition:all 0.2s; }
-  .broadcast-dismiss:hover { color:var(--pale);border-color:var(--ash); }
+  .broadcast-icon { font-size:1.1rem;flex-shrink:0; }
+  .broadcast-text { font-family:var(--ff-body);font-style:italic;font-size:0.9rem;color:var(--ghost);flex:1;line-height:1.5; }
+  .broadcast-dismiss { font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--indigo-bright);background:transparent;border:1px solid var(--indigo-bright);padding:0.4rem 0.8rem;cursor:pointer;flex-shrink:0; }
+  .broadcast-dismiss:active { background:rgba(61,61,170,0.3); }
   #exchange-modal { position:fixed;inset:0;z-index:700;background:rgba(5,4,7,0.97);display:none;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem; }
   #exchange-modal.open { display:flex; }
   .exchange-title { font-family:var(--ff-title);font-size:1.6rem;color:var(--gold);letter-spacing:2px;margin-bottom:0.3rem;text-align:center; }
@@ -2124,12 +2090,12 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.18</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.20</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
-      <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">⊕</button>
+      <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
         <div class="location-dot"></div>
-        <span id="location-text">Reading the stars…</span>
+        <span id="location-text">Locating...</span>
       </div>
     </div>
   </div>
@@ -2185,27 +2151,27 @@
   <!-- TABS -->
   <div id="tabs">
     <button class="tab active" onclick="switchTab('journal')">
-      <span class="tab-icon">✦</span>
+      <span class="tab-icon">📜</span>
       <span class="tab-label">Journal</span>
     </button>
     <button class="tab" onclick="switchTab('field')">
-      <span class="tab-icon">⬡</span>
+      <span class="tab-icon">🗺</span>
       <span class="tab-label">Field</span>
     </button>
     <button class="tab" onclick="switchTab('company')">
-      <span class="tab-icon">🜄</span>
+      <span class="tab-icon">👁</span>
       <span class="tab-label">Company</span>
     </button>
     <button class="tab" onclick="switchTab('lair')">
-      <span class="tab-icon">⛧</span>
+      <span class="tab-icon">🏚</span>
       <span class="tab-label">Lair</span>
     </button>
     <button class="tab" onclick="switchTab('arcana')">
-      <span class="tab-icon">☽</span>
+      <span class="tab-icon">🌙</span>
       <span class="tab-label">Arcana</span>
     </button>
     <button class="tab" onclick="switchTab('codex')">
-      <span class="tab-icon">☿</span>
+      <span class="tab-icon">📖</span>
       <span class="tab-label">Codex</span>
     </button>
   </div>
@@ -2242,7 +2208,7 @@
         </p>
         <div class="entry-actions">
           <button class="btn-action primary" onclick="showCombat()">Enter the Passage</button>
-          <button class="btn-action" onclick="toast('Maurus withdraws to the Dormitorium. His wounds will keep.')">Send to the Dormitorium</button>
+          <button class="btn-action" onclick="toast('You send Maurus to rest in the Dormitorium.')">Rest Maurus</button>
         </div>
       </div>
 
@@ -2255,7 +2221,7 @@
           The Mercurial hour worked its gift: the spiral inscription on the eastern wall reveals itself as a <em>Chaldean <span data-codex="planetary-hour">planetary table</span></em>. Cross-referencing with the city's founding maps, three <span data-codex="convergence-point">convergence points</span> emerge above ground. They pulse during the <span data-codex="lunar">Moon\'s hour</span>.
         </p>
         <div class="entry-actions">
-          <button class="btn-action primary" onclick="switchTab('field')">Mark the Points</button>
+          <button class="btn-action primary" onclick="switchTab('field')">Mark Convergences</button>
           <button class="btn-action" onclick="switchTab('arcana')">Study Further</button>
         </div>
       </div>
@@ -2269,8 +2235,8 @@
           Near the old market, a young woman named <em>Serena Falch</em> pressed a strange coin into your palm — the same sigil as the one above the lair's gate. She is waiting at the designated corner at dusk.
         </p>
         <div class="entry-actions">
-          <button class="btn-action primary" onclick="switchTab('field')">Find Her at Dusk</button>
-          <button class="btn-action" onclick="toast('You let the moment pass. The coin grows warm in your pocket.')">Ignore the Summons</button>
+          <button class="btn-action primary" onclick="switchTab('field')">Go to Meeting</button>
+          <button class="btn-action" onclick="toast('You ignore the summons. The coin grows warm in your pocket.')">Ignore</button>
         </div>
       </div>
 
@@ -2285,7 +2251,7 @@
           While you slept, the lair's mechanisms continued their slow accumulation. The <em><span data-codex="lunar">Lunar confluence</span></em> was favourable: +216 <span data-codex="lunar">Lunar essence</span> gathered. The <span data-codex="altar">Altar of Mercury</span> processed two unfinished inscriptions. Brother Orin completed his transcription of the Third <span data-codex="scriptorium">Grimoire</span>.
         </p>
         <div class="entry-actions">
-          <button class="btn-action" onclick="toast('The essences settle into your reserves.')">Receive</button>
+          <button class="btn-action" onclick="toast('Resources claimed.')">Claim</button>
         </div>
       </div>
 
@@ -2299,13 +2265,13 @@
         <div class="map-vignette"></div>
         <div class="map-loading" id="map-loading">
           <span class="map-loading-symbol">⛧</span>
-          <span class="map-loading-text">The field takes shape…</span>
+          <span class="map-loading-text">Divining Your Location...</span>
         </div>
       </div>
 
       <div class="map-legend">
         <div class="legend-item"><div class="legend-dot" style="background:var(--gold);box-shadow:0 0 5px var(--gold)"></div>You</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#7b4fcf;border-radius:2px;box-shadow:0 0 5px #7b4fcf"></div>Another Seeker</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#7b4fcf;border-radius:2px;box-shadow:0 0 5px #7b4fcf"></div>Nearby Seeker</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--crimson-bright)"></div>Combat Encounter</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--indigo-bright)"></div>Story Event</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--viridian-bright)"></div>Convergence Point</div>
@@ -2313,10 +2279,10 @@
       </div>
 
       <div id="nearby-players-list" style="display:none;margin-bottom:0.8rem;">
-        <div class="section-label">Others in the Field</div>
+        <div class="section-label">Nearby Seekers</div>
         <div id="nearby-players-cards"></div>
       </div>
-      <div class="section-label">Obligations &amp; Omens</div>
+      <div class="section-label">Active Missions</div>
 
       <div class="mission-card" style="--mission-color:var(--crimson-bright)" onclick="showCombat()">
         <div class="mission-header">
@@ -2331,7 +2297,7 @@
         </div>
       </div>
 
-      <div class="mission-card" style="--mission-color:var(--indigo-bright)" onclick="toast('Serena will not wait forever. Go to her.')">
+      <div class="mission-card" style="--mission-color:var(--indigo-bright)" onclick="toast('You must go to the market in person to trigger this event.')">
         <div class="mission-header">
           <span class="mission-title">The Coin Bearer</span>
           <span class="mission-badge story">Story</span>
@@ -2344,7 +2310,7 @@
         </div>
       </div>
 
-      <div class="mission-card" style="--mission-color:var(--viridian-bright)" onclick="toast('This place speaks only during the Moon\'s hour. Return then.')">
+      <div class="mission-card" style="--mission-color:var(--viridian-bright)" onclick="toast('Convergence Point active during Moon\'s hour only. Return then.')">
         <div class="mission-header">
           <span class="mission-title">Lunar Confluence — Via dei Fiori</span>
           <span class="mission-badge" style="color:var(--viridian-bright);">Gather</span>
@@ -2361,7 +2327,7 @@
     <!-- COMPANY PANEL -->
     <div id="panel-company" class="tab-panel">
 
-      <div class="section-label">The Archivist</div>
+      <div class="section-label">The Seeker</div>
 
       <div class="char-header">
         <div class="char-avatar">🜏</div>
@@ -2414,9 +2380,11 @@
         </div>
       </div>
 
-      <div class="section-label">Acolytes</div>
+      <div class="section-label" data-section="acolytes">Acolytes</div>
 
-      <div class="acolyte-card">
+      <!-- Acolyte cards are rendered dynamically by renderAcolyteCards() from Firebase save data.
+           The cards below are fallback placeholders shown before the first save loads. -->
+      <div class="acolyte-card" data-acolyte-id="maurus" data-acolyte-class="Flagellant" data-acolyte-level="4" data-acolyte-states="Paranoid,Masochistic">
         <div class="acolyte-avatar">🜃</div>
         <div class="acolyte-info">
           <div class="acolyte-name">Brother Maurus</div>
@@ -2430,7 +2398,7 @@
         </div>
       </div>
 
-      <div class="acolyte-card">
+      <div class="acolyte-card" data-acolyte-id="irene" data-acolyte-class="Plague Scribe" data-acolyte-level="3" data-acolyte-states="Courageous,Ink-Stained">
         <div class="acolyte-avatar">🜁</div>
         <div class="acolyte-info">
           <div class="acolyte-name">Sister Irene Voss</div>
@@ -2444,7 +2412,7 @@
         </div>
       </div>
 
-      <div class="acolyte-card" style="border-style:dashed;opacity:0.5;cursor:pointer" onclick="switchTab('field')">
+      <div class="acolyte-card" data-recruit="true" style="border-style:dashed;opacity:0.5;cursor:pointer" onclick="switchTab('field')">
         <div class="acolyte-avatar" style="border-style:dashed">＋</div>
         <div class="acolyte-info">
           <div class="acolyte-name" style="color:var(--text-secondary)">Recruit a New Acolyte</div>
@@ -2459,7 +2427,7 @@
 
       <div class="section-label">Lair Depth I — The Antechamber</div>
 
-      <div class="building-grid">
+      <div class="building-grid" id="lair-building-grid">
         <div class="building-card">
           <span class="building-level">Lv. 2</span>
           <span class="building-icon">🕯</span>
@@ -2499,6 +2467,7 @@
       </div>
 
       <div class="section-label">Research Queue</div>
+      <!-- Research is static flavour until research system is fully implemented -->
 
       <div class="research-item active">
         <div class="research-name">Chaldean <span data-codex="planetary-hour">Planetary Correspondences</span> — Vol. III</div>
@@ -2660,8 +2629,8 @@
     <div class="save-id-display" id="save-id-display" onclick="copySaveId()">—</div>
     <p class="save-id-hint">This seal identifies your chronicle. Tap to copy it. Keep it safe — you will need it to restore your game on another device.</p>
     <div class="save-btn-row">
-      <button class="save-btn primary" onclick="saveGame()">Seal Chronicle</button>
-      <button class="save-btn" onclick="loadGame()">Restore Chronicle</button>
+      <button class="save-btn primary" onclick="saveGame()">Save Now</button>
+      <button class="save-btn" onclick="loadGame()">Load Cloud</button>
     </div>
     <div class="save-status" id="save-status"></div>
   </div>
@@ -2853,6 +2822,9 @@
       setTimeout(() => toast('The lair stirs. The stars take notice. You descend.'), 800);
       setTimeout(() => { try { initCodex(); attachLongPress(); } catch(e) { console.error('init error:',e); } }, 600);
       startAutoSave();
+      setTimeout(seedWorldDataIfEmpty, 2000);
+      setTimeout(loadBuildingsFromFirebase, 2600);
+      setTimeout(loadRecipesFromFirebase, 2500);
       playerName = localStorage.getItem('llair_name') || '';
       playerCoven = localStorage.getItem('llair_coven') || '';
       // Auto-load saved state from Firebase on every startup
@@ -2890,20 +2862,75 @@
   let playerLat = 45.4642; // Milan fallback
   let playerLng = 9.1900;
 
-  const missions = [
-    { type: 'combat',  title: 'The Writhing Threshold',   desc: 'Something has nested in the third sub-level. The seals weaken from inside.',   dlat:  0.0018, dlng:  0.0025, action: () => showCombat() },
-    { type: 'story',   title: 'The Coin Bearer',           desc: 'Serena Falch waits at the market corner, pressing a strange sigil into strangers\' palms.', dlat: -0.0022, dlng: -0.0015, action: () => toast('You must go there in person to trigger this event.') },
-    { type: 'gather',  title: 'Lunar Confluence',          desc: 'Lunar essence pools here during the Moon\'s planetary hour. Stand here then.',  dlat:  0.0010, dlng: -0.0030, action: () => toast('Return here during the Moon\'s hour for massive Lunar gain.') },
-    { type: 'recruit', title: 'Potential Acolyte',         desc: 'A figure lingers near the old fountain, marked by something unseen.',          dlat: -0.0005, dlng:  0.0035, action: () => toast('Approach in person to begin the recruitment encounter.') },
-  ];
+  // World events loaded from Firebase — split into dm (placed by DM) and random (spawned near player)
+  let dmMapMarkers = {};     // evtId -> leaflet marker
+  let randomMapMarkers = {}; // evtId -> leaflet marker
 
-  function makeIcon(type) {
+  async function loadWorldEvents(lat, lng) {
+    try {
+      const res = await fetch(`${FB_URL}/world/events.json?cb=` + Date.now());
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data || data.error) return;
+
+      // DM-placed events
+      const dmEvts = data.dm || {};
+      Object.entries(dmEvts).forEach(([id, ev]) => {
+        if (!ev || !ev.lat || !ev.lng) return;
+        if (dmMapMarkers[id]) return; // already on map
+        const marker = L.marker([ev.lat, ev.lng], { icon: makeIcon(ev.type || 'story', 'dm') }).addTo(map);
+        marker.bindPopup(makeEventPopup(ev), { maxWidth: 240, className: '' });
+        dmMapMarkers[id] = marker;
+      });
+      // Remove stale DM markers
+      Object.keys(dmMapMarkers).forEach(id => {
+        if (!dmEvts[id]) { dmMapMarkers[id].remove(); delete dmMapMarkers[id]; }
+      });
+
+      // Random world events — spawn near player if not already on map
+      const randomEvts = data.random || {};
+      Object.entries(randomEvts).forEach(([id, ev]) => {
+        if (!ev) return;
+        if (randomMapMarkers[id]) return;
+        // Offset from player position using stored dlat/dlng, or absolute lat/lng
+        const elat = ev.lat !== undefined ? ev.lat : lat + (ev.dlat || 0);
+        const elng = ev.lng !== undefined ? ev.lng : lng + (ev.dlng || 0);
+        const marker = L.marker([elat, elng], { icon: makeIcon(ev.type || 'gather', 'random') }).addTo(map);
+        marker.bindPopup(makeEventPopup(ev), { maxWidth: 240, className: '' });
+        randomMapMarkers[id] = marker;
+      });
+      Object.keys(randomMapMarkers).forEach(id => {
+        if (!randomEvts[id]) { randomMapMarkers[id].remove(); delete randomMapMarkers[id]; }
+      });
+
+    } catch(e) {}
+  }
+
+  function makeEventPopup(ev) {
+    const rewardHtml = ev.reward ? `<div style="margin-top:0.4rem;font-family:var(--ff-heading);font-size:0.5rem;color:#c9a84c;letter-spacing:0.08em;">${ev.reward}</div>` : '';
+    return `<div class="popup-title">${ev.title || 'Unknown Event'}</div>
+      <div>${ev.desc || ''}</div>
+      ${rewardHtml}
+      <button class="popup-btn" onclick="handleWorldEvent(${JSON.stringify(JSON.stringify(ev))})">Investigate</button>`;
+  }
+
+  function handleWorldEvent(evJson) {
+    const ev = JSON.parse(evJson);
+    document.querySelector('.leaflet-popup-close-button')?.click();
+    if (ev.type === 'combat') { showCombat(); return; }
+    toast(ev.actionText || 'You approach the site. The air thickens.');
+  }
+
+  function makeIcon(type, source) {
+    // source: 'dm' = DM-placed (larger, pulsing ring), 'random' = world-spawned (smaller)
+    const size = source === 'dm' ? 16 : 12;
+    const extra = source === 'dm' ? ' dm-placed' : '';
     return L.divIcon({
       className: '',
-      html: `<div class="llair-mission ${type}"></div>`,
-      iconSize: [14, 14],
-      iconAnchor: [7, 7],
-      popupAnchor: [0, -12],
+      html: `<div class="llair-mission ${type}${extra}"></div>`,
+      iconSize: [size, size],
+      iconAnchor: [size/2, size/2],
+      popupAnchor: [0, -14],
     });
   }
 
@@ -2936,19 +2963,9 @@
     // Player marker
     playerMarker = L.marker([lat, lng], { icon: makePlayerIcon(), zIndexOffset: 1000 }).addTo(map);
 
-    // Mission markers
-    missions.forEach(m => {
-      const mlat = lat + m.dlat;
-      const mlng = lng + m.dlng;
-      const marker = L.marker([mlat, mlng], { icon: makeIcon(m.type) }).addTo(map);
-      marker.bindPopup(`
-        <div class="popup-title">${m.title}</div>
-        <div>${m.desc}</div>
-        <button class="popup-btn" onclick="(${m.action.toString()})(); document.querySelector('.leaflet-popup-close-button').click()">
-          Investigate
-        </button>
-      `, { maxWidth: 220, className: '' });
-    });
+    // Load DM and random world events from Firebase
+    setTimeout(() => loadWorldEvents(lat, lng), 1500);
+    setInterval(() => loadWorldEvents(playerLat, playerLng), 30000);
 
     // Hide loading overlay
     const loading = document.getElementById('map-loading');
@@ -3641,35 +3658,104 @@
   }
 
   function collectGameState() {
+    // Collect character from live DOM (set by applyGameState or identity setup)
+    const charName  = document.querySelector('.char-name')?.textContent  || playerName || 'Unknown';
+    const charClass = document.querySelector('.char-class')?.textContent || 'Unknown';
+    // Collect acolyte stress from live DOM
+    const acolyteEls = document.querySelectorAll('.acolyte-card[data-acolyte-id]');
+    const acolytesLive = Array.from(acolyteEls).map(el => ({
+      id:     el.dataset.acolyteId,
+      name:   el.querySelector('.acolyte-name')?.textContent || '',
+      class:  el.dataset.acolyteClass || '',
+      level:  parseInt(el.dataset.acolyteLevel)||1,
+      stress: parseInt(el.querySelector('.stress-fill')?.style.width)||0,
+      states: (el.dataset.acolyteStates||'').split(',').filter(Boolean),
+      available: !!availableAcolytes[el.dataset.acolyteId],
+    }));
     return {
       version: 1,
       savedAt: new Date().toISOString(),
       playerId: getOrCreatePlayerId(),
       resources: { values: [...values] },
-      character: {
-        name: 'The Archivist', class: 'Hermeticist', level: 6, xp: 4320,
-        stats: { fortitude:12, wrath:9, intuition:14, empathy:11, endurance:10, memory:7, cunning:15, speed:13, gnosis:22 }
+      character: _characterData || {
+        name: charName, class: charClass, level: 1, xp: 0,
+        stats: { fortitude:10, wrath:8, intuition:12, empathy:10, endurance:10, memory:8, cunning:12, speed:10, gnosis:0 }
       },
-      acolytes: [
-        { name:'Brother Maurus',    class:'Flagellant',    level:4, stress:85, states:['Paranoid','Masochistic'] },
-        { name:'Sister Irene Voss', class:'Plague Scribe', level:3, stress:30, states:['Courageous','Ink-Stained'] }
-      ],
-      lair: { buildings: { scriptorium:2, forge:1, dormitorium:1, altar:2 } },
-      research: { active:'chaldean-vol3', progress:65, queue:['doctrine-of-signatures'] },
+      acolytes: acolytesLive.length ? acolytesLive : (_acolytesData || []),
+      lair: _lairData || { buildings: {} },
+      research: _researchData || { active: null, progress: 0, queue: [] },
       inventory: { ...inventory },
       availableAcolytes: { ...availableAcolytes },
     };
   }
 
+  // Live game data mirrors — updated by applyGameState
+  let _characterData = null;
+  let _acolytesData  = null;
+  let _lairData      = null;
+  let _researchData  = null;
+
   function applyGameState(state) {
     if (!state || state.version !== 1) return false;
+
+    // Resources
     if (state.resources?.values) {
       state.resources.values.forEach((v, i) => { values[i] = v; });
       document.querySelectorAll('.resource-pill .res-value').forEach((el, i) => {
         el.textContent = Math.floor(values[i]);
       });
     }
+
+    // Inventory
     if (state.inventory) inventory = { ...state.inventory };
+
+    // Character
+    if (state.character) {
+      _characterData = state.character;
+      const c = state.character;
+      const xpForLevel = n => n * 1000;
+      const xpNext = xpForLevel((c.level||1) + 1);
+      const xpPct  = Math.min(100, Math.round(((c.xp||0) / xpNext) * 100));
+      const el = document.querySelector('#panel-company .char-name');
+      if (el) el.textContent = c.name || playerName || 'Unknown';
+      const secLbl = document.getElementById('company-section-label');
+      if (secLbl) secLbl.textContent = c.name || playerName || 'Your Character';
+      const elCls = document.querySelector('#panel-company .char-class');
+      if (elCls) elCls.textContent = (c.class||'—') + ' · Level ' + (c.level||1);
+      const xpFill = document.querySelector('#panel-company .char-xp-fill');
+      if (xpFill) xpFill.style.width = xpPct + '%';
+      const xpLbl = document.querySelector('#panel-company .char-xp-label');
+      if (xpLbl) xpLbl.textContent = (c.xp||0).toLocaleString() + ' / ' + xpNext.toLocaleString() + ' XP';
+      // Stats
+      if (c.stats) {
+        const STAT_MAP = {
+          fortitude:'fortitude', wrath:'wrath', intuition:'intuition', empathy:'empathy',
+          endurance:'endurance', memory:'memory', cunning:'cunning', speed:'speed', gnosis:'gnosis'
+        };
+        document.querySelectorAll('#panel-company .stat-val').forEach(sv => {
+          const row = sv.closest('.stat-row');
+          const key = row?.querySelector('.stat-name')?.dataset?.codex;
+          if (key && c.stats[key] !== undefined) {
+            const base = c.stats[key];
+            if (key === 'gnosis') {
+              sv.textContent = base + ' / 30';
+              const bar = row.closest('.stat-block')?.querySelector('.aether-fill');
+              if (bar) bar.style.width = Math.min(100, Math.round((base/30)*100)) + '%';
+            } else {
+              sv.textContent = base;
+            }
+          }
+        });
+      }
+    }
+
+    // Acolytes
+    if (state.acolytes && state.acolytes.length) {
+      _acolytesData = state.acolytes;
+      renderAcolyteCards(state.acolytes);
+    }
+
+    // Available acolytes
     if (state.availableAcolytes) {
       availableAcolytes = { ...state.availableAcolytes };
       Object.entries(availableAcolytes).forEach(([id, on]) => {
@@ -3677,7 +3763,86 @@
         if (btn) { btn.textContent = 'Share with Coven: ' + (on ? 'On' : 'Off'); btn.classList.toggle('active', on); }
       });
     }
+
+    // Lair
+    if (state.lair) {
+      _lairData = state.lair;
+      renderLairBuildings(state.lair.buildings || {});
+    }
+
+    // Research
+    if (state.research) {
+      _researchData = state.research;
+      // research panel is static flavour for now — no re-render needed
+    }
+
     return true;
+  }
+
+  function renderAcolyteCards(acolytes) {
+    const section = document.querySelector('#panel-company .section-label[data-section="acolytes"]');
+    if (!section) return;
+    // Remove old dynamic cards
+    document.querySelectorAll('.acolyte-card[data-acolyte-id]').forEach(e => e.remove());
+    const recruit = document.querySelector('.acolyte-card[data-recruit]');
+    const parent  = section.parentElement;
+    const GLYPHS  = ['🜃','🜁','🜂','🜄'];
+    acolytes.forEach((a, idx) => {
+      const stressPct = Math.min(100, Math.max(0, a.stress || 0));
+      const states    = (a.states || []);
+      const id        = a.id || ('ac' + idx);
+      const el        = document.createElement('div');
+      el.className    = 'acolyte-card';
+      el.dataset.acolyteId     = id;
+      el.dataset.acolyteClass  = a.class || '';
+      el.dataset.acolyteLevel  = a.level || 1;
+      el.dataset.acolyteStates = states.join(',');
+      el.innerHTML = `
+        <div class="acolyte-avatar">${GLYPHS[idx % GLYPHS.length]}</div>
+        <div class="acolyte-info">
+          <div class="acolyte-name">${a.name}</div>
+          <div class="acolyte-class">${a.class || '—'} · Lv.${a.level||1}</div>
+          <div class="stress-bar"><div class="stress-fill" style="width:${stressPct}%"></div></div>
+          <div class="acolyte-states">${states.map(s => `<span class="state-tag">${s}</span>`).join('')}</div>
+          <button class="acolyte-avail-toggle ${availableAcolytes[id]?'active':''}" id="avail-${id}"
+            onclick="toggleAcolyteAvailable('${id}',this)">Share with Coven: ${availableAcolytes[id]?'On':'Off'}</button>
+        </div>`;
+      if (recruit) { parent.insertBefore(el, recruit); }
+      else { parent.appendChild(el); }
+    });
+  }
+
+  function renderLairBuildings(playerBuildings) {
+    // Merge player building levels with world building definitions
+    // _worldBuildings is populated by loadBuildingsFromFirebase
+    const grid = document.getElementById('lair-building-grid') || document.querySelector('#panel-lair .building-grid');
+    if (!grid || !_worldBuildings) return;
+    grid.innerHTML = Object.entries(_worldBuildings).map(([key, b]) => {
+      const lvl    = playerBuildings[key] || 0;
+      const maxLvl = b.maxLevel || 3;
+      const locked = lvl === 0;
+      const isForge = key === 'forge' || key === 'alchemical-forge';
+      return `<div class="building-card ${locked?'locked':''}" ${isForge&&!locked?'onclick="openForge()" style="cursor:pointer"':''}>
+        <span class="building-level">${locked ? 'Locked' : 'Lv. '+lvl}</span>
+        <span class="building-icon">${b.icon || '🏛'}</span>
+        <div class="building-name">${b.name || key}</div>
+        <p class="building-desc">${b.desc || ''}</p>
+        ${!locked&&lvl<maxLvl?`<div style="font-family:var(--ff-heading);font-size:0.35rem;color:var(--gold-dim);margin-top:0.3rem;letter-spacing:0.06em;">Upgrade available</div>`:''}
+      </div>`;
+    }).join('');
+  }
+
+  let _worldBuildings = null;
+  async function loadBuildingsFromFirebase() {
+    try {
+      const res = await fetch(`${FB_URL}/world/buildings.json?cb=` + Date.now());
+      if (!res.ok) return;
+      const d = await res.json();
+      if (!d || d.error) return;
+      _worldBuildings = d;
+      // Re-render lair if we have player building data
+      if (_lairData) renderLairBuildings(_lairData.buildings || {});
+    } catch(e) {}
   }
 
   async function fbRead(playerId) {
@@ -3815,7 +3980,7 @@
   // ══════════════════════════════════════════
   // FORGE SYSTEM
   // ══════════════════════════════════════════
-  const RECIPES = [
+  let RECIPES = [
     { key:'solar-brand', cat:'weapons', icon:'🔥', name:'Solar Brand', type:'Weapon — One-handed',
       desc:'A blade inscribed with Solar sigils. Deals +4 Holy damage and ignites Blighted enemies on hit.',
       effect:'+4 Holy damage · Ignite on Blight', color:'#c9a84c',
@@ -3849,6 +4014,19 @@
       effect:'Instant Glyph Decode · +25% Research', color:'#4a7a8b',
       costs:[{res:6,symbol:'☿',name:'Mercurial',amount:250},{res:4,symbol:'♄',name:'Saturnine',amount:100}] },
   ];
+
+  async function loadRecipesFromFirebase() {
+    try {
+      const res = await fetch(`${FB_URL}/world/recipes.json?cb=` + Date.now());
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data || data.error || !Array.isArray(data)) return;
+      RECIPES = data;
+      // Re-render forge if open
+      const modal = document.getElementById('forge-modal');
+      if (modal && modal.classList.contains('open')) renderForgeTab(currentForgeTab);
+    } catch(e) {}
+  }
 
   function openForge() {
     document.getElementById('forge-modal').classList.add('open');
@@ -3953,10 +4131,10 @@
     const id = getOrCreatePlayerId();
     const profile = {
       resources: RES_NAMES.map((n,i) => ({ name:n, symbol:RES_SYMBOLS[i], value:Math.floor(values[i]) })),
-      acolytes: [
-        { id:'maurus', name:'Brother Maurus', cls:'Flagellant · Lv.4', stress:85, available: !!availableAcolytes.maurus },
-        { id:'irene',  name:'Sister Irene Voss', cls:'Plague Scribe · Lv.3', stress:30, available: !!availableAcolytes.irene },
-      ],
+      acolytes: (_acolytesData || [
+        { id:'maurus', name:'Brother Maurus', cls:'Flagellant · Lv.4', stress:85, available: false },
+        { id:'irene',  name:'Sister Irene Voss', cls:'Plague Scribe · Lv.3', stress:30, available: false },
+      ]).map(a => ({...a, available: !!availableAcolytes[a.id || a.name]})),
       inventory: Object.entries(inventory).filter(([,q])=>q>0).map(([k,q])=>{
         const r=RECIPES.find(x=>x.key===k); return r?{name:r.name,icon:r.icon,qty:q}:null;
       }).filter(Boolean),
@@ -4038,6 +4216,59 @@
         }
       });
       renderNearbyPlayersList();
+    } catch(e) {}
+  }
+
+  async function seedWorldDataIfEmpty() {
+    // Seed /world/recipes, /world/classes, /world/creatures, /world/buildings if not present
+    try {
+      const check = await fetch(`${FB_URL}/world/seeded.json?cb=` + Date.now());
+      const val = await check.json();
+      if (val === true) return; // already seeded
+      // Seed recipes
+      await fetch(`${FB_URL}/world/recipes.json`, {
+        method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(RECIPES)
+      });
+      // Seed sample world events
+      const sampleEvents = {
+        random: {
+          'evt-writhing': { type:'combat', title:'The Writhing Threshold', desc:'Something has nested in the third sub-level. The seals weaken from inside.', dlat:0.0018, dlng:0.0025, reward:'☉ 50 Solar · ♂ 30 Martial', actionText:'You descend into the passage.' },
+          'evt-confluence': { type:'gather', title:'Lunar Confluence', desc:'Lunar essence pools here during the Moon\'s planetary hour. Stand here then.', dlat:0.0010, dlng:-0.0030, reward:'☽ ×3 Income during Moon Hour', actionText:'You mark the location in your memory.' },
+          'evt-acolyte': { type:'recruit', title:'Potential Acolyte', desc:'A figure lingers near the old fountain, marked by something unseen.', dlat:-0.0005, dlng:0.0035, actionText:'You approach carefully.' },
+        },
+        dm: {}
+      };
+      await fetch(`${FB_URL}/world/events.json`, {
+        method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(sampleEvents)
+      });
+      // Seed default buildings
+      const defaultBuildings = {
+        'scriptorium':      { name:'The Scriptorium',   icon:'🕯', desc:'Research grimoires. Unlock new skills and esoteric knowledge.',         maxLevel:3, upgradeCost:[200,0,100,0,50,0,0],   effects:['Lv1: Research speed +20%','Lv2: +40%, unlock advanced codex','Lv3: +60%, unlock lost texts'] },
+        'alchemical-forge': { name:'Alchemical Forge',  icon:'⚗', desc:'Craft equipment and consumables from gathered essences.',                 maxLevel:3, upgradeCost:[150,0,0,200,50,0,0],   effects:['Lv1: Unlock basic recipes','Lv2: Unlock weapons & armour','Lv3: Unlock Grand Sigils'] },
+        'dormitorium':      { name:'Dormitorium',        icon:'🛏', desc:'Acolytes recover Stress here. Haunted dreams may yield visions.',         maxLevel:3, upgradeCost:[100,150,0,0,0,100,0], effects:['Lv1: -10 Stress/cycle','Lv2: -20 Stress/cycle, chance of vision','Lv3: -30 Stress/cycle, vision always'] },
+        'altar':            { name:'The Altar',          icon:'🗿', desc:'Perform planetary rites. Empowers resource gathering by hour.',           maxLevel:3, upgradeCost:[0,0,200,0,100,0,150], effects:['Lv1: Rite slots x1','Lv2: Rite slots x2','Lv3: Rite slots x3, Grand Conjuration unlocked'] },
+        'scrying-chamber':  { name:'Scrying Chamber',   icon:'🔮', desc:'See further on the field map. Reveal hidden encounters.',                 maxLevel:2, upgradeCost:[0,200,0,0,0,0,300],   effects:['Lv1: Map radius +50%','Lv2: Map radius x2, hidden encounters visible'] },
+        'ossuary':          { name:'Ossuary',            icon:'🦴', desc:'Extract Saturnine essence from the ancient dead within the walls.',       maxLevel:2, upgradeCost:[0,0,0,0,300,0,0],     effects:['Lv1: +2 Saturnine/h','Lv2: +5 Saturnine/h, unlock bone-craft recipes'] },
+      };
+      await fetch(`${FB_URL}/world/buildings.json`, {
+        method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(defaultBuildings)
+      });
+      // Seed default acolyte classes
+      const defaultClasses = {
+        'hermeticist': { name:'Hermeticist', role:'Seeker of hidden correspondences', desc:'Specialises in Solar and Mercurial essence. Their Hermetic Strike scales with Cunning. At high Gnosis they unlock Grand Rites.', stats:{fortitude:10,wrath:8,intuition:14,empathy:11,endurance:9,memory:12,cunning:15,gnosis:0}, skills:['Glyph Reading','Solar Banishment','Hermetic Strike'], lore:'They read the world as a text. Everything corresponds to something else.' },
+        'flagellant':  { name:'Flagellant',  role:'Front-rank brawler of the wounded', desc:'Peaks at low HP. Converts incoming Stress into Wrath. Synergises with Blight. Affliction rate is high but rarely impairs.', stats:{fortitude:16,wrath:14,intuition:7,empathy:6,endurance:15,memory:7,cunning:9,gnosis:0}, skills:['Iron Will','Self-Mortification','Punishing Strike'], lore:'Pain is the oldest rite. They have simply formalized it.' },
+        'plague-scribe': { name:'Plague Scribe', role:'Back-rank Blight applicator', desc:'Applies Blight stacks and debuffs enemy resistances. Consumes Mercurial Essence. Fragile — cannot survive rank 1 or 2.', stats:{fortitude:7,wrath:9,intuition:13,empathy:8,endurance:7,memory:14,cunning:13,gnosis:0}, skills:['Ink Inscription','Virulent Scrawl','Mercurial Flux'], lore:'What is written becomes real. What is blighted rots into truth.' },
+      };
+      await fetch(`${FB_URL}/world/classes.json`, {
+        method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(defaultClasses)
+      });
+      await fetch(`${FB_URL}/world/seeded.json`, {
+        method:'PUT', headers:{'Content-Type':'application/json'}, body:'true'
+      });
     } catch(e) {}
   }
 
@@ -4400,9 +4631,9 @@
       inbox.style.display = 'block';
       const card = document.createElement('div');
       card.id = 'exch-' + exchId;
-      card.style.cssText = 'border-left:2px solid var(--gold-dim);border-top:1px solid rgba(201,168,76,0.15);border-right:1px solid rgba(201,168,76,0.1);border-bottom:1px solid rgba(201,168,76,0.1);background:rgba(10,8,15,0.7);padding:0.9rem 1rem;margin-bottom:0.5rem;';
+      card.style.cssText = 'border:1px solid rgba(201,168,76,0.5);background:rgba(201,168,76,0.06);padding:0.9rem 1rem;margin-bottom:0.5rem;';
       card.innerHTML = `
-        <div style="font-family:var(--ff-heading);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem;">⟺ Proposal from ${ex.fromName}</div>
+        <div style="font-family:var(--ff-heading);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem;">⟺ Exchange from ${ex.fromName}</div>
         <div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--pale);margin-bottom:0.6rem;">
           Coven of ${ex.fromCoven||'Unknown'}<br>
           <strong style="color:var(--bone);">Offers:</strong> ${offerText}<br>
@@ -4571,17 +4802,28 @@
     const actionsEl = document.getElementById('dm-evt-actions');
     actionsEl.innerHTML = '';
 
-    const makeBtn = (label, primary) => {
+    const makeBtn = (label, primary, applyReward) => {
       const btn = document.createElement('button');
       btn.className = 'dm-event-btn' + (primary ? ' primary' : '');
       btn.textContent = label;
-      btn.onclick = () => closeDmEventModal();
+      btn.onclick = () => {
+        if (applyReward && ev.rewardRes) applyDmEventReward(ev);
+        closeDmEventModal();
+      };
       actionsEl.appendChild(btn);
     };
 
-    if (ev.btn1) makeBtn(ev.btn1, true);
-    if (ev.btn2) makeBtn(ev.btn2, false);
-    if (!ev.btn1 && !ev.btn2) makeBtn('Acknowledge', true);
+    if (ev.btn1) makeBtn(ev.btn1, true, true);   // primary button grants reward
+    if (ev.btn2) makeBtn(ev.btn2, false, false);  // secondary button declines reward
+    if (!ev.btn1 && !ev.btn2) makeBtn('Acknowledge', true, true);
+
+    // Show reward summary if present
+    if (ev.reward) {
+      const rwd = document.createElement('div');
+      rwd.style.cssText = 'font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.08em;color:var(--gold-dim);text-align:left;padding:0.5rem 0.2rem 0;border-top:1px solid rgba(201,168,76,0.1);margin-top:0.5rem;';
+      rwd.textContent = '↳ ' + ev.reward;
+      actionsEl.parentElement.insertBefore(rwd, actionsEl);
+    }
 
     // If event has a location, add a "Go to Map" button
     if (ev.location?.lat && ev.location?.lng) {
@@ -4595,10 +4837,32 @@
     document.getElementById('dm-event-modal').classList.add('open');
   }
 
+  function applyDmEventReward(ev) {
+    if (!ev.rewardRes || !Array.isArray(ev.rewardRes)) return;
+    const RES_NAMES_LOCAL = ['Solar','Lunar','Jovian','Martial','Saturnine','Venusian','Mercurial'];
+    const gained = [];
+    ev.rewardRes.forEach((amt, i) => {
+      if (amt && amt > 0) {
+        values[i] = (values[i] || 0) + amt;
+        gained.push(RES_SYMBOLS[i] + ' +' + amt + ' ' + RES_NAMES_LOCAL[i]);
+      }
+    });
+    document.querySelectorAll('.resource-pill .res-value').forEach((el, i) => {
+      el.textContent = Math.floor(values[i]);
+    });
+    if (ev.rewardXp) {
+      // XP would update character data — store for next save
+      if (_characterData) _characterData.xp = (_characterData.xp || 0) + (ev.rewardXp || 0);
+    }
+    if (gained.length) toast('✦ Received: ' + gained.join(' · '));
+    // Persist
+    const myId = getOrCreatePlayerId();
+    fbWrite(myId, collectGameState()).catch(() => {});
+  }
+
   function closeDmEventModal() {
     document.getElementById('dm-event-modal').classList.remove('open');
     _dmEventShowing = false;
-    // Show next queued event after a short pause
     setTimeout(drainDmEventQueue, 400);
   }
 
@@ -4640,21 +4904,21 @@
 <div id="incoming-exchange-modal">
   <div class="incoming-modal-inner">
     <div class="incoming-modal-sigil">⟺</div>
-    <div class="incoming-modal-title">A Proposal Arrives</div>
+    <div class="incoming-modal-title">Exchange Proposal</div>
     <div class="incoming-modal-from" id="iem-from"></div>
     <div class="incoming-modal-coven" id="iem-coven"></div>
     <hr class="incoming-modal-divider">
     <div class="incoming-modal-row">
-      <span class="incoming-modal-label">What is Offered</span>
+      <span class="incoming-modal-label">They Offer</span>
       <span class="incoming-modal-value" id="iem-offer"></span>
     </div>
     <div class="incoming-modal-row">
-      <span class="incoming-modal-label">What is Sought</span>
+      <span class="incoming-modal-label">They Request</span>
       <span class="incoming-modal-value" id="iem-request"></span>
     </div>
     <div class="incoming-modal-actions">
-      <button class="incoming-modal-btn accept" id="iem-accept-btn">Bind the Exchange</button>
-      <button class="incoming-modal-btn decline" id="iem-decline-btn">Refuse</button>
+      <button class="incoming-modal-btn accept" id="iem-accept-btn">✓ Accept</button>
+      <button class="incoming-modal-btn decline" id="iem-decline-btn">✗ Decline</button>
     </div>
     <div class="incoming-modal-timer" id="iem-timer"></div>
   </div>
@@ -4673,9 +4937,9 @@
 
 <!-- DM Broadcast Banner -->
 <div id="dm-broadcast-banner">
-  <span class="broadcast-icon">✦</span>
+  <span class="broadcast-icon">📢</span>
   <span class="broadcast-text" id="broadcast-msg-text"></span>
-  <button class="broadcast-dismiss" onclick="dismissBroadcast()">Acknowledge</button>
+  <button class="broadcast-dismiss" onclick="dismissBroadcast()">Dismiss</button>
 </div>
 </body>
 </html>

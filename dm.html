@@ -3,1244 +3,439 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>THE LAIR BELOW — Dungeon Master</title>
+<title>The Lair Below — Archivist's Console</title>
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cinzel:wght@400;600;900&family=Cinzel+Decorative:wght@400;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
 <style>
-:root {
-  --void: #050407;
-  --abyss: #0a080f;
-  --deep: #100c1a;
-  --shadow: #1a1326;
-  --stone: #2e2440;
-  --ash: #4a3d5c;
-  --mist: #6b5c80;
-  --pale: #9b8aaa;
-  --bone: #c4b5d4;
-  --ghost: #e8dff0;
-  --gold: #c9a84c;
-  --gold-bright: #f0cc6a;
-  --gold-dim: #7a5f2a;
-  --crimson: #8b1a1a;
-  --crimson-bright: #c43030;
-  --viridian: #1a4a3a;
-  --viridian-bright: #2d7a5f;
-  --indigo-bright: #3d3daa;
-  --amber-bright: #d4890a;
-  --dm-accent: #7b2fff;
-  --dm-accent-dim: #3a1a7a;
-  --dm-accent-bright: #a855f7;
-  --border: rgba(201,168,76,0.2);
-  --border-bright: rgba(201,168,76,0.5);
-  --ff-title: 'UnifrakturMaguntia', serif;
-  --ff-heading: 'Cinzel', serif;
-  --ff-heading-deco: 'Cinzel Decorative', serif;
-  --ff-body: 'IM Fell English', serif;
-}
-
-* { margin:0; padding:0; box-sizing:border-box; }
-
-body {
-  background: var(--void);
-  color: var(--bone);
-  font-family: var(--ff-body);
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-body::before {
-  content:'';
-  position:fixed;
-  inset:0;
-  background:
-    radial-gradient(ellipse at 10% 10%, rgba(123,47,255,0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 90% 90%, rgba(139,26,26,0.06) 0%, transparent 50%);
-  pointer-events:none;
-  z-index:0;
-}
-
-#app { position:relative; z-index:1; display:grid; grid-template-columns:260px 1fr; min-height:100vh; }
-
-/* ── SIDEBAR ── */
-#sidebar {
-  background: var(--abyss);
-  border-right: 1px solid rgba(123,47,255,0.3);
-  padding: 1.5rem 0;
-  display: flex;
-  flex-direction: column;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-}
-
-.sidebar-title {
-  font-family: var(--ff-title);
-  font-size: 1.5rem;
-  color: var(--dm-accent-bright);
-  text-align: center;
-  padding: 0 1rem 1rem;
-  border-bottom: 1px solid rgba(123,47,255,0.2);
-  margin-bottom: 0.5rem;
-  text-shadow: 0 0 20px rgba(123,47,255,0.5);
-}
-.sidebar-subtitle {
-  font-family: var(--ff-heading);
-  font-size: 0.38rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--mist);
-  text-align: center;
-  margin-top: -0.8rem;
-  margin-bottom: 1rem;
-}
-
-.nav-section {
-  font-family: var(--ff-heading);
-  font-size: 0.38rem;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--ash);
-  padding: 0.8rem 1.2rem 0.3rem;
-}
-
-.nav-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  width: 100%;
-  padding: 0.65rem 1.2rem;
-  background: transparent;
-  border: none;
-  color: var(--pale);
-  font-family: var(--ff-heading);
-  font-size: 0.6rem;
-  letter-spacing: 0.08em;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.15s;
-  text-transform: uppercase;
-}
-.nav-btn:hover { background: rgba(123,47,255,0.08); color: var(--bone); }
-.nav-btn.active { background: rgba(123,47,255,0.15); color: var(--dm-accent-bright); border-left: 2px solid var(--dm-accent-bright); }
-.nav-btn .nav-icon { font-size: 0.85rem; width: 1rem; text-align: center; }
-
-.sidebar-player-list {
-  margin-top: auto;
-  padding: 0.8rem 1rem;
-  border-top: 1px solid rgba(123,47,255,0.2);
-}
-.sidebar-player-list-title {
-  font-family: var(--ff-heading);
-  font-size: 0.38rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--ash);
-  margin-bottom: 0.5rem;
-}
-.player-pill {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.4rem 0.5rem;
-  margin-bottom: 0.3rem;
-  cursor: pointer;
-  border-radius: 2px;
-  transition: background 0.15s;
-}
-.player-pill:hover { background: rgba(123,47,255,0.1); }
-.player-dot { width:6px; height:6px; border-radius:50%; background: var(--viridian-bright); flex-shrink:0; }
-.player-dot.offline { background: var(--ash); }
-.player-pill-name { font-family: var(--ff-heading); font-size: 0.55rem; color: var(--bone); }
-.player-pill-coven { font-family: var(--ff-body); font-style: italic; font-size: 0.5rem; color: var(--mist); }
-
-/* ── MAIN ── */
-#main { padding: 2rem; overflow-y: auto; }
-
-.page { display: none; }
-.page.active { display: block; }
-
-.page-title {
-  font-family: var(--ff-heading-deco);
-  font-size: 1.1rem;
-  color: var(--gold);
-  margin-bottom: 0.3rem;
-  letter-spacing: 0.05em;
-}
-.page-subtitle {
-  font-family: var(--ff-body);
-  font-style: italic;
-  font-size: 0.85rem;
-  color: var(--mist);
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border);
-}
-
-/* ── CARDS / PANELS ── */
-.card {
-  background: rgba(10,8,15,0.8);
-  border: 1px solid var(--border);
-  padding: 1.2rem 1.4rem;
-  margin-bottom: 1rem;
-}
-.card-title {
-  font-family: var(--ff-heading);
-  font-size: 0.55rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 0.8rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.card-title::after { content:''; flex:1; height:1px; background: var(--border); }
-
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
-
-/* ── PLAYER SELECTOR ── */
-.player-select-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  margin-bottom: 1.2rem;
-  padding: 0.8rem 1rem;
-  background: rgba(123,47,255,0.06);
-  border: 1px solid rgba(123,47,255,0.25);
-}
-.player-select-bar label {
-  font-family: var(--ff-heading);
-  font-size: 0.5rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--mist);
-  white-space: nowrap;
-}
-select {
-  background: var(--deep);
-  border: 1px solid var(--border);
-  color: var(--bone);
-  font-family: var(--ff-heading);
-  font-size: 0.6rem;
-  padding: 0.5rem 0.7rem;
-  cursor: pointer;
-  flex: 1;
-  letter-spacing: 0.05em;
-}
-select:focus { outline: none; border-color: var(--dm-accent-bright); }
-
-/* ── RESOURCE ROW ── */
-.res-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.6rem;
-  margin-bottom: 0.8rem;
-}
-.res-cell {
-  background: var(--deep);
-  border: 1px solid var(--border);
-  padding: 0.6rem 0.5rem;
-  text-align: center;
-}
-.res-symbol { font-size: 1rem; color: var(--gold); display: block; margin-bottom: 0.2rem; }
-.res-name { font-family: var(--ff-heading); font-size: 0.38rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mist); display: block; margin-bottom: 0.4rem; }
-.res-input {
-  width: 100%;
-  background: var(--abyss);
-  border: 1px solid var(--stone);
-  color: var(--bone);
-  font-family: var(--ff-heading);
-  font-size: 0.7rem;
-  text-align: center;
-  padding: 0.3rem;
-}
-.res-input:focus { outline: none; border-color: var(--dm-accent-bright); }
-
-/* ── BUTTONS ── */
-.btn {
-  font-family: var(--ff-heading);
-  font-size: 0.55rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 0.7rem 1.2rem;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-primary { background: rgba(123,47,255,0.15); border: 1px solid var(--dm-accent-bright); color: var(--dm-accent-bright); }
-.btn-primary:hover { background: rgba(123,47,255,0.3); }
-.btn-gold { background: rgba(201,168,76,0.1); border: 1px solid var(--gold-dim); color: var(--gold); }
-.btn-gold:hover { background: rgba(201,168,76,0.2); }
-.btn-danger { background: rgba(196,48,48,0.1); border: 1px solid var(--crimson-bright); color: var(--crimson-bright); }
-.btn-danger:hover { background: rgba(196,48,48,0.25); }
-.btn-green { background: rgba(45,122,95,0.1); border: 1px solid var(--viridian-bright); color: var(--viridian-bright); }
-.btn-green:hover { background: rgba(45,122,95,0.25); }
-.btn + .btn { margin-left: 0.5rem; }
-
-/* ── INPUTS / TEXTAREAS ── */
-input[type=text], input[type=number], textarea {
-  background: var(--deep);
-  border: 1px solid var(--border);
-  color: var(--bone);
-  font-family: var(--ff-body);
-  font-size: 0.85rem;
-  padding: 0.55rem 0.7rem;
-  width: 100%;
-}
-input[type=text]:focus, input[type=number]:focus, textarea:focus {
-  outline: none;
-  border-color: var(--dm-accent-bright);
-}
-textarea { resize: vertical; min-height: 80px; }
-.field { margin-bottom: 0.8rem; }
-.field label {
-  display: block;
-  font-family: var(--ff-heading);
-  font-size: 0.45rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--mist);
-  margin-bottom: 0.3rem;
-}
-
-/* ── STATUS / LOG ── */
-#dm-log {
-  background: var(--abyss);
-  border: 1px solid rgba(123,47,255,0.2);
-  padding: 0.8rem 1rem;
-  height: 180px;
-  overflow-y: auto;
-  font-family: monospace;
-  font-size: 0.72rem;
-}
-.log-entry { padding: 0.15rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
-.log-ok { color: var(--viridian-bright); }
-.log-err { color: var(--crimson-bright); }
-.log-info { color: var(--mist); }
-.log-warn { color: var(--amber-bright); }
-
-/* ── PLAYER SAVE VIEWER ── */
-.save-viewer {
-  background: var(--deep);
-  border: 1px solid var(--border);
-  padding: 1rem;
-  font-family: monospace;
-  font-size: 0.72rem;
-  color: var(--pale);
-  max-height: 320px;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-/* ── EVENTS TABLE ── */
-.events-table { width:100%; border-collapse: collapse; }
-.events-table th {
-  font-family: var(--ff-heading);
-  font-size: 0.42rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--mist);
-  padding: 0.5rem 0.7rem;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-}
-.events-table td {
-  font-family: var(--ff-body);
-  font-size: 0.8rem;
-  padding: 0.6rem 0.7rem;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-  vertical-align: top;
-}
-.events-table tr:hover td { background: rgba(123,47,255,0.05); }
-
-/* ── BADGE ── */
-.badge {
-  display: inline-block;
-  font-family: var(--ff-heading);
-  font-size: 0.38rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 0.2rem 0.5rem;
-  border: 1px solid;
-}
-.badge-story  { border-color: var(--indigo-bright); color: var(--indigo-bright); }
-.badge-urgent { border-color: var(--crimson-bright); color: var(--crimson-bright); }
-.badge-discovery { border-color: var(--viridian-bright); color: var(--viridian-bright); }
-
-/* ── TOAST ── */
-#dm-toast {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  background: var(--deep);
-  border: 1px solid var(--dm-accent-bright);
-  color: var(--dm-accent-bright);
-  font-family: var(--ff-heading);
-  font-size: 0.6rem;
-  letter-spacing: 0.1em;
-  padding: 0.8rem 1.2rem;
-  z-index: 999;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: all 0.3s;
-  pointer-events: none;
-  max-width: 320px;
-}
-#dm-toast.show { opacity: 1; transform: translateY(0); }
-
-/* ── STAT BLOCK ── */
-.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
-.stat-cell {
-  background: var(--deep);
-  border: 1px solid var(--border);
-  padding: 0.5rem;
-  text-align: center;
-}
-.stat-key { font-family: var(--ff-heading); font-size: 0.38rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mist); }
-.stat-val { font-family: var(--ff-heading); font-size: 1rem; color: var(--bone); }
-
-/* ── ACOLYTE ROW ── */
-.acolyte-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.7rem 0.8rem;
-  border: 1px solid var(--border);
-  margin-bottom: 0.5rem;
-  background: var(--deep);
-}
-.acolyte-avatar { font-size: 1.3rem; color: var(--gold); }
-.acolyte-info { flex:1; }
-.acolyte-name { font-family: var(--ff-heading); font-size: 0.65rem; color: var(--bone); }
-.acolyte-class { font-family: var(--ff-body); font-style: italic; font-size: 0.72rem; color: var(--mist); }
-.stress-bar-wrap { width: 80px; }
-.stress-bar-label { font-family: var(--ff-heading); font-size: 0.38rem; color: var(--mist); margin-bottom: 0.2rem; }
-.stress-bar { height: 4px; background: var(--stone); position: relative; }
-.stress-bar-fill { height: 100%; background: var(--crimson-bright); transition: width 0.3s; }
-.stress-val { font-family: var(--ff-heading); font-size: 0.5rem; color: var(--crimson-bright); margin-top: 0.1rem; }
+:root{--void:#050407;--abyss:#0a080f;--deep:#100c1a;--shadow:#1a1326;--stone:#2e2440;--ash:#4a3d5c;--mist:#6b5c80;--pale:#9b8aaa;--bone:#c4b5d4;--ghost:#e8dff0;--gold:#c9a84c;--gold-bright:#f0cc6a;--gold-dim:#7a5f2a;--crimson-bright:#c43030;--viridian-bright:#2d7a5f;--indigo-bright:#3d3daa;--amber-bright:#d4890a;--dm:#7b2fff;--dm-dim:#2a0e5c;--dm-bright:#a855f7;--border:rgba(201,168,76,0.18);--border-hi:rgba(201,168,76,0.45);--ff-title:'UnifrakturMaguntia',serif;--ff-h:'Cinzel',serif;--ff-hd:'Cinzel Decorative',serif;--ff-b:'IM Fell English',serif;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--void);color:var(--bone);font-family:var(--ff-b);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 15% 0%,rgba(123,47,255,0.06) 0%,transparent 55%),radial-gradient(ellipse at 85% 100%,rgba(139,26,26,0.05) 0%,transparent 50%);pointer-events:none;z-index:0;}
+#app{position:relative;z-index:1;display:grid;grid-template-columns:230px 1fr;min-height:100vh;}
+#sidebar{background:linear-gradient(180deg,#080610 0%,#050407 100%);border-right:1px solid rgba(123,47,255,0.18);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+#sidebar::-webkit-scrollbar{width:2px;}#sidebar::-webkit-scrollbar-thumb{background:var(--stone);}
+.sb-head{padding:1.4rem 1.2rem 1.1rem;border-bottom:1px solid rgba(123,47,255,0.12);text-align:center;}
+.sb-title{font-family:var(--ff-title);font-size:1.5rem;color:var(--dm-bright);text-shadow:0 0 20px rgba(168,85,247,0.3);line-height:1;margin-bottom:0.3rem;}
+.sb-sub{font-family:var(--ff-h);font-size:0.32rem;letter-spacing:0.35em;text-transform:uppercase;color:var(--ash);}
+.sb-rune{font-size:0.6rem;color:rgba(168,85,247,0.2);letter-spacing:0.5em;margin-top:0.4rem;}
+.nav-sec{font-family:var(--ff-h);font-size:0.3rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(74,61,92,0.7);padding:0.9rem 1.2rem 0.2rem;}
+.nb{display:flex;align-items:center;gap:0.6rem;width:100%;padding:0.55rem 1.2rem;background:transparent;border:none;border-left:2px solid transparent;color:var(--mist);font-family:var(--ff-h);font-size:0.52rem;letter-spacing:0.06em;text-align:left;cursor:pointer;transition:all 0.15s;text-transform:uppercase;}
+.nb:hover{color:var(--pale);background:rgba(123,47,255,0.05);}.nb.active{color:var(--dm-bright);background:rgba(123,47,255,0.1);border-left-color:var(--dm-bright);}
+.ni{font-size:0.7rem;width:0.9rem;text-align:center;opacity:0.75;}
+.sb-seekers{margin-top:auto;padding:0.7rem 1rem 1rem;border-top:1px solid rgba(123,47,255,0.12);}
+.sb-seekers-lbl{font-family:var(--ff-h);font-size:0.3rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--ash);margin-bottom:0.5rem;padding-left:0.2rem;}
+.seeker-row{display:flex;align-items:center;gap:0.45rem;padding:0.3rem 0.4rem;cursor:pointer;transition:background 0.15s;}
+.seeker-row:hover{background:rgba(123,47,255,0.07);}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--viridian-bright);box-shadow:0 0 5px var(--viridian-bright);flex-shrink:0;}
+.dot.off{background:var(--ash);box-shadow:none;}
+.sn{font-family:var(--ff-h);font-size:0.5rem;color:var(--bone);}
+.sc{font-family:var(--ff-b);font-style:italic;font-size:0.45rem;color:var(--mist);}
+#main{padding:1.8rem 2rem 7rem;overflow-y:auto;min-height:100vh;}
+.page{display:none;}.page.active{display:block;}
+.pg-head{margin-bottom:1.6rem;}
+.pg-title{font-family:var(--ff-hd);font-size:0.95rem;color:var(--gold);letter-spacing:0.04em;margin-bottom:0.35rem;}
+.pg-desc{font-family:var(--ff-b);font-style:italic;font-size:0.8rem;color:var(--mist);line-height:1.6;border-left:2px solid rgba(201,168,76,0.18);padding-left:0.7rem;}
+.panel{background:rgba(10,8,15,0.65);border:1px solid var(--border);padding:1.1rem 1.3rem;margin-bottom:0.9rem;}
+.ph{font-family:var(--ff-h);font-size:0.44rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:0.85rem;display:flex;align-items:center;gap:0.5rem;}
+.ph::after{content:'';flex:1;height:1px;background:rgba(201,168,76,0.1);}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.9rem;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:0.7rem;}
+.sk-bar{display:flex;align-items:center;gap:0.7rem;margin-bottom:1.1rem;padding:0.65rem 0.9rem;background:rgba(123,47,255,0.04);border:1px solid rgba(123,47,255,0.15);}
+.sk-lbl{font-family:var(--ff-h);font-size:0.42rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ash);white-space:nowrap;}
+select{background:var(--deep);border:1px solid rgba(201,168,76,0.15);color:var(--pale);font-family:var(--ff-h);font-size:0.55rem;padding:0.42rem 0.55rem;cursor:pointer;flex:1;outline:none;}
+select:focus{border-color:var(--dm-bright);}
+.ess-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:0.45rem;margin-bottom:0.75rem;}
+.ess-cell{background:var(--deep);border:1px solid rgba(201,168,76,0.1);padding:0.5rem 0.35rem;text-align:center;transition:border-color 0.2s;}
+.ess-cell:focus-within{border-color:rgba(201,168,76,0.35);}
+.es{font-size:0.9rem;color:var(--gold);display:block;margin-bottom:0.12rem;}
+.en{font-family:var(--ff-h);font-size:0.3rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--ash);display:block;margin-bottom:0.28rem;}
+.ei{width:100%;background:var(--abyss);border:1px solid var(--stone);color:var(--bone);font-family:var(--ff-h);font-size:0.65rem;text-align:center;padding:0.22rem;outline:none;}
+.ei:focus{border-color:rgba(168,85,247,0.45);}
+.btn{font-family:var(--ff-h);font-size:0.48rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.6rem 1rem;border:1px solid;background:transparent;cursor:pointer;transition:all 0.18s;}
+.btn+.btn{margin-left:0.4rem;}
+.b-rune{border-color:rgba(168,85,247,0.45);color:var(--dm-bright);}.b-rune:hover{background:rgba(123,47,255,0.12);}
+.b-seal{border-color:var(--gold-dim);color:var(--gold);}.b-seal:hover{background:rgba(201,168,76,0.07);}
+.b-ward{border-color:rgba(45,122,95,0.5);color:var(--viridian-bright);}.b-ward:hover{background:rgba(45,122,95,0.1);}
+.b-breach{border-color:rgba(196,48,48,0.45);color:var(--crimson-bright);}.b-breach:hover{background:rgba(196,48,48,0.08);}
+.b-amber{border-color:rgba(212,137,10,0.5);color:var(--amber-bright);}.b-amber:hover{background:rgba(212,137,10,0.08);}
+input[type=text],input[type=number],textarea{background:var(--deep);border:1px solid rgba(201,168,76,0.13);color:var(--bone);font-family:var(--ff-b);font-size:0.82rem;padding:0.48rem 0.6rem;width:100%;outline:none;transition:border-color 0.18s;}
+input:focus,textarea:focus{border-color:rgba(168,85,247,0.4);}
+textarea{resize:vertical;min-height:72px;line-height:1.6;}
+.fld{margin-bottom:0.7rem;}
+.fld label{display:block;font-family:var(--ff-h);font-size:0.38rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ash);margin-bottom:0.25rem;}
+#dm-console{position:fixed;bottom:0;right:0;width:calc(100% - 230px);z-index:50;background:rgba(5,4,7,0.97);border-top:1px solid rgba(123,47,255,0.13);padding:0.35rem 1.1rem 0.5rem;}
+.con-bar{display:flex;align-items:center;gap:0.7rem;margin-bottom:0.2rem;}
+.con-lbl{font-family:var(--ff-h);font-size:0.3rem;letter-spacing:0.25em;text-transform:uppercase;color:rgba(74,61,92,0.55);}
+.con-clr{background:none;border:none;color:var(--ash);cursor:pointer;font-family:var(--ff-h);font-size:0.35rem;letter-spacing:0.1em;text-transform:uppercase;transition:color 0.15s;}
+.con-clr:hover{color:var(--pale);}
+#dm-log{height:66px;overflow-y:auto;font-family:'Courier New',monospace;font-size:0.62rem;}
+#dm-log::-webkit-scrollbar{width:2px;}#dm-log::-webkit-scrollbar-thumb{background:var(--stone);}
+.ll{padding:0.06rem 0;color:var(--ash);}.ll.ok{color:#2d7a5f;}.ll.err{color:#c43030;}.ll.info{color:#4a3d5c;}.ll.warn{color:#8b5a00;}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-family:var(--ff-h);font-size:0.36rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ash);padding:0.45rem 0.55rem;text-align:left;border-bottom:1px solid rgba(201,168,76,0.1);}
+.tbl td{font-family:var(--ff-b);font-size:0.76rem;padding:0.5rem 0.55rem;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle;}
+.tbl tr:hover td{background:rgba(123,47,255,0.04);}
+.bdg{display:inline-block;font-family:var(--ff-h);font-size:0.32rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.13rem 0.4rem;border:1px solid;vertical-align:middle;}
+.bdg-story{border-color:var(--indigo-bright);color:var(--indigo-bright);}.bdg-urgent{border-color:var(--crimson-bright);color:var(--crimson-bright);}.bdg-disc{border-color:var(--viridian-bright);color:var(--viridian-bright);}.bdg-neutral{border-color:var(--ash);color:var(--ash);}.bdg-combat{border-color:var(--crimson-bright);color:var(--crimson-bright);}.bdg-gather{border-color:var(--viridian-bright);color:var(--viridian-bright);}.bdg-recruit{border-color:var(--amber-bright);color:var(--amber-bright);}.bdg-dm{border-color:var(--dm-bright);color:var(--dm-bright);}.bdg-rnd{border-color:var(--mist);color:var(--mist);}
+.seeker-card{background:rgba(10,8,15,0.65);border:1px solid rgba(201,168,76,0.13);padding:0.9rem 1rem;cursor:pointer;transition:border-color 0.2s;}.seeker-card:hover{border-color:rgba(201,168,76,0.3);}
+.sc-head{display:flex;align-items:center;gap:0.55rem;margin-bottom:0.65rem;}
+.sc-name{font-family:var(--ff-h);font-size:0.68rem;color:var(--bone);flex:1;}
+.sc-coven{font-family:var(--ff-b);font-style:italic;font-size:0.6rem;color:var(--mist);}
+.sc-status{font-family:var(--ff-h);font-size:0.3rem;letter-spacing:0.1em;text-transform:uppercase;}
+.sc-ess{display:flex;flex-wrap:wrap;gap:0.25rem 0.5rem;margin-bottom:0.45rem;font-size:0.68rem;}
+.sc-foot{font-family:var(--ff-h);font-size:0.32rem;letter-spacing:0.06em;color:var(--ash);border-top:1px solid rgba(201,168,76,0.07);padding-top:0.35rem;margin-top:0.15rem;}
+.entity-card{background:var(--deep);border:1px solid var(--border);padding:0.8rem 0.9rem;margin-bottom:0.5rem;}.entity-card:hover{border-color:rgba(201,168,76,0.3);}
+.entity-name{font-family:var(--ff-h);font-size:0.7rem;color:var(--bone);margin-bottom:0.15rem;}
+.entity-sub{font-family:var(--ff-b);font-style:italic;font-size:0.72rem;color:var(--mist);}
+.estat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.3rem;margin-top:0.5rem;}
+.estat{background:rgba(201,168,76,0.04);border:1px solid rgba(201,168,76,0.1);padding:0.3rem;text-align:center;}
+.estat-k{font-family:var(--ff-h);font-size:0.3rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ash);}
+.estat-v{font-family:var(--ff-h);font-size:0.68rem;color:var(--pale);}
+.acol-row{display:flex;align-items:center;gap:0.9rem;padding:0.65rem 0.75rem;border:1px solid rgba(201,168,76,0.08);margin-bottom:0.4rem;background:var(--deep);}
+.acol-glyph{font-size:1.1rem;color:var(--gold-dim);flex-shrink:0;}
+.acol-det{flex:1;}
+.acol-n{font-family:var(--ff-h);font-size:0.6rem;color:var(--bone);}
+.acol-c{font-family:var(--ff-b);font-style:italic;font-size:0.67rem;color:var(--mist);}
+.acol-states{font-family:var(--ff-h);font-size:0.35rem;color:var(--ash);margin-top:0.15rem;}
+.stress-col{text-align:right;min-width:70px;}
+.str-lbl{font-family:var(--ff-h);font-size:0.32rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ash);margin-bottom:0.15rem;}
+.str-track{height:3px;background:var(--stone);margin-bottom:0.2rem;}
+.str-fill{height:100%;background:var(--crimson-bright);transition:width 0.3s;}
+.str-pct{font-family:var(--ff-h);font-size:0.45rem;color:var(--crimson-bright);}
+.str-inp{width:50px;margin-top:0.2rem;background:var(--abyss);border:1px solid var(--stone);color:var(--bone);font-family:var(--ff-h);font-size:0.52rem;text-align:center;padding:0.16rem 0.28rem;outline:none;}
+.str-inp:focus{border-color:rgba(168,85,247,0.4);}
+.recipe-row{display:flex;align-items:flex-start;gap:0.8rem;padding:0.75rem 0.8rem;border:1px solid var(--border);margin-bottom:0.5rem;background:var(--deep);}
+.recipe-row:hover{border-color:rgba(201,168,76,0.3);}
+.recipe-ico{font-size:1.2rem;flex-shrink:0;margin-top:0.1rem;}
+.recipe-info{flex:1;}
+.recipe-name{font-family:var(--ff-h);font-size:0.65rem;color:var(--bone);margin-bottom:0.15rem;}
+.recipe-type{font-family:var(--ff-b);font-style:italic;font-size:0.7rem;color:var(--mist);margin-bottom:0.2rem;}
+.recipe-effect{font-family:var(--ff-h);font-size:0.38rem;letter-spacing:0.06em;color:var(--gold-dim);}
+.recipe-costs{font-family:var(--ff-h);font-size:0.38rem;color:var(--ash);margin-top:0.2rem;}
+.recipe-actions{display:flex;flex-direction:column;gap:0.3rem;flex-shrink:0;}
+.raw-editor{background:var(--abyss);border:1px solid rgba(201,168,76,0.1);padding:0.7rem;font-family:'Courier New',monospace;font-size:0.65rem;color:var(--pale);width:100%;resize:vertical;min-height:180px;outline:none;line-height:1.5;}
+.raw-editor:focus{border-color:rgba(168,85,247,0.35);}
+.rune-div{text-align:center;font-size:0.5rem;color:rgba(201,168,76,0.13);letter-spacing:0.5em;margin:0.7rem 0;}
+#dm-toast{position:fixed;bottom:6.5rem;right:1.5rem;background:var(--abyss);border:1px solid rgba(168,85,247,0.35);color:var(--dm-bright);font-family:var(--ff-h);font-size:0.5rem;letter-spacing:0.1em;padding:0.6rem 0.9rem;z-index:999;opacity:0;transform:translateY(8px);transition:all 0.25s;pointer-events:none;max-width:280px;}
+#dm-toast.show{opacity:1;transform:translateY(0);}
 </style>
 </head>
 <body>
-
 <div id="app">
-
-<!-- ══════════ SIDEBAR ══════════ -->
 <nav id="sidebar">
-  <div class="sidebar-title">Lair Below</div>
-  <div class="sidebar-subtitle">Dungeon Master Console</div>
-
-  <div class="nav-section">Overview</div>
-  <button class="nav-btn active" onclick="showPage('dashboard')" data-page="dashboard">
-    <span class="nav-icon">⬡</span> Dashboard
-  </button>
-
-  <div class="nav-section">Players</div>
-  <button class="nav-btn" onclick="showPage('resources')" data-page="resources">
-    <span class="nav-icon">☉</span> Resources
-  </button>
-  <button class="nav-btn" onclick="showPage('saves')" data-page="saves">
-    <span class="nav-icon">📜</span> Save Files
-  </button>
-  <button class="nav-btn" onclick="showPage('roster')" data-page="roster">
-    <span class="nav-icon">🜃</span> Rosters
-  </button>
-
-  <div class="nav-section">World</div>
-  <button class="nav-btn" onclick="showPage('events')" data-page="events">
-    <span class="nav-icon">⚠</span> Story Events
-  </button>
-  <button class="nav-btn" onclick="showPage('exchanges')" data-page="exchanges">
-    <span class="nav-icon">⟺</span> Exchanges
-  </button>
-
-  <div class="nav-section">Tools</div>
-  <button class="nav-btn" onclick="showPage('broadcast')" data-page="broadcast">
-    <span class="nav-icon">✦</span> Broadcast
-  </button>
-
-  <!-- Live player list -->
-  <div class="sidebar-player-list">
-    <div class="sidebar-player-list-title">Online Players</div>
-    <div id="sidebar-players"><span style="font-family:var(--ff-body);font-style:italic;font-size:0.65rem;color:var(--ash);">Loading...</span></div>
-  </div>
+  <div class="sb-head"><div class="sb-title">The Lair Below</div><div class="sb-sub">Archivist's Console</div><div class="sb-rune">⋆ ✦ ⋆</div></div>
+  <div class="nav-sec">Chronicle</div>
+  <button class="nb active" onclick="nav('vigil')" data-page="vigil"><span class="ni">⬡</span> The Vigil</button>
+  <div class="nav-sec">Seekers</div>
+  <button class="nb" onclick="nav('resources')" data-page="resources"><span class="ni">☉</span> Essence Ledger</button>
+  <button class="nb" onclick="nav('grimoires')" data-page="grimoires"><span class="ni">📜</span> Grimoires</button>
+  <button class="nb" onclick="nav('acolytes')" data-page="acolytes"><span class="ni">🜃</span> Acolyte Rolls</button>
+  <button class="nb" onclick="nav('characters')" data-page="characters"><span class="ni">🜏</span> Characters &amp; Classes</button>
+  <div class="nav-sec">The World</div>
+  <button class="nb" onclick="nav('events')" data-page="events"><span class="ni">⚠</span> Omens &amp; Events</button>
+  <button class="nb" onclick="nav('worldmap')" data-page="worldmap"><span class="ni">⬡</span> World Map Events</button>
+  <button class="nb" onclick="nav('exchanges')" data-page="exchanges"><span class="ni">⟺</span> Exchange Ledger</button>
+  <button class="nb" onclick="nav('creatures')" data-page="creatures"><span class="ni">⛧</span> Creatures &amp; Combat</button>
+  <div class="nav-sec">The Forge</div>
+  <button class="nb" onclick="nav('forge')" data-page="forge"><span class="ni">⚗</span> Recipes &amp; Craft</button>
+  <button class="nb" onclick="nav('buildings')" data-page="buildings"><span class="ni">🏛</span> Buildings &amp; Skills</button>
+  <div class="nav-sec">Rites</div>
+  <button class="nb" onclick="nav('broadcast')" data-page="broadcast"><span class="ni">✦</span> Proclamation</button>
+  <div class="sb-seekers"><div class="sb-seekers-lbl">Seekers</div><div id="sidebar-players"><span style="font-family:var(--ff-b);font-style:italic;font-size:0.62rem;color:var(--ash);">Consulting the ether…</span></div></div>
 </nav>
-
-<!-- ══════════ MAIN ══════════ -->
 <main id="main">
 
-  <!-- ── LOG (always visible bottom) ── -->
-  <div style="position:fixed;bottom:0;right:0;width:calc(100% - 260px);z-index:50;background:var(--abyss);border-top:1px solid rgba(123,47,255,0.2);padding:0.5rem 1rem;">
-    <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.3rem;">
-      <span style="font-family:var(--ff-heading);font-size:0.38rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ash);">Console Log</span>
-      <button onclick="document.getElementById('dm-log').innerHTML=''" style="background:none;border:none;color:var(--ash);cursor:pointer;font-size:0.6rem;">clear</button>
-    </div>
-    <div id="dm-log"></div>
-  </div>
+<div id="page-vigil" class="page active">
+<div class="pg-head"><div class="pg-title">The Vigil</div><div class="pg-desc">All seekers bound to the lair. Their reserves, last sealing, and field presence.</div></div>
+<div style="display:flex;gap:0.5rem;margin-bottom:1.2rem;"><button class="btn b-rune" onclick="refreshAll()">↻ Consult the Ether</button><button class="btn b-seal" onclick="nav('broadcast')">✦ Proclamation</button></div>
+<div class="g3" id="vigil-cards"><div class="seeker-card"><span style="color:var(--mist);font-style:italic;font-family:var(--ff-b);">The ether stirs…</span></div></div>
+</div>
 
-  <!-- ══ DASHBOARD ══ -->
-  <div id="page-dashboard" class="page active">
-    <div class="page-title">Dashboard</div>
-    <div class="page-subtitle">Overview of all active players and world state.</div>
+<div id="page-resources" class="page">
+<div class="pg-head"><div class="pg-title">Essence Ledger</div><div class="pg-desc">Inspect and alter the seven planetary essences held by any seeker. Changes take effect immediately.</div></div>
+<div class="sk-bar"><span class="sk-lbl">Seeker</span><select id="res-sel" onchange="loadRes()"><option value="">— choose —</option></select><button class="btn b-rune" onclick="loadRes()">Recall</button></div>
+<div class="panel" id="res-panel" style="display:none;"><div class="ph">Planetary Reserves</div><div class="ess-grid" id="res-grid"></div><div class="rune-div">⋆ ✦ ⋆</div><button class="btn b-ward" onclick="saveRes()">✓ Inscribe to Firebase</button><button class="btn b-rune" onclick="loadRes()">↻ Recall</button><button class="btn b-breach" onclick="zeroRes()">✗ Exhaust All</button></div>
+</div>
 
-    <div style="display:flex;gap:0.8rem;margin-bottom:1rem;">
-      <button class="btn btn-primary" onclick="refreshAll()">↻ Refresh All</button>
-      <button class="btn btn-gold" onclick="showPage('broadcast')">✦ Broadcast Event</button>
-    </div>
+<div id="page-grimoires" class="page">
+<div class="pg-head"><div class="pg-title">Grimoires</div><div class="pg-desc">Each seeker's full save state. Overwriting a grimoire cannot be undone.</div></div>
+<div class="sk-bar"><span class="sk-lbl">Seeker</span><select id="grim-sel" onchange="loadGrim()"><option value="">— choose —</option></select><button class="btn b-rune" onclick="loadGrim()">Unseal</button></div>
+<div class="panel" id="grim-panel" style="display:none;"><div class="ph">Chronicle Contents</div><textarea id="grim-editor" class="raw-editor"></textarea><div style="margin-top:0.7rem;"><button class="btn b-ward" onclick="writeGrim()">✓ Overwrite Chronicle</button><button class="btn b-rune" onclick="loadGrim()">↻ Re-unseal</button><button class="btn b-breach" onclick="deleteGrim()">✗ Burn Chronicle</button></div></div>
+</div>
 
-    <div class="grid3" id="dashboard-player-cards">
-      <div class="card" style="color:var(--mist);font-style:italic;font-family:var(--ff-body);">Loading players...</div>
-    </div>
-  </div>
+<div id="page-acolytes" class="page">
+<div class="pg-head"><div class="pg-title">Acolyte Rolls</div><div class="pg-desc">The men and women bound to each seeker's lair. Adjust stress — approach 100 and they fracture.</div></div>
+<div class="sk-bar"><span class="sk-lbl">Seeker</span><select id="acol-sel" onchange="loadAcol()"><option value="">— choose —</option></select><button class="btn b-rune" onclick="loadAcol()">Summon Rolls</button></div>
+<div id="acol-panel" style="display:none;"><div id="acol-rows"></div><button class="btn b-ward" style="margin-top:0.7rem;" onclick="saveAcol()">✓ Commit Changes</button></div>
+</div>
 
-  <!-- ══ RESOURCES ══ -->
-  <div id="page-resources" class="page">
-    <div class="page-title">Resource Management</div>
-    <div class="page-subtitle">Read and write the resource values of any player directly.</div>
+<div id="page-characters" class="page">
+<div class="pg-head"><div class="pg-title">Characters &amp; Classes</div><div class="pg-desc">Define the classes available to seekers. Each shapes stats, starting skills, and available rites.</div></div>
+<div style="display:flex;gap:0.5rem;margin-bottom:1rem;"><button class="btn b-rune" onclick="loadClasses()">↻ Refresh</button><button class="btn b-seal" onclick="openClassEditor()">+ New Class</button></div>
+<div id="classes-list"></div>
+<div class="panel" id="class-editor" style="display:none;"><div class="ph" id="cls-ed-title">New Class</div><input type="hidden" id="cls-key">
+<div class="g2"><div class="fld"><label>Class Name</label><input type="text" id="cls-name" placeholder="Hermeticist"></div><div class="fld"><label>Role</label><input type="text" id="cls-role" placeholder="Seeker of hidden correspondences"></div></div>
+<div class="fld"><label>Description</label><textarea id="cls-desc"></textarea></div>
+<div class="g4"><div class="fld"><label>Fortitude</label><input type="number" id="cls-fortitude" value="10" min="1"></div><div class="fld"><label>Wrath</label><input type="number" id="cls-wrath" value="8" min="1"></div><div class="fld"><label>Intuition</label><input type="number" id="cls-intuition" value="12" min="1"></div><div class="fld"><label>Empathy</label><input type="number" id="cls-empathy" value="10" min="1"></div><div class="fld"><label>Endurance</label><input type="number" id="cls-endurance" value="10" min="1"></div><div class="fld"><label>Memory</label><input type="number" id="cls-memory" value="8" min="1"></div><div class="fld"><label>Cunning</label><input type="number" id="cls-cunning" value="12" min="1"></div><div class="fld"><label>Gnosis</label><input type="number" id="cls-gnosis" value="14" min="1"></div></div>
+<div class="fld"><label>Starting Skills (comma-separated)</label><input type="text" id="cls-skills" placeholder="Glyph Reading, Rite of Bindings"></div>
+<div class="fld"><label>Lore Fragment</label><textarea id="cls-lore" style="min-height:50px;"></textarea></div>
+<button class="btn b-ward" onclick="saveClass()">✓ Seal Class</button><button class="btn b-seal" onclick="document.getElementById('class-editor').style.display='none'">Cancel</button></div>
+</div>
 
-    <div class="player-select-bar">
-      <label>Target Player</label>
-      <select id="res-player-select" onchange="loadPlayerResources()">
-        <option value="">— Select a player —</option>
-      </select>
-      <button class="btn btn-primary" onclick="loadPlayerResources()">Load</button>
-    </div>
+<div id="page-events" class="page">
+<div class="pg-head"><div class="pg-title">Omens &amp; Events</div><div class="pg-desc">Inscribe a narrative event into a seeker's journal. It appears as a full-screen omen within moments.</div></div>
+<div class="g2">
+<div>
+<div class="panel"><div class="ph">Compose the Omen</div>
+<div class="fld"><label>Recipient</label><select id="evt-sel"><option value="__all__">All Seekers</option></select></div>
+<div class="fld"><label>Nature</label><select id="evt-type"><option value="urgent">Urgent</option><option value="story" selected>Story</option><option value="discovery">Discovery</option><option value="neutral">Neutral</option></select></div>
+<div class="fld"><label>Title</label><input type="text" id="evt-title" placeholder="The Second Seal Stirs…"></div>
+<div class="fld"><label>The Text</label><textarea id="evt-body" placeholder="Write what the seeker sees, hears, or feels."></textarea></div>
+<div class="g2"><div class="fld"><label>First Choice</label><input type="text" id="evt-btn1" placeholder="Investigate"></div><div class="fld"><label>Second Choice</label><input type="text" id="evt-btn2" placeholder="Withdraw"></div></div></div>
+<div class="panel"><div class="ph">Rewards (optional)</div>
+<div class="fld"><label>Reward Display Text</label><input type="text" id="evt-reward" placeholder="☉ 80 Solar · ♃ 40 Jovian"></div>
+<div class="g4">
+<div class="fld"><label>☉ Solar</label><input type="number" id="evt-r0" value="0" min="0"></div>
+<div class="fld"><label>☽ Lunar</label><input type="number" id="evt-r1" value="0" min="0"></div>
+<div class="fld"><label>♃ Jovian</label><input type="number" id="evt-r2" value="0" min="0"></div>
+<div class="fld"><label>♂ Martial</label><input type="number" id="evt-r3" value="0" min="0"></div>
+<div class="fld"><label>♄ Saturnine</label><input type="number" id="evt-r4" value="0" min="0"></div>
+<div class="fld"><label>♀ Venusian</label><input type="number" id="evt-r5" value="0" min="0"></div>
+<div class="fld"><label>☿ Mercurial</label><input type="number" id="evt-r6" value="0" min="0"></div>
+<div class="fld"><label>XP</label><input type="number" id="evt-rxp" value="0" min="0"></div>
+</div>
+<div class="fld"><label>Anchor Location</label><div class="g2"><input type="number" id="evt-lat" step="0.0001" placeholder="lat"><input type="number" id="evt-lng" step="0.0001" placeholder="lng"></div></div>
+<div class="fld"><label>Marker Name</label><input type="text" id="evt-marker" placeholder="The Weeping Eye"></div></div>
+<button class="btn b-rune" style="width:100%;padding:0.85rem;" onclick="pushEvent()">✦ Send Omen to Seeker(s)</button>
+</div>
+<div><div class="panel"><div class="ph">Active Omens</div><div id="active-events" style="min-height:80px;"><span style="font-family:var(--ff-b);font-style:italic;color:var(--mist);font-size:0.8rem;">None inscribed.</span></div><button class="btn b-seal" style="margin-top:0.7rem;" onclick="loadActiveEvents()">↻ Refresh</button></div></div>
+</div>
+</div>
 
-    <div class="card" id="res-card" style="display:none;">
-      <div class="card-title">☉ Essence Reserves</div>
-      <div class="res-grid" id="res-grid"></div>
-      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;">
-        <button class="btn btn-green" onclick="savePlayerResources()">✓ Write to Firebase</button>
-        <button class="btn btn-gold" onclick="loadPlayerResources()">↻ Reload</button>
-        <button class="btn btn-danger" onclick="zeroPlayerResources()">✗ Zero All</button>
-      </div>
-    </div>
-  </div>
+<div id="page-worldmap" class="page">
+<div class="pg-head"><div class="pg-title">World Map Events</div><div class="pg-desc"><strong style="color:var(--dm-bright);">DM-placed</strong> events are pinned to absolute coordinates. <strong style="color:var(--mist);">Random</strong> events spawn offset from each player's position. Both appear as markers on the field map.</div></div>
+<div style="display:flex;gap:0.5rem;margin-bottom:1rem;"><button class="btn b-rune" onclick="loadWorldEvents()">↻ Refresh</button><button class="btn b-seal" onclick="openMapEvtEd('dm')">+ DM Event</button><button class="btn b-amber" onclick="openMapEvtEd('random')">+ Random Event</button></div>
+<div class="g2">
+<div><div class="panel"><div class="ph">DM-Placed <span class="bdg bdg-dm">DM</span></div><div id="dm-map-events"></div></div></div>
+<div><div class="panel"><div class="ph">Random Spawns <span class="bdg bdg-rnd">Random</span></div><div id="random-map-events"></div></div></div>
+</div>
+<div class="panel" id="map-evt-editor" style="display:none;margin-top:1rem;"><div class="ph" id="mevt-editor-title">New Map Event</div>
+<input type="hidden" id="mevt-src"><input type="hidden" id="mevt-key">
+<div class="g2"><div class="fld"><label>Title</label><input type="text" id="mevt-title"></div><div class="fld"><label>Type</label><select id="mevt-type"><option value="combat">Combat</option><option value="gather">Gather</option><option value="story">Story</option><option value="recruit">Recruit</option></select></div></div>
+<div class="fld"><label>Description</label><textarea id="mevt-desc"></textarea></div>
+<div class="g2"><div class="fld"><label>Reward Text</label><input type="text" id="mevt-reward" placeholder="☉ 50 Solar"></div><div class="fld"><label>Action Text (toast)</label><input type="text" id="mevt-action" placeholder="You descend."></div></div>
+<div id="mevt-abs"><div class="g2"><div class="fld"><label>Latitude (absolute)</label><input type="number" id="mevt-lat" step="0.0001"></div><div class="fld"><label>Longitude (absolute)</label><input type="number" id="mevt-lng" step="0.0001"></div></div></div>
+<div id="mevt-rel" style="display:none;"><div class="g2"><div class="fld"><label>Δ Latitude (from player)</label><input type="number" id="mevt-dlat" step="0.0001" placeholder="0.0018"></div><div class="fld"><label>Δ Longitude (from player)</label><input type="number" id="mevt-dlng" step="0.0001" placeholder="0.0025"></div></div></div>
+<button class="btn b-ward" onclick="saveMapEvt()">✓ Seal to Firebase</button><button class="btn b-seal" onclick="document.getElementById('map-evt-editor').style.display='none'">Cancel</button></div>
+</div>
 
-  <!-- ══ SAVES ══ -->
-  <div id="page-saves" class="page">
-    <div class="page-title">Save Files</div>
-    <div class="page-subtitle">Read and overwrite any player's full save state.</div>
+<div id="page-exchanges" class="page">
+<div class="pg-head"><div class="pg-title">Exchange Ledger</div><div class="pg-desc">All essence proposals in flight. Expired entries may be culled.</div></div>
+<div style="display:flex;gap:0.5rem;margin-bottom:1rem;"><button class="btn b-rune" onclick="loadExchanges()">↻ Refresh</button><button class="btn b-breach" onclick="purgeExpired()">✗ Cull Expired</button></div>
+<div class="panel"><table class="tbl"><thead><tr><th>Seal</th><th>Sender</th><th>Recipient</th><th>Offered</th><th>Sought</th><th>State</th><th>Expires</th><th></th></tr></thead><tbody id="exch-tbody"><tr><td colspan="8" style="color:var(--mist);font-style:italic;">Consulting…</td></tr></tbody></table></div>
+</div>
 
-    <div class="player-select-bar">
-      <label>Target Player</label>
-      <select id="save-player-select" onchange="loadPlayerSave()">
-        <option value="">— Select a player —</option>
-      </select>
-      <button class="btn btn-primary" onclick="loadPlayerSave()">Load</button>
-    </div>
+<div id="page-creatures" class="page">
+<div class="pg-head"><div class="pg-title">Creatures &amp; Combat</div><div class="pg-desc">Define the creatures that inhabit the lair's encounters. Stats, behaviours, loot.</div></div>
+<div style="display:flex;gap:0.5rem;margin-bottom:1rem;"><button class="btn b-rune" onclick="loadCreatures()">↻ Refresh</button><button class="btn b-seal" onclick="openCrtEd()">+ New Creature</button></div>
+<div id="creatures-list"></div>
+<div class="panel" id="crt-editor" style="display:none;margin-top:1rem;"><div class="ph" id="crt-ed-title">New Creature</div><input type="hidden" id="crt-key">
+<div class="g2"><div class="fld"><label>Name</label><input type="text" id="crt-name" placeholder="The Threshold Warden"></div><div class="fld"><label>Type</label><select id="crt-type"><option value="beast">Beast</option><option value="specter">Specter</option><option value="construct">Construct</option><option value="corrupted">Corrupted</option><option value="elder">Elder Entity</option></select></div></div>
+<div class="fld"><label>Description</label><textarea id="crt-desc"></textarea></div>
+<div class="g4"><div class="fld"><label>HP</label><input type="number" id="crt-hp" value="30"></div><div class="fld"><label>Armour</label><input type="number" id="crt-armour" value="4"></div><div class="fld"><label>Dodge</label><input type="number" id="crt-dodge" value="8"></div><div class="fld"><label>Speed</label><input type="number" id="crt-speed" value="10"></div><div class="fld"><label>Damage</label><input type="text" id="crt-damage" placeholder="2d6+3"></div><div class="fld"><label>Stress Dmg</label><input type="number" id="crt-stress" value="10"></div><div class="fld"><label>Danger Tier</label><input type="number" id="crt-tier" value="2" min="1" max="5"></div><div class="fld"><label>XP Reward</label><input type="number" id="crt-xp" value="100"></div></div>
+<div class="fld"><label>Special Abilities (one per line)</label><textarea id="crt-abilities" placeholder="Blight Aura: 2 stacks per turn.&#10;Phase Shift: 30% evade."></textarea></div>
+<div class="fld"><label>Loot (one per line: name · amount)</label><textarea id="crt-loot" placeholder="Martial · 40&#10;Solar · 20"></textarea></div>
+<button class="btn b-ward" onclick="saveCrt()">✓ Seal Creature</button><button class="btn b-seal" onclick="document.getElementById('crt-editor').style.display='none'">Cancel</button></div>
+</div>
 
-    <div class="card" id="save-card" style="display:none;">
-      <div class="card-title">📜 Raw Save Data</div>
-      <textarea id="save-json-editor" style="font-family:monospace;font-size:0.72rem;height:300px;"></textarea>
-      <div style="display:flex;gap:0.5rem;margin-top:0.8rem;">
-        <button class="btn btn-green" onclick="writeSaveJson()">✓ Write Save to Firebase</button>
-        <button class="btn btn-gold" onclick="loadPlayerSave()">↻ Reload</button>
-        <button class="btn btn-danger" onclick="deleteSave()">✗ Delete Save</button>
-      </div>
-    </div>
-  </div>
+<div id="page-forge" class="page">
+<div class="pg-head"><div class="pg-title">Recipes &amp; Craft</div><div class="pg-desc">Everything the Forge can produce. Changes propagate to all seekers immediately.</div></div>
+<div style="display:flex;gap:0.5rem;margin-bottom:1rem;"><button class="btn b-rune" onclick="loadRecipes()">↻ Refresh</button><button class="btn b-seal" onclick="openRecEd()">+ New Recipe</button></div>
+<div id="recipes-list"></div>
+<div class="panel" id="rec-editor" style="display:none;margin-top:1rem;"><div class="ph" id="rec-ed-title">New Recipe</div><input type="hidden" id="rec-idx">
+<div class="g2"><div class="fld"><label>Name</label><input type="text" id="rec-name"></div><div class="fld"><label>Type</label><input type="text" id="rec-type" placeholder="Weapon — One-handed"></div></div>
+<div class="g2"><div class="fld"><label>Category</label><select id="rec-cat"><option value="weapons">Weapons</option><option value="armour">Armour</option><option value="consumables">Consumables</option><option value="sigils">Sigils</option></select></div><div class="fld"><label>Icon (emoji)</label><input type="text" id="rec-icon" placeholder="🔥"></div></div>
+<div class="fld"><label>Description</label><textarea id="rec-desc"></textarea></div>
+<div class="fld"><label>Effect Line</label><input type="text" id="rec-effect" placeholder="+4 Holy damage · Ignite on Blight"></div>
+<div class="fld"><label>Accent Colour (hex)</label><input type="text" id="rec-color" placeholder="#c9a84c"></div>
+<div class="ph" style="margin-top:0.5rem;">Costs</div><div id="rec-costs"></div>
+<button class="btn b-seal" style="margin-bottom:0.7rem;" onclick="addCostRow()">+ Add Cost</button><br>
+<button class="btn b-ward" onclick="saveRec()">✓ Seal Recipe</button><button class="btn b-seal" onclick="document.getElementById('rec-editor').style.display='none'">Cancel</button></div>
+</div>
 
-  <!-- ══ ROSTER ══ -->
-  <div id="page-roster" class="page">
-    <div class="page-title">Acolyte Rosters</div>
-    <div class="page-subtitle">View and modify acolyte stress and availability for any player.</div>
+<div id="page-buildings" class="page">
+<div class="pg-head"><div class="pg-title">Buildings &amp; Skills</div><div class="pg-desc">The lair's infrastructure and skills available to seekers.</div></div>
+<div style="display:flex;gap:0.5rem;margin-bottom:1rem;"><button class="btn b-rune" onclick="loadBldSkl()">↻ Refresh</button><button class="btn b-seal" onclick="openBldEd()">+ Building</button><button class="btn b-amber" onclick="openSklEd()">+ Skill</button></div>
+<div class="g2">
+<div><div style="font-family:var(--ff-h);font-size:0.44rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:0.7rem;">Buildings</div><div id="bld-list"></div></div>
+<div><div style="font-family:var(--ff-h);font-size:0.44rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:0.7rem;">Skills</div><div id="skl-list"></div></div>
+</div>
+<div class="panel" id="bld-editor" style="display:none;margin-top:1rem;"><div class="ph" id="bld-ed-title">New Building</div><input type="hidden" id="bld-key">
+<div class="g2"><div class="fld"><label>Name</label><input type="text" id="bld-name"></div><div class="fld"><label>Icon</label><input type="text" id="bld-icon" placeholder="🕯"></div></div>
+<div class="fld"><label>Description</label><textarea id="bld-desc"></textarea></div>
+<div class="fld"><label>Max Level</label><input type="number" id="bld-maxlv" value="3" min="1"></div>
+<div class="fld"><label>Upgrade Cost (JSON array of 7 essence values)</label><input type="text" id="bld-cost" placeholder="[200,0,100,0,50,0,0]"></div>
+<div class="fld"><label>Effects per Level (one per line)</label><textarea id="bld-effects" placeholder="Lv1: +20% Research&#10;Lv2: +40%, unlock advanced codex"></textarea></div>
+<button class="btn b-ward" onclick="saveBld()">✓ Seal Building</button><button class="btn b-seal" onclick="document.getElementById('bld-editor').style.display='none'">Cancel</button></div>
+<div class="panel" id="skl-editor" style="display:none;margin-top:1rem;"><div class="ph" id="skl-ed-title">New Skill</div><input type="hidden" id="skl-key">
+<div class="g2"><div class="fld"><label>Name</label><input type="text" id="skl-name"></div><div class="fld"><label>Class Requirement</label><input type="text" id="skl-class" placeholder="Any"></div></div>
+<div class="fld"><label>Description</label><textarea id="skl-desc"></textarea></div>
+<div class="g2"><div class="fld"><label>Unlock Cost (JSON array)</label><input type="text" id="skl-cost" placeholder="[0,0,150,0,0,0,100]"></div><div class="fld"><label>Unlock Condition</label><input type="text" id="skl-unlock" placeholder="Scriptorium Lv2"></div></div>
+<button class="btn b-ward" onclick="saveSkl()">✓ Seal Skill</button><button class="btn b-seal" onclick="document.getElementById('skl-editor').style.display='none'">Cancel</button></div>
+</div>
 
-    <div class="player-select-bar">
-      <label>Target Player</label>
-      <select id="roster-player-select" onchange="loadPlayerRoster()">
-        <option value="">— Select a player —</option>
-      </select>
-      <button class="btn btn-primary" onclick="loadPlayerRoster()">Load</button>
-    </div>
-
-    <div id="roster-card" style="display:none;">
-      <div id="roster-acolytes"></div>
-      <div style="margin-top:0.8rem;">
-        <button class="btn btn-green" onclick="savePlayerRoster()">✓ Write Roster to Firebase</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ STORY EVENTS ══ -->
-  <div id="page-events" class="page">
-    <div class="page-title">Story Events</div>
-    <div class="page-subtitle">Inject narrative events into a player's journal, optionally tied to a map location.</div>
-
-    <div class="grid2">
-      <div>
-        <div class="card">
-          <div class="card-title">⚠ Create Event</div>
-          <div class="field">
-            <label>Target Player</label>
-            <select id="event-player-select">
-              <option value="__all__">— All Players —</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Event Type</label>
-            <select id="event-type">
-              <option value="urgent">Urgent</option>
-              <option value="story" selected>Story</option>
-              <option value="discovery">Discovery</option>
-              <option value="neutral">Neutral</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Title</label>
-            <input type="text" id="event-title" placeholder="The Second Seal Stirs...">
-          </div>
-          <div class="field">
-            <label>Body Text</label>
-            <textarea id="event-body" placeholder="Narrative text shown to the player in their Journal..."></textarea>
-          </div>
-          <div class="field">
-            <label>Button 1 Label (optional)</label>
-            <input type="text" id="event-btn1" placeholder="Investigate">
-          </div>
-          <div class="field">
-            <label>Button 2 Label (optional)</label>
-            <input type="text" id="event-btn2" placeholder="Ignore">
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-title">📍 Map Location (optional)</div>
-          <div class="grid2">
-            <div class="field">
-              <label>Latitude</label>
-              <input type="number" id="event-lat" step="0.0001" placeholder="46.1713">
-            </div>
-            <div class="field">
-              <label>Longitude</label>
-              <input type="number" id="event-lng" step="0.0001" placeholder="9.8694">
-            </div>
-          </div>
-          <div class="field">
-            <label>Map Marker Label</label>
-            <input type="text" id="event-marker-label" placeholder="The Weeping Eye">
-          </div>
-        </div>
-
-        <button class="btn btn-primary" style="width:100%;padding:1rem;" onclick="pushEvent()">✦ Push Event to Player(s)</button>
-      </div>
-
-      <div>
-        <div class="card">
-          <div class="card-title">📋 Active Events in Firebase</div>
-          <div id="events-list" style="min-height:100px;">
-            <span style="font-family:var(--ff-body);font-style:italic;color:var(--mist);">Loading...</span>
-          </div>
-          <button class="btn btn-gold" style="margin-top:0.8rem;" onclick="loadActiveEvents()">↻ Refresh</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ EXCHANGES ══ -->
-  <div id="page-exchanges" class="page">
-    <div class="page-title">Exchange Monitor</div>
-    <div class="page-subtitle">View and moderate all pending exchanges in Firebase.</div>
-
-    <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
-      <button class="btn btn-primary" onclick="loadExchanges()">↻ Refresh</button>
-      <button class="btn btn-danger" onclick="purgeExpiredExchanges()">✗ Purge Expired</button>
-    </div>
-
-    <div class="card">
-      <table class="events-table" id="exchanges-table">
-        <thead>
-          <tr>
-            <th>ID</th><th>From</th><th>To</th><th>Offer</th><th>Request</th><th>Status</th><th>Expires</th><th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="exchanges-tbody">
-          <tr><td colspan="8" style="color:var(--mist);font-style:italic;">Loading...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ══ BROADCAST ══ -->
-  <div id="page-broadcast" class="page">
-    <div class="page-title">Broadcast</div>
-    <div class="page-subtitle">Send a global message or inject a resource bonus/penalty to all players simultaneously.</div>
-
-    <div class="grid2">
-      <div class="card">
-        <div class="card-title">📢 Global Announcement</div>
-        <div class="field">
-          <label>Message (shown as toast to all players)</label>
-          <textarea id="broadcast-msg" placeholder="The Third Seal has been broken. All Saturnine essence surges."></textarea>
-        </div>
-        <button class="btn btn-primary" onclick="pushBroadcast()">✦ Broadcast to All</button>
-      </div>
-
-      <div class="card">
-        <div class="card-title">☉ Global Resource Modifier</div>
-        <p style="font-family:var(--ff-body);font-style:italic;font-size:0.8rem;color:var(--mist);margin-bottom:0.8rem;">Add or subtract from every player's resources. Use negative values to deduct.</p>
-        <div class="res-grid" id="broadcast-res-grid"></div>
-        <button class="btn btn-gold" style="margin-top:0.5rem;width:100%;" onclick="pushResourceModifier()">Apply to All Players</button>
-      </div>
-    </div>
-  </div>
+<div id="page-broadcast" class="page">
+<div class="pg-head"><div class="pg-title">Proclamation</div><div class="pg-desc">Words sent to all seekers at once, or a planetary shift affecting all reserves simultaneously.</div></div>
+<div class="g2">
+<div class="panel"><div class="ph">A Word from the Lair</div><div class="fld"><label>The Proclamation</label><textarea id="bc-msg" placeholder="The Third Seal trembles. All who carry Saturnine essence feel it first."></textarea></div><button class="btn b-rune" onclick="pushBC()">✦ Proclaim to All</button></div>
+<div class="panel"><div class="ph">Planetary Shift</div><p style="font-family:var(--ff-b);font-style:italic;font-size:0.78rem;color:var(--mist);margin-bottom:0.75rem;line-height:1.6;">Add or remove essence from every seeker. Negative values drain. The lair does not ask permission.</p><div class="ess-grid" id="bc-grid"></div><button class="btn b-seal" style="margin-top:0.4rem;width:100%;" onclick="pushShift()">Apply Shift to All Seekers</button></div>
+</div>
+</div>
 
 </main>
 </div>
-
+<div id="dm-console"><div class="con-bar"><span class="con-lbl">Arcane Log</span><button class="con-clr" onclick="document.getElementById('dm-log').innerHTML=''">clear</button></div><div id="dm-log"></div></div>
 <div id="dm-toast"></div>
-
 <script>
-const FB = 'https://lairbelow-default-rtdb.firebaseio.com';
-const RES_SYMBOLS = ['☉','☽','♃','♂','♄','♀','☿'];
-const RES_NAMES   = ['Solar','Lunar','Jovian','Martial','Saturnine','Venusian','Mercurial'];
+const FB='https://lairbelow-default-rtdb.firebaseio.com';
+const RS=['☉','☽','♃','♂','♄','♀','☿'];
+const RN=['Solar','Lunar','Jovian','Martial','Saturnine','Venusian','Mercurial'];
+let allPlayers={},rosterEdits={},editingRecipes=[],costRowN=0;
 
-let allPlayers = {}; // id -> { presence, profile, save }
-let currentRosterEdits = {}; // id -> acolytes array being edited
+function log(m,t='info'){const e=document.getElementById('dm-log'),d=document.createElement('div');d.className='ll '+t;d.textContent='['+new Date().toLocaleTimeString()+'] '+m;e.prepend(d);}
+function toast(m){const t=document.getElementById('dm-toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 
-// ══════════════════════════════════════
-// LOGGING
-// ══════════════════════════════════════
-function log(msg, type='info') {
-  const el = document.getElementById('dm-log');
-  const div = document.createElement('div');
-  div.className = 'log-entry log-' + type;
-  const ts = new Date().toLocaleTimeString();
-  div.textContent = '[' + ts + '] ' + msg;
-  el.prepend(div);
+function nav(n){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+n).classList.add('active');
+  document.querySelector(`[data-page="${n}"]`)?.classList.add('active');
+  if(['resources','grimoires','acolytes'].includes(n)) populateSels();
+  if(n==='events'){populateSels();loadActiveEvents();}
+  if(n==='exchanges') loadExchanges();
+  if(n==='broadcast') buildBcGrid();
+  if(n==='worldmap') loadWorldEvents();
+  if(n==='creatures') loadCreatures();
+  if(n==='forge') loadRecipes();
+  if(n==='buildings') loadBldSkl();
+  if(n==='characters') loadClasses();
 }
 
-function toast(msg) {
-  const t = document.getElementById('dm-toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+async function fbGet(p){const r=await fetch(`${FB}/${p}.json?cb=`+Date.now());if(!r.ok)throw new Error('HTTP '+r.status);const d=await r.json();if(d&&d.error)throw new Error(d.error);return d;}
+async function fbPut(p,d){const r=await fetch(`${FB}/${p}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
+async function fbPatch(p,d){const r=await fetch(`${FB}/${p}.json`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
+async function fbDel(p){const r=await fetch(`${FB}/${p}.json`,{method:'DELETE'});if(!r.ok)throw new Error('HTTP '+r.status);}
+
+async function loadAll(){
+  try{
+    log('Consulting the ether…','info');
+    const[pl,sv]=await Promise.all([fbGet('players'),fbGet('saves')]);
+    allPlayers={};
+    if(pl)Object.entries(pl).forEach(([id,d])=>{allPlayers[id]=allPlayers[id]||{};allPlayers[id].presence=d.presence||null;allPlayers[id].profile=d.profile||null;});
+    if(sv)Object.entries(sv).forEach(([id,d])=>{allPlayers[id]=allPlayers[id]||{};allPlayers[id].save=d||null;});
+    log('Bound seekers: '+Object.keys(allPlayers).length,'ok');
+    renderVigil();renderSbPlayers();populateSels();
+  }catch(e){log('Failed: '+e.message,'err');}
 }
+function refreshAll(){loadAll();}
 
-// ══════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  document.querySelector(`[data-page="${name}"]`).classList.add('active');
-  // Lazy load page data
-  if (name === 'resources') populatePlayerSelects();
-  if (name === 'saves')     populatePlayerSelects();
-  if (name === 'roster')    populatePlayerSelects();
-  if (name === 'events')    { populatePlayerSelects(); loadActiveEvents(); }
-  if (name === 'exchanges') loadExchanges();
-  if (name === 'broadcast') buildBroadcastResGrid();
-}
-
-// ══════════════════════════════════════
-// FIREBASE HELPERS
-// ══════════════════════════════════════
-async function fbGet(path) {
-  const res = await fetch(`${FB}/${path}.json?cb=` + Date.now());
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  const data = await res.json();
-  if (data && data.error) throw new Error(data.error);
-  return data;
-}
-
-async function fbPut(path, data) {
-  const res = await fetch(`${FB}/${path}.json`, {
-    method: 'PUT',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(data)
-  });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
-}
-
-async function fbPatch(path, data) {
-  const res = await fetch(`${FB}/${path}.json`, {
-    method: 'PATCH',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(data)
-  });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
-}
-
-async function fbDelete(path) {
-  const res = await fetch(`${FB}/${path}.json`, { method: 'DELETE' });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-}
-
-// ══════════════════════════════════════
-// LOAD ALL PLAYERS
-// ══════════════════════════════════════
-async function loadAllPlayers() {
-  try {
-    log('Fetching all players and saves...', 'info');
-    const [players, saves] = await Promise.all([
-      fbGet('players'),
-      fbGet('saves'),
-    ]);
-
-    allPlayers = {};
-
-    if (players) {
-      Object.entries(players).forEach(([id, data]) => {
-        allPlayers[id] = allPlayers[id] || {};
-        allPlayers[id].presence = data.presence || null;
-        allPlayers[id].profile  = data.profile  || null;
-      });
-    }
-    if (saves) {
-      Object.entries(saves).forEach(([id, data]) => {
-        allPlayers[id] = allPlayers[id] || {};
-        allPlayers[id].save = data || null;
-      });
-    }
-
-    log('Loaded ' + Object.keys(allPlayers).length + ' player(s).', 'ok');
-    renderDashboard();
-    renderSidebarPlayers();
-    populatePlayerSelects();
-  } catch(e) {
-    log('Failed to load players: ' + e.message, 'err');
-  }
-}
-
-// ══════════════════════════════════════
-// DASHBOARD
-// ══════════════════════════════════════
-function renderDashboard() {
-  const container = document.getElementById('dashboard-player-cards');
-  const ids = Object.keys(allPlayers);
-  if (!ids.length) {
-    container.innerHTML = '<div class="card" style="color:var(--mist);font-style:italic;font-family:var(--ff-body);">No players found in Firebase.</div>';
-    return;
-  }
-  const now = Date.now();
-  container.innerHTML = ids.map(id => {
-    const p = allPlayers[id];
-    const pres = p.presence;
-    const save = p.save;
-    const online = pres && (now - pres.lastSeen < 3 * 60 * 1000);
-    const name = pres?.name || save?.character?.name || id.slice(0,8);
-    const coven = pres?.coven || '—';
-    const res = save?.resources?.values || [];
-    const resHtml = RES_SYMBOLS.map((s,i) =>
-      `<span style="font-family:var(--ff-heading);font-size:0.55rem;color:var(--gold);">${s}</span>
-       <span style="font-family:var(--ff-heading);font-size:0.55rem;color:var(--bone);">${res[i] !== undefined ? Math.floor(res[i]) : '?'}</span>`
-    ).join('<span style="color:var(--stone);margin:0 0.2rem;">·</span>');
-
-    return `<div class="card" style="cursor:pointer;" onclick="quickSelectPlayer('${id}')">
-      <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem;">
-        <div style="width:8px;height:8px;border-radius:50%;background:${online ? 'var(--viridian-bright)' : 'var(--ash)'};flex-shrink:0;"></div>
-        <div style="flex:1;">
-          <div style="font-family:var(--ff-heading);font-size:0.75rem;color:var(--bone);">${name}</div>
-          <div style="font-family:var(--ff-body);font-style:italic;font-size:0.65rem;color:var(--mist);">${coven}</div>
-        </div>
-        <span style="font-family:var(--ff-heading);font-size:0.38rem;letter-spacing:0.08em;color:${online ? 'var(--viridian-bright)' : 'var(--ash)'};">${online ? 'ONLINE' : 'OFFLINE'}</span>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:0.3rem 0.5rem;font-size:0.7rem;">${resHtml}</div>
-      <div style="margin-top:0.6rem;font-family:var(--ff-heading);font-size:0.38rem;letter-spacing:0.06em;color:var(--ash);">
-        ${save?.savedAt ? 'Saved: ' + new Date(save.savedAt).toLocaleString() : 'No save found'}
-      </div>
+function renderVigil(){
+  const now=Date.now(),ids=Object.keys(allPlayers),c=document.getElementById('vigil-cards');
+  if(!ids.length){c.innerHTML='<div class="seeker-card"><span style="color:var(--mist);font-style:italic;font-family:var(--ff-b);">No seekers found.</span></div>';return;}
+  c.innerHTML=ids.map(id=>{
+    const p=allPlayers[id],online=p.presence&&(now-p.presence.lastSeen<3*60*1000);
+    const name=p.presence?.name||p.save?.character?.name||id.slice(0,8),coven=p.presence?.coven||'—';
+    const res=p.save?.resources?.values||[];
+    return `<div class="seeker-card" onclick="quickSel('${id}')">
+      <div class="sc-head"><div class="dot ${online?'':'off'}"></div><div style="flex:1;"><div class="sc-name">${name}</div><div class="sc-coven">${coven}</div></div><span class="sc-status" style="color:${online?'var(--viridian-bright)':'var(--ash)'};">${online?'present':'absent'}</span></div>
+      <div class="sc-ess">${RS.map((s,i)=>`<span>${s}<span style="font-family:var(--ff-h);font-size:0.52rem;color:var(--bone);margin-left:0.1rem;">${res[i]!==undefined?Math.floor(res[i]):'?'}</span></span>`).join('')}</div>
+      <div class="sc-foot">${p.save?.savedAt?'Sealed '+new Date(p.save.savedAt).toLocaleString():'No grimoire'}</div>
     </div>`;
   }).join('');
 }
-
-function renderSidebarPlayers() {
-  const now = Date.now();
-  const el = document.getElementById('sidebar-players');
-  const ids = Object.keys(allPlayers);
-  if (!ids.length) { el.innerHTML = '<span style="font-family:var(--ff-body);font-style:italic;font-size:0.65rem;color:var(--ash);">No players.</span>'; return; }
-  el.innerHTML = ids.map(id => {
-    const p = allPlayers[id];
-    const online = p.presence && (now - p.presence.lastSeen < 3 * 60 * 1000);
-    const name = p.presence?.name || p.save?.character?.name || id.slice(0,8);
-    const coven = p.presence?.coven || '—';
-    return `<div class="player-pill" onclick="quickSelectPlayer('${id}')">
-      <div class="player-dot ${online ? '' : 'offline'}"></div>
-      <div>
-        <div class="player-pill-name">${name}</div>
-        <div class="player-pill-coven">${coven}</div>
-      </div>
-    </div>`;
-  }).join('');
+function renderSbPlayers(){
+  const now=Date.now(),el=document.getElementById('sidebar-players'),ids=Object.keys(allPlayers);
+  if(!ids.length){el.innerHTML='<span style="font-family:var(--ff-b);font-style:italic;font-size:0.62rem;color:var(--ash);">None found.</span>';return;}
+  el.innerHTML=ids.map(id=>{const p=allPlayers[id],online=p.presence&&(now-p.presence.lastSeen<3*60*1000),name=p.presence?.name||p.save?.character?.name||id.slice(0,8);return`<div class="seeker-row" onclick="quickSel('${id}')"><div class="dot ${online?'':'off'}"></div><div><div class="sn">${name}</div><div class="sc">${p.presence?.coven||'—'}</div></div></div>`;}).join('');
+}
+function quickSel(id){['res-sel','grim-sel','acol-sel'].forEach(s=>{const e=document.getElementById(s);if(e)e.value=id;});nav('resources');loadRes();}
+function populateSels(){
+  const ids=Object.keys(allPlayers);
+  ['res-sel','grim-sel','acol-sel'].forEach(sid=>{const s=document.getElementById(sid);if(!s)return;const cur=s.value;s.innerHTML='<option value="">— choose —</option>';ids.forEach(id=>{const n=allPlayers[id].presence?.name||allPlayers[id].save?.character?.name||id.slice(0,8);s.innerHTML+=`<option value="${id}">${n}</option>`;});if(cur)s.value=cur;});
+  const es=document.getElementById('evt-sel');if(es){const cur=es.value;es.innerHTML='<option value="__all__">All Seekers</option>';ids.forEach(id=>{const n=allPlayers[id].presence?.name||allPlayers[id].save?.character?.name||id.slice(0,8);es.innerHTML+=`<option value="${id}">${n}</option>`;});if(cur)es.value=cur;}
 }
 
-function quickSelectPlayer(id) {
-  // Set all selects to this player and navigate to resources
-  ['res-player-select','save-player-select','roster-player-select','event-player-select'].forEach(sel => {
-    const el = document.getElementById(sel);
-    if (el) el.value = id;
-  });
-  showPage('resources');
-  loadPlayerResources();
-}
-
-// ══════════════════════════════════════
-// PLAYER SELECTS
-// ══════════════════════════════════════
-function populatePlayerSelects() {
-  const ids = Object.keys(allPlayers);
-  const selects = ['res-player-select','save-player-select','roster-player-select'];
-  selects.forEach(selId => {
-    const sel = document.getElementById(selId);
-    if (!sel) return;
-    const current = sel.value;
-    sel.innerHTML = '<option value="">— Select a player —</option>';
-    ids.forEach(id => {
-      const p = allPlayers[id];
-      const name = p.presence?.name || p.save?.character?.name || id.slice(0,8);
-      sel.innerHTML += `<option value="${id}">${name} (${id.slice(0,8)})</option>`;
-    });
-    if (current) sel.value = current;
-  });
-
-  // Event player select also has "All Players"
-  const evSel = document.getElementById('event-player-select');
-  if (evSel) {
-    const cur = evSel.value;
-    evSel.innerHTML = '<option value="__all__">— All Players —</option>';
-    ids.forEach(id => {
-      const p = allPlayers[id];
-      const name = p.presence?.name || p.save?.character?.name || id.slice(0,8);
-      evSel.innerHTML += `<option value="${id}">${name} (${id.slice(0,8)})</option>`;
-    });
-    if (cur) evSel.value = cur;
-  }
-}
-
-// ══════════════════════════════════════
 // RESOURCES
-// ══════════════════════════════════════
-async function loadPlayerResources() {
-  const id = document.getElementById('res-player-select').value;
-  if (!id) return;
-  try {
-    log('Loading resources for ' + id.slice(0,8) + '...', 'info');
-    const save = await fbGet('saves/' + id);
-    if (!save) { log('No save found for this player.', 'warn'); return; }
-    allPlayers[id] = allPlayers[id] || {};
-    allPlayers[id].save = save;
-    renderResGrid(save.resources?.values || Array(7).fill(0));
-    document.getElementById('res-card').style.display = 'block';
-    log('Resources loaded.', 'ok');
-  } catch(e) { log('Error: ' + e.message, 'err'); }
-}
+async function loadRes(){const id=document.getElementById('res-sel').value;if(!id)return;try{log('Recalling essence for '+id.slice(0,8)+'…','info');const s=await fbGet('saves/'+id);if(!s){log('No grimoire.','warn');return;}allPlayers[id]=allPlayers[id]||{};allPlayers[id].save=s;renderEssGrid(s.resources?.values||Array(7).fill(0));document.getElementById('res-panel').style.display='block';log('Recalled.','ok');}catch(e){log('Error: '+e.message,'err');}}
+function renderEssGrid(v){document.getElementById('res-grid').innerHTML=RS.map((s,i)=>`<div class="ess-cell"><span class="es">${s}</span><span class="en">${RN[i]}</span><input class="ei" type="number" id="rv${i}" value="${Math.floor(v[i]||0)}" min="0" step="1"></div>`).join('');}
+async function saveRes(){const id=document.getElementById('res-sel').value;if(!id)return;const vals=RS.map((_,i)=>parseFloat(document.getElementById('rv'+i).value)||0);try{await fbPatch('saves/'+id,{resources:{values:vals}});log('Inscribed.','ok');toast('✓ Essence sealed.');renderVigil();}catch(e){log('Error: '+e.message,'err');}}
+function zeroRes(){RS.forEach((_,i)=>{const e=document.getElementById('rv'+i);if(e)e.value=0;});}
 
-function renderResGrid(vals) {
-  document.getElementById('res-grid').innerHTML = RES_SYMBOLS.map((s,i) => `
-    <div class="res-cell">
-      <span class="res-symbol">${s}</span>
-      <span class="res-name">${RES_NAMES[i]}</span>
-      <input class="res-input" type="number" id="res-val-${i}" value="${Math.floor(vals[i] || 0)}" min="0" step="1">
-    </div>`).join('');
-}
+// GRIMOIRES
+async function loadGrim(){const id=document.getElementById('grim-sel').value;if(!id)return;try{const s=await fbGet('saves/'+id);document.getElementById('grim-editor').value=JSON.stringify(s,null,2);document.getElementById('grim-panel').style.display='block';log('Unsealed.','ok');}catch(e){log('Error: '+e.message,'err');}}
+async function writeGrim(){const id=document.getElementById('grim-sel').value;if(!id)return;let p;try{p=JSON.parse(document.getElementById('grim-editor').value);}catch(e){log('Invalid JSON.','err');toast('✗ Invalid JSON.');return;}try{await fbPut('saves/'+id,p);log('Written.','ok');toast('✓ Chronicle overwritten.');renderVigil();}catch(e){log('Error: '+e.message,'err');}}
+async function deleteGrim(){const id=document.getElementById('grim-sel').value;if(!id||!confirm('Burn chronicle?'))return;try{await fbDel('saves/'+id);log('Burned.','warn');toast('Chronicle deleted.');document.getElementById('grim-editor').value='';}catch(e){log('Error: '+e.message,'err');}}
 
-async function savePlayerResources() {
-  const id = document.getElementById('res-player-select').value;
-  if (!id) return;
-  const vals = RES_SYMBOLS.map((_,i) => parseFloat(document.getElementById('res-val-'+i).value) || 0);
-  try {
-    log('Writing resources for ' + id.slice(0,8) + '...', 'info');
-    // Patch only the resources field in the save
-    await fbPatch('saves/' + id, { resources: { values: vals } });
-    allPlayers[id].save.resources = { values: vals };
-    log('Resources saved.', 'ok');
-    toast('✓ Resources written to Firebase.');
-    renderDashboard();
-  } catch(e) { log('Error: ' + e.message, 'err'); }
-}
+// ACOLYTES
+async function loadAcol(){const id=document.getElementById('acol-sel').value;if(!id)return;try{const s=await fbGet('saves/'+id);if(!s){log('No grimoire.','warn');return;}const a=s.acolytes||[];rosterEdits[id]=JSON.parse(JSON.stringify(a));renderAcol(id,rosterEdits[id]);document.getElementById('acol-panel').style.display='block';log(a.length+' acolyte(s).','ok');}catch(e){log('Error: '+e.message,'err');}}
+function renderAcol(pid,acolytes){const c=document.getElementById('acol-rows');if(!acolytes.length){c.innerHTML='<p style="color:var(--mist);font-style:italic;">No acolytes.</p>';return;}c.innerHTML=acolytes.map((a,i)=>`<div class="acol-row"><div class="acol-glyph">🜃</div><div class="acol-det"><div class="acol-n">${a.name}</div><div class="acol-c">${a.class||a.cls||'—'} · Lv.${a.level||'?'}</div><div class="acol-states">States: ${(a.states||[]).join(', ')||'none'}</div></div><div class="stress-col"><div class="str-lbl">Stress</div><div class="str-track"><div class="str-fill" id="sf${i}" style="width:${a.stress||0}%"></div></div><div class="str-pct" id="sp${i}">${a.stress||0}%</div><input class="str-inp" type="number" min="0" max="100" value="${a.stress||0}" oninput="rosterEdits['${pid}'][${i}].stress=parseInt(this.value)||0;document.getElementById('sf${i}').style.width=this.value+'%';document.getElementById('sp${i}').textContent=this.value+'%';"></div></div>`).join('');}
+async function saveAcol(){const id=document.getElementById('acol-sel').value;if(!id||!rosterEdits[id])return;try{await fbPatch('saves/'+id,{acolytes:rosterEdits[id]});log('Committed.','ok');toast('✓ Roster committed.');}catch(e){log('Error: '+e.message,'err');}}
 
-function zeroPlayerResources() {
-  RES_SYMBOLS.forEach((_,i) => { const el = document.getElementById('res-val-'+i); if(el) el.value = 0; });
-}
+// CLASSES
+async function loadClasses(){try{const d=await fbGet('world/classes');const c=document.getElementById('classes-list');if(!d){c.innerHTML='<p style="color:var(--mist);font-style:italic;">No classes defined.</p>';return;}c.innerHTML=Object.entries(d).map(([k,cls])=>`<div class="entity-card"><div style="display:flex;align-items:flex-start;gap:0.5rem;"><div style="flex:1;"><div class="entity-name">${cls.name||k}</div><div class="entity-sub">${cls.role||''}</div>${cls.desc?`<div style="font-family:var(--ff-b);font-style:italic;font-size:0.72rem;color:var(--mist);margin-top:0.3rem;">${cls.desc}</div>`:''}</div><div style="display:flex;gap:0.3rem;"><button class="btn b-seal" style="padding:0.25rem 0.5rem;font-size:0.38rem;" onclick="editClass('${k}')">Edit</button><button class="btn b-breach" style="padding:0.25rem 0.5rem;font-size:0.38rem;" onclick="delClass('${k}')">✗</button></div></div>${cls.stats?`<div class="estat-grid">${Object.entries(cls.stats).map(([sk,sv])=>`<div class="estat"><div class="estat-k">${sk}</div><div class="estat-v">${sv}</div></div>`).join('')}</div>`:''}</div>`).join('');}catch(e){log('Error: '+e.message,'err');}}
+function openClassEditor(){document.getElementById('class-editor').style.display='block';document.getElementById('cls-ed-title').textContent='New Class';document.getElementById('cls-key').value='';['cls-name','cls-role','cls-desc','cls-skills','cls-lore'].forEach(id=>document.getElementById(id).value='');['cls-fortitude','cls-wrath','cls-intuition','cls-empathy','cls-endurance','cls-memory','cls-cunning','cls-gnosis'].forEach(id=>document.getElementById(id).value=10);}
+async function editClass(key){try{const d=await fbGet('world/classes/'+key);document.getElementById('class-editor').style.display='block';document.getElementById('cls-ed-title').textContent='Edit: '+d.name;document.getElementById('cls-key').value=key;document.getElementById('cls-name').value=d.name||'';document.getElementById('cls-role').value=d.role||'';document.getElementById('cls-desc').value=d.desc||'';document.getElementById('cls-skills').value=(d.skills||[]).join(', ');document.getElementById('cls-lore').value=d.lore||'';if(d.stats){['fortitude','wrath','intuition','empathy','endurance','memory','cunning','gnosis'].forEach(s=>{const e=document.getElementById('cls-'+s);if(e)e.value=d.stats[s]||10;});}}catch(e){log('Error: '+e.message,'err');}}
+async function saveClass(){const key=document.getElementById('cls-key').value||(document.getElementById('cls-name').value.toLowerCase().replace(/\s+/g,'-'));const stats={};['fortitude','wrath','intuition','empathy','endurance','memory','cunning','gnosis'].forEach(s=>stats[s]=parseInt(document.getElementById('cls-'+s).value)||10);const d={name:document.getElementById('cls-name').value,role:document.getElementById('cls-role').value,desc:document.getElementById('cls-desc').value,stats,skills:document.getElementById('cls-skills').value.split(',').map(s=>s.trim()).filter(Boolean),lore:document.getElementById('cls-lore').value};try{await fbPut('world/classes/'+key,d);log('Class sealed: '+d.name,'ok');toast('✦ '+d.name+' sealed.');loadClasses();}catch(e){log('Error: '+e.message,'err');}}
+async function delClass(key){if(!confirm('Delete class '+key+'?'))return;try{await fbDel('world/classes/'+key);log('Deleted.','warn');loadClasses();}catch(e){log('Error: '+e.message,'err');}}
 
-// ══════════════════════════════════════
-// SAVES
-// ══════════════════════════════════════
-async function loadPlayerSave() {
-  const id = document.getElementById('save-player-select').value;
-  if (!id) return;
-  try {
-    log('Loading full save for ' + id.slice(0,8) + '...', 'info');
-    const save = await fbGet('saves/' + id);
-    document.getElementById('save-json-editor').value = JSON.stringify(save, null, 2);
-    document.getElementById('save-card').style.display = 'block';
-    log('Save loaded.', 'ok');
-  } catch(e) { log('Error: ' + e.message, 'err'); }
-}
+// EVENTS
+async function pushEvent(){const tid=document.getElementById('evt-sel').value,type=document.getElementById('evt-type').value,title=document.getElementById('evt-title').value.trim(),body=document.getElementById('evt-body').value.trim(),btn1=document.getElementById('evt-btn1').value.trim(),btn2=document.getElementById('evt-btn2').value.trim(),reward=document.getElementById('evt-reward').value.trim(),lat=parseFloat(document.getElementById('evt-lat').value),lng=parseFloat(document.getElementById('evt-lng').value),marker=document.getElementById('evt-marker').value.trim();const rewardRes=RS.map((_,i)=>parseFloat(document.getElementById('evt-r'+i).value)||0);const rewardXp=parseInt(document.getElementById('evt-rxp').value)||0;if(!title||!body){toast('✗ Title and text required.');return;}const ev={type,title,body,btn1:btn1||null,btn2:btn2||null,reward:reward||null,rewardRes,rewardXp,location:(!isNaN(lat)&&!isNaN(lng))?{lat,lng,label:marker||title}:null,createdAt:Date.now(),createdBy:'DM',read:false};const targets=tid==='__all__'?Object.keys(allPlayers):[tid];try{log('Inscribing "'+title+'" to '+targets.length+' seeker(s)…','info');await Promise.all(targets.map(id=>fbPut('events/'+id+'/dm-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),ev)));log('Inscribed.','ok');toast('✦ Omen sent.');loadActiveEvents();}catch(e){log('Error: '+e.message,'err');}}
+async function loadActiveEvents(){const el=document.getElementById('active-events');try{const all=await fbGet('events');if(!all){el.innerHTML='<p style="color:var(--mist);font-style:italic;">None.</p>';return;}let html='';Object.entries(all).forEach(([pid,evts])=>{if(!evts)return;const name=allPlayers[pid]?.presence?.name||allPlayers[pid]?.save?.character?.name||pid.slice(0,8);Object.entries(evts).forEach(([eid,ev])=>{if(!ev)return;const bc=ev.type==='urgent'?'bdg-urgent':ev.type==='discovery'?'bdg-disc':'bdg-story';html+=`<div style="border:1px solid var(--border);padding:0.5rem 0.65rem;margin-bottom:0.4rem;background:var(--deep);display:flex;align-items:flex-start;gap:0.4rem;"><div style="flex:1;"><span class="bdg ${bc}">${ev.type}</span> <span style="font-family:var(--ff-h);font-size:0.6rem;color:var(--bone);">${ev.title}</span><div style="font-family:var(--ff-b);font-style:italic;font-size:0.65rem;color:var(--mist);margin-top:0.1rem;">→ ${name}</div></div><button onclick="fbDel('events/${pid}/${eid}').then(loadActiveEvents)" class="btn b-breach" style="padding:0.22rem 0.4rem;font-size:0.35rem;">✗</button></div>`;});});el.innerHTML=html||'<p style="color:var(--mist);font-style:italic;">None active.</p>';}catch(e){log('Error: '+e.message,'err');}}
 
-async function writeSaveJson() {
-  const id = document.getElementById('save-player-select').value;
-  if (!id) return;
-  let parsed;
-  try { parsed = JSON.parse(document.getElementById('save-json-editor').value); }
-  catch(e) { log('Invalid JSON: ' + e.message, 'err'); toast('✗ Invalid JSON.'); return; }
-  try {
-    log('Writing full save for ' + id.slice(0,8) + '...', 'info');
-    await fbPut('saves/' + id, parsed);
-    allPlayers[id] = allPlayers[id] || {};
-    allPlayers[id].save = parsed;
-    log('Save written.', 'ok');
-    toast('✓ Save written to Firebase.');
-    renderDashboard();
-  } catch(e) { log('Error: ' + e.message, 'err'); }
-}
+// WORLD MAP EVENTS
+async function loadWorldEvents(){try{const d=await fbGet('world/events');const renderEvts=(obj,el,src)=>{if(!obj||!Object.keys(obj).length){el.innerHTML='<p style="color:var(--mist);font-style:italic;">None.</p>';return;}el.innerHTML=Object.entries(obj).map(([k,ev])=>{if(!ev)return'';const bc='bdg-'+(ev.type||'story');const pos=src==='dm'?`${ev.lat||'?'}, ${ev.lng||'?'}`:`Δ${ev.dlat||0}, Δ${ev.dlng||0}`;return`<div class="entity-card"><div style="display:flex;align-items:flex-start;gap:0.5rem;"><div style="flex:1;"><span class="bdg ${bc}">${ev.type||'—'}</span> <span style="font-family:var(--ff-h);font-size:0.62rem;color:var(--bone);">${ev.title||k}</span><div style="font-family:var(--ff-h);font-size:0.32rem;color:var(--ash);margin-top:0.15rem;">📍 ${pos}</div>${ev.reward?`<div style="font-family:var(--ff-h);font-size:0.35rem;color:var(--gold-dim);margin-top:0.1rem;">↳ ${ev.reward}</div>`:''}</div><div style="display:flex;gap:0.3rem;"><button class="btn b-seal" style="padding:0.22rem 0.45rem;font-size:0.35rem;" onclick="editMapEvt('${src}','${k}')">Edit</button><button class="btn b-breach" style="padding:0.22rem 0.45rem;font-size:0.35rem;" onclick="delMapEvt('${src}','${k}')">✗</button></div></div></div>`;}).join('');};renderEvts(d?.dm,document.getElementById('dm-map-events'),'dm');renderEvts(d?.random,document.getElementById('random-map-events'),'random');}catch(e){log('Error: '+e.message,'err');}}
+function openMapEvtEd(src){const ed=document.getElementById('map-evt-editor');ed.style.display='block';document.getElementById('mevt-src').value=src;document.getElementById('mevt-key').value='';document.getElementById('mevt-editor-title').textContent=src==='dm'?'New DM Event':'New Random Event';['mevt-title','mevt-desc','mevt-reward','mevt-action','mevt-lat','mevt-lng','mevt-dlat','mevt-dlng'].forEach(id=>document.getElementById(id).value='');document.getElementById('mevt-type').value='combat';document.getElementById('mevt-abs').style.display=src==='dm'?'block':'none';document.getElementById('mevt-rel').style.display=src==='random'?'block':'none';}
+async function editMapEvt(src,key){try{const d=await fbGet('world/events/'+src+'/'+key);openMapEvtEd(src);document.getElementById('mevt-key').value=key;document.getElementById('mevt-title').value=d.title||'';document.getElementById('mevt-desc').value=d.desc||'';document.getElementById('mevt-reward').value=d.reward||'';document.getElementById('mevt-action').value=d.actionText||'';document.getElementById('mevt-type').value=d.type||'combat';if(src==='dm'){document.getElementById('mevt-lat').value=d.lat||'';document.getElementById('mevt-lng').value=d.lng||'';}else{document.getElementById('mevt-dlat').value=d.dlat||'';document.getElementById('mevt-dlng').value=d.dlng||'';}}catch(e){log('Error: '+e.message,'err');}}
+async function saveMapEvt(){const src=document.getElementById('mevt-src').value,editKey=document.getElementById('mevt-key').value,key=editKey||'evt-'+Date.now(),type=document.getElementById('mevt-type').value;const ev={type,title:document.getElementById('mevt-title').value,desc:document.getElementById('mevt-desc').value,reward:document.getElementById('mevt-reward').value||null,actionText:document.getElementById('mevt-action').value||null};if(src==='dm'){ev.lat=parseFloat(document.getElementById('mevt-lat').value)||0;ev.lng=parseFloat(document.getElementById('mevt-lng').value)||0;}else{ev.dlat=parseFloat(document.getElementById('mevt-dlat').value)||0;ev.dlng=parseFloat(document.getElementById('mevt-dlng').value)||0;}try{await fbPut('world/events/'+src+'/'+key,ev);log('Event sealed: '+ev.title,'ok');toast('✦ Event sealed.');document.getElementById('map-evt-editor').style.display='none';loadWorldEvents();}catch(e){log('Error: '+e.message,'err');}}
+async function delMapEvt(src,key){if(!confirm('Delete this event?'))return;try{await fbDel('world/events/'+src+'/'+key);log('Deleted.','warn');loadWorldEvents();}catch(e){log('Error: '+e.message,'err');}}
 
-async function deleteSave() {
-  const id = document.getElementById('save-player-select').value;
-  if (!id || !confirm('Delete save for ' + id.slice(0,8) + '? This cannot be undone.')) return;
-  try {
-    await fbDelete('saves/' + id);
-    log('Save deleted for ' + id.slice(0,8), 'warn');
-    toast('Save deleted.');
-    document.getElementById('save-json-editor').value = '';
-  } catch(e) { log('Error: ' + e.message, 'err'); }
-}
-
-// ══════════════════════════════════════
-// ROSTER
-// ══════════════════════════════════════
-async function loadPlayerRoster() {
-  const id = document.getElementById('roster-player-select').value;
-  if (!id) return;
-  try {
-    log('Loading roster for ' + id.slice(0,8) + '...', 'info');
-    const save = await fbGet('saves/' + id);
-    if (!save) { log('No save found.', 'warn'); return; }
-    const acolytes = save.acolytes || [];
-    currentRosterEdits[id] = JSON.parse(JSON.stringify(acolytes));
-    renderRoster(id, currentRosterEdits[id]);
-    document.getElementById('roster-card').style.display = 'block';
-    log('Roster loaded: ' + acolytes.length + ' acolyte(s).', 'ok');
-  } catch(e) { log('Error: ' + e.message, 'err'); }
-}
-
-function renderRoster(playerId, acolytes) {
-  const container = document.getElementById('roster-acolytes');
-  if (!acolytes.length) { container.innerHTML = '<p style="color:var(--mist);font-style:italic;">No acolytes found.</p>'; return; }
-  container.innerHTML = acolytes.map((a, i) => `
-    <div class="acolyte-row">
-      <div class="acolyte-avatar">🜃</div>
-      <div class="acolyte-info">
-        <div class="acolyte-name">${a.name}</div>
-        <div class="acolyte-class">${a.class || a.cls || '—'} · Lv.${a.level || '?'}</div>
-        <div style="margin-top:0.3rem;font-family:var(--ff-heading);font-size:0.42rem;color:var(--mist);">States: ${(a.states||[]).join(', ') || 'none'}</div>
-      </div>
-      <div class="stress-bar-wrap">
-        <div class="stress-bar-label">Stress</div>
-        <div class="stress-bar"><div class="stress-bar-fill" style="width:${a.stress||0}%"></div></div>
-        <div class="stress-val">${a.stress||0}%</div>
-        <input type="number" min="0" max="100" value="${a.stress||0}" 
-          style="width:60px;margin-top:0.3rem;font-family:var(--ff-heading);font-size:0.6rem;background:var(--abyss);border:1px solid var(--border);color:var(--bone);padding:0.2rem 0.4rem;text-align:center;"
-          oninput="currentRosterEdits['${playerId}'][${i}].stress=parseInt(this.value)||0; this.parentElement.querySelector('.stress-bar-fill').style.width=this.value+'%'; this.parentElement.querySelector('.stress-val').textContent=this.value+'%';">
-      </div>
-    </div>`).join('');
-}
-
-async function savePlayerRoster() {
-  const id = document.getElementById('roster-player-select').value;
-  if (!id || !currentRosterEdits[id]) return;
-  try {
-    log('Writing roster for ' + id.slice(0,8) + '...', 'info');
-    await fbPatch('saves/' + id, { acolytes: currentRosterEdits[id] });
-    log('Roster saved.', 'ok');
-    toast('✓ Roster written to Firebase.');
-  } catch(e) { log('Error: ' + e.message, 'err'); }
-}
-
-// ══════════════════════════════════════
-// STORY EVENTS
-// ══════════════════════════════════════
-async function pushEvent() {
-  const targetId = document.getElementById('event-player-select').value;
-  const type    = document.getElementById('event-type').value;
-  const title   = document.getElementById('event-title').value.trim();
-  const body    = document.getElementById('event-body').value.trim();
-  const btn1    = document.getElementById('event-btn1').value.trim();
-  const btn2    = document.getElementById('event-btn2').value.trim();
-  const lat     = parseFloat(document.getElementById('event-lat').value);
-  const lng     = parseFloat(document.getElementById('event-lng').value);
-  const marker  = document.getElementById('event-marker-label').value.trim();
-
-  if (!title || !body) { toast('✗ Title and body are required.'); return; }
-
-  const event = {
-    type, title, body,
-    btn1: btn1 || null,
-    btn2: btn2 || null,
-    location: (!isNaN(lat) && !isNaN(lng)) ? { lat, lng, label: marker || title } : null,
-    createdAt: Date.now(),
-    createdBy: 'DM',
-    read: false,
-  };
-
-  const targets = targetId === '__all__' ? Object.keys(allPlayers) : [targetId];
-
-  try {
-    log('Pushing event "' + title + '" to ' + targets.length + ' player(s)...', 'info');
-    await Promise.all(targets.map(id => {
-      const eventId = 'dm-' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
-      return fbPut('events/' + id + '/' + eventId, event);
-    }));
-    log('Event pushed.', 'ok');
-    toast('✦ Event pushed to ' + targets.length + ' player(s).');
-    loadActiveEvents();
-  } catch(e) { log('Error: ' + e.message, 'err'); }
-}
-
-async function loadActiveEvents() {
-  const el = document.getElementById('events-list');
-  try {
-    const all = await fbGet('events');
-    if (!all) { el.innerHTML = '<p style="color:var(--mist);font-style:italic;">No events found.</p>'; return; }
-    let html = '';
-    Object.entries(all).forEach(([playerId, evts]) => {
-      if (!evts) return;
-      const p = allPlayers[playerId];
-      const name = p?.presence?.name || p?.save?.character?.name || playerId.slice(0,8);
-      Object.entries(evts).forEach(([evtId, ev]) => {
-        if (!ev) return;
-        const badgeClass = ev.type === 'urgent' ? 'badge-urgent' : ev.type === 'discovery' ? 'badge-discovery' : 'badge-story';
-        html += `<div style="border:1px solid var(--border);padding:0.6rem 0.8rem;margin-bottom:0.5rem;background:var(--deep);">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;">
-            <div>
-              <span class="badge ${badgeClass}" style="margin-right:0.4rem;">${ev.type}</span>
-              <span style="font-family:var(--ff-heading);font-size:0.65rem;color:var(--bone);">${ev.title}</span>
-              <div style="font-family:var(--ff-body);font-style:italic;font-size:0.7rem;color:var(--mist);margin-top:0.2rem;">→ ${name}</div>
-            </div>
-            <button onclick="deleteEvent('${playerId}','${evtId}')" class="btn btn-danger" style="padding:0.3rem 0.6rem;font-size:0.45rem;">✗</button>
-          </div>
-        </div>`;
-      });
-    });
-    el.innerHTML = html || '<p style="color:var(--mist);font-style:italic;">No active events.</p>';
-  } catch(e) { log('Error loading events: ' + e.message, 'err'); }
-}
-
-async function deleteEvent(playerId, evtId) {
-  try {
-    await fbDelete('events/' + playerId + '/' + evtId);
-    log('Event deleted.', 'warn');
-    loadActiveEvents();
-  } catch(e) { log('Error: ' + e.message, 'err'); }
-}
-
-// ══════════════════════════════════════
 // EXCHANGES
-// ══════════════════════════════════════
-async function loadExchanges() {
-  const tbody = document.getElementById('exchanges-tbody');
-  try {
-    const all = await fbGet('exchanges');
-    if (!all) { tbody.innerHTML = '<tr><td colspan="8" style="color:var(--mist);font-style:italic;">No exchanges found.</td></tr>'; return; }
-    const now = Date.now();
-    const rows = Object.entries(all).map(([id, ex]) => {
-      if (!ex) return '';
-      const expired = (ex.expires||0) < now;
-      const fromName = ex.fromName || ex.from?.slice(0,8) || '?';
-      const toId = ex.to?.slice(0,8) || '?';
-      const offer = Object.entries(ex.offer||{}).map(([r,a]) => RES_SYMBOLS[r]+a).join(' ') || '—';
-      const req   = Object.entries(ex.request||{}).map(([r,a]) => RES_SYMBOLS[r]+a).join(' ') || '—';
-      const statusColor = ex.status === 'accepted' ? 'var(--viridian-bright)' : ex.status === 'declined' ? 'var(--crimson-bright)' : expired ? 'var(--ash)' : 'var(--gold)';
-      const expiresStr = expired ? '<span style="color:var(--crimson-bright);">Expired</span>' : Math.round(((ex.expires||0) - now) / 60000) + 'm';
-      return `<tr>
-        <td style="font-family:monospace;font-size:0.65rem;color:var(--mist);">${id.slice(0,12)}</td>
-        <td>${fromName}</td>
-        <td style="color:var(--mist);">${toId}</td>
-        <td style="color:var(--gold);">${offer}</td>
-        <td style="color:var(--pale);">${req}</td>
-        <td style="color:${statusColor};">${ex.status || 'pending'}</td>
-        <td>${expiresStr}</td>
-        <td><button onclick="deleteExchange('${id}')" class="btn btn-danger" style="padding:0.3rem 0.5rem;font-size:0.42rem;">✗ Delete</button></td>
-      </tr>`;
-    }).join('');
-    tbody.innerHTML = rows || '<tr><td colspan="8" style="color:var(--mist);font-style:italic;">No exchanges.</td></tr>';
-    log('Exchanges loaded: ' + Object.keys(all).length, 'ok');
-  } catch(e) { log('Error: ' + e.message, 'err'); }
-}
+async function loadExchanges(){const tb=document.getElementById('exch-tbody');try{const all=await fbGet('exchanges');if(!all){tb.innerHTML='<tr><td colspan="8" style="color:var(--mist);font-style:italic;">None.</td></tr>';return;}const now=Date.now();const rows=Object.entries(all).map(([id,ex])=>{if(!ex)return'';const exp=(ex.expires||0)<now;const fn=ex.fromName||ex.from?.slice(0,8)||'?';const offer=Object.entries(ex.offer||{}).map(([r,a])=>RS[r]+a).join(' ')||'—';const req=Object.entries(ex.request||{}).map(([r,a])=>RS[r]+a).join(' ')||'—';const sc=ex.status==='accepted'?'var(--viridian-bright)':ex.status==='declined'?'var(--crimson-bright)':exp?'var(--ash)':'var(--gold)';return`<tr><td style="font-family:monospace;font-size:0.62rem;color:var(--mist);">${id.slice(0,12)}</td><td>${fn}</td><td style="color:var(--mist);">${ex.to?.slice(0,8)||'?'}</td><td style="color:var(--gold);">${offer}</td><td>${req}</td><td style="color:${sc};">${ex.status||'pending'}</td><td>${exp?'<span style="color:var(--crimson-bright);">Expired</span>':Math.round(((ex.expires||0)-now)/60000)+'m'}</td><td><button onclick="fbDel('exchanges/${id}').then(loadExchanges)" class="btn b-breach" style="padding:0.22rem 0.4rem;font-size:0.35rem;">✗</button></td></tr>`;}).join('');tb.innerHTML=rows||'<tr><td colspan="8" style="color:var(--mist);">None.</td></tr>';log('Ledger loaded.','ok');}catch(e){log('Error: '+e.message,'err');}}
+async function purgeExpired(){try{const all=await fbGet('exchanges');if(!all){toast('None found.');return;}const now=Date.now(),exp=Object.entries(all).filter(([,ex])=>ex&&(ex.expires||0)<now);await Promise.all(exp.map(([id])=>fbDel('exchanges/'+id)));log('Purged '+exp.length+'.','warn');toast('Culled '+exp.length+'.');loadExchanges();}catch(e){log('Error: '+e.message,'err');}}
 
-async function deleteExchange(id) {
-  try { await fbDelete('exchanges/' + id); log('Exchange ' + id.slice(0,8) + ' deleted.', 'warn'); loadExchanges(); }
-  catch(e) { log('Error: ' + e.message, 'err'); }
-}
+// CREATURES
+async function loadCreatures(){try{const d=await fbGet('world/creatures');const c=document.getElementById('creatures-list');if(!d){c.innerHTML='<p style="color:var(--mist);font-style:italic;">No creatures defined.</p>';return;}c.innerHTML=Object.entries(d).map(([k,cr])=>`<div class="entity-card"><div style="display:flex;align-items:flex-start;gap:0.5rem;"><div style="flex:1;"><div class="entity-name">${cr.name||k}</div><div class="entity-sub">${cr.type||'Unknown'} · Danger ${cr.tier||'?'}</div>${cr.desc?`<div style="font-family:var(--ff-b);font-style:italic;font-size:0.7rem;color:var(--mist);margin-top:0.25rem;">${cr.desc}</div>`:''}</div><div style="display:flex;gap:0.3rem;"><button class="btn b-seal" style="padding:0.25rem 0.5rem;font-size:0.35rem;" onclick="editCrt('${k}')">Edit</button><button class="btn b-breach" style="padding:0.25rem 0.5rem;font-size:0.35rem;" onclick="delCrt('${k}')">✗</button></div></div>${cr.stats?`<div class="estat-grid">${Object.entries(cr.stats).map(([sk,sv])=>`<div class="estat"><div class="estat-k">${sk}</div><div class="estat-v">${sv}</div></div>`).join('')}</div>`:''}</div>`).join('');}catch(e){log('Error: '+e.message,'err');}}
+function openCrtEd(){document.getElementById('crt-editor').style.display='block';document.getElementById('crt-ed-title').textContent='New Creature';document.getElementById('crt-key').value='';['crt-name','crt-desc','crt-damage','crt-abilities','crt-loot'].forEach(id=>document.getElementById(id).value='');document.getElementById('crt-type').value='beast';document.getElementById('crt-hp').value=30;document.getElementById('crt-armour').value=4;document.getElementById('crt-dodge').value=8;document.getElementById('crt-speed').value=10;document.getElementById('crt-stress').value=10;document.getElementById('crt-tier').value=2;document.getElementById('crt-xp').value=100;}
+async function editCrt(key){try{const d=await fbGet('world/creatures/'+key);document.getElementById('crt-editor').style.display='block';document.getElementById('crt-ed-title').textContent='Edit: '+d.name;document.getElementById('crt-key').value=key;document.getElementById('crt-name').value=d.name||'';document.getElementById('crt-type').value=d.type||'beast';document.getElementById('crt-desc').value=d.desc||'';document.getElementById('crt-abilities').value=(d.abilities||[]).join('\n');document.getElementById('crt-loot').value=(d.loot||[]).map(l=>l.name+' · '+l.amount).join('\n');if(d.stats){['hp','armour','dodge','speed','stress','tier','xp'].forEach(s=>{const e=document.getElementById('crt-'+s);if(e)e.value=d.stats[s]||0;});}}catch(e){log('Error: '+e.message,'err');}}
+async function saveCrt(){const key=document.getElementById('crt-key').value||(document.getElementById('crt-name').value.toLowerCase().replace(/\s+/g,'-'));const stats={hp:parseInt(document.getElementById('crt-hp').value)||0,armour:parseInt(document.getElementById('crt-armour').value)||0,dodge:parseInt(document.getElementById('crt-dodge').value)||0,speed:parseInt(document.getElementById('crt-speed').value)||0,damage:document.getElementById('crt-damage').value,stress:parseInt(document.getElementById('crt-stress').value)||0,tier:parseInt(document.getElementById('crt-tier').value)||1,xp:parseInt(document.getElementById('crt-xp').value)||0};const abilities=document.getElementById('crt-abilities').value.split('\n').map(s=>s.trim()).filter(Boolean);const loot=document.getElementById('crt-loot').value.split('\n').map(s=>{const p=s.split('·');return{name:(p[0]||'').trim(),amount:parseInt((p[1]||'').trim())||0};}).filter(l=>l.name);const d={name:document.getElementById('crt-name').value,type:document.getElementById('crt-type').value,desc:document.getElementById('crt-desc').value,stats,abilities,loot};try{await fbPut('world/creatures/'+key,d);log('Creature sealed: '+d.name,'ok');toast('✦ '+d.name+' bound.');loadCreatures();}catch(e){log('Error: '+e.message,'err');}}
+async function delCrt(key){if(!confirm('Delete '+key+'?'))return;try{await fbDel('world/creatures/'+key);log('Deleted.','warn');loadCreatures();}catch(e){log('Error: '+e.message,'err');}}
 
-async function purgeExpiredExchanges() {
-  try {
-    const all = await fbGet('exchanges');
-    if (!all) { toast('No exchanges found.'); return; }
-    const now = Date.now();
-    const expired = Object.entries(all).filter(([,ex]) => ex && (ex.expires||0) < now);
-    await Promise.all(expired.map(([id]) => fbDelete('exchanges/' + id)));
-    log('Purged ' + expired.length + ' expired exchange(s).', 'warn');
-    toast('Purged ' + expired.length + ' expired exchange(s).');
-    loadExchanges();
-  } catch(e) { log('Error: ' + e.message, 'err'); }
-}
+// RECIPES
+async function loadRecipes(){try{const d=await fbGet('world/recipes');editingRecipes=Array.isArray(d)?JSON.parse(JSON.stringify(d)):[];const c=document.getElementById('recipes-list');if(!editingRecipes.length){c.innerHTML='<p style="color:var(--mist);font-style:italic;">No recipes.</p>';return;}c.innerHTML=editingRecipes.map((r,i)=>`<div class="recipe-row"><div class="recipe-ico">${r.icon||'⚗'}</div><div class="recipe-info"><div class="recipe-name">${r.name}</div><div class="recipe-type">${r.type}</div><div class="recipe-effect">${r.effect}</div><div class="recipe-costs">Cost: ${(r.costs||[]).map(c=>`${c.symbol}${c.amount}`).join(' · ')}</div></div><div class="recipe-actions"><button class="btn b-seal" style="padding:0.25rem 0.5rem;font-size:0.35rem;" onclick="editRec(${i})">Edit</button><button class="btn b-breach" style="padding:0.25rem 0.5rem;font-size:0.35rem;" onclick="delRec(${i})">✗</button></div></div>`).join('');}catch(e){log('Error: '+e.message,'err');}}
+function openRecEd(){document.getElementById('rec-editor').style.display='block';document.getElementById('rec-ed-title').textContent='New Recipe';document.getElementById('rec-idx').value='';['rec-name','rec-type','rec-desc','rec-effect','rec-color','rec-icon'].forEach(id=>document.getElementById(id).value='');document.getElementById('rec-cat').value='weapons';costRowN=0;document.getElementById('rec-costs').innerHTML='';addCostRow();}
+function editRec(i){const r=editingRecipes[i];document.getElementById('rec-editor').style.display='block';document.getElementById('rec-ed-title').textContent='Edit: '+r.name;document.getElementById('rec-idx').value=i;document.getElementById('rec-name').value=r.name||'';document.getElementById('rec-type').value=r.type||'';document.getElementById('rec-desc').value=r.desc||'';document.getElementById('rec-effect').value=r.effect||'';document.getElementById('rec-color').value=r.color||'#c9a84c';document.getElementById('rec-icon').value=r.icon||'';document.getElementById('rec-cat').value=r.cat||'weapons';costRowN=0;document.getElementById('rec-costs').innerHTML='';(r.costs||[]).forEach(c=>addCostRow(c));}
+function addCostRow(c){const n=costRowN++;const d=document.createElement('div');d.className='g2';d.style.marginBottom='0.4rem';d.id='cr'+n;d.innerHTML=`<div class="fld"><label>Essence</label><select id="crs${n}">${RS.map((s,i)=>`<option value="${i}" ${c&&c.res===i?'selected':''}>${s} ${RN[i]}</option>`).join('')}</select></div><div class="fld" style="display:flex;gap:0.4rem;align-items:flex-end;"><div style="flex:1;"><label>Amount</label><input type="number" id="cra${n}" value="${c?c.amount:100}" min="1"></div><button class="btn b-breach" style="padding:0.28rem 0.5rem;font-size:0.35rem;height:fit-content;" onclick="document.getElementById('cr${n}').remove()">✗</button></div>`;document.getElementById('rec-costs').appendChild(d);}
+async function saveRec(){const idx=document.getElementById('rec-idx').value;const costs=[];for(let i=0;i<costRowN;i++){const row=document.getElementById('cr'+i);if(!row)continue;const res=parseInt(document.getElementById('crs'+i)?.value)||0;const amount=parseInt(document.getElementById('cra'+i)?.value)||0;costs.push({res,symbol:RS[res],name:RN[res],amount});}const r={key:document.getElementById('rec-name').value.toLowerCase().replace(/\s+/g,'-'),cat:document.getElementById('rec-cat').value,icon:document.getElementById('rec-icon').value||'⚗',name:document.getElementById('rec-name').value,type:document.getElementById('rec-type').value,desc:document.getElementById('rec-desc').value,effect:document.getElementById('rec-effect').value,color:document.getElementById('rec-color').value||'#c9a84c',costs};if(idx!==''){editingRecipes[parseInt(idx)]=r;}else{editingRecipes.push(r);}try{await fbPut('world/recipes',editingRecipes);log('Recipes sealed.','ok');toast('✓ Recipe sealed.');document.getElementById('rec-editor').style.display='none';loadRecipes();}catch(e){log('Error: '+e.message,'err');}}
+async function delRec(i){if(!confirm('Delete recipe?'))return;editingRecipes.splice(i,1);try{await fbPut('world/recipes',editingRecipes);log('Deleted.','warn');loadRecipes();}catch(e){log('Error: '+e.message,'err');}}
 
-// ══════════════════════════════════════
+// BUILDINGS & SKILLS
+async function loadBldSkl(){try{const[bd,sk]=await Promise.all([fbGet('world/buildings'),fbGet('world/skills')]);const bc=document.getElementById('bld-list');if(!bd){bc.innerHTML='<p style="color:var(--mist);font-style:italic;">No buildings.</p>';}else{bc.innerHTML=Object.entries(bd).map(([k,b])=>`<div class="entity-card"><div style="display:flex;align-items:flex-start;gap:0.5rem;"><div style="flex:1;"><div class="entity-name">${b.icon||''} ${b.name||k}</div><div class="entity-sub">Max Lv.${b.maxLevel||'?'}</div>${b.desc?`<div style="font-family:var(--ff-b);font-style:italic;font-size:0.7rem;color:var(--mist);margin-top:0.2rem;">${b.desc}</div>`:''}</div><div style="display:flex;gap:0.3rem;"><button class="btn b-seal" style="padding:0.22rem 0.45rem;font-size:0.35rem;" onclick="editBld('${k}')">Edit</button><button class="btn b-breach" style="padding:0.22rem 0.45rem;font-size:0.35rem;" onclick="delBld('${k}')">✗</button></div></div></div>`).join('');}const sc=document.getElementById('skl-list');if(!sk){sc.innerHTML='<p style="color:var(--mist);font-style:italic;">No skills.</p>';}else{sc.innerHTML=Object.entries(sk).map(([k,s])=>`<div class="entity-card"><div style="display:flex;align-items:flex-start;gap:0.5rem;"><div style="flex:1;"><div class="entity-name">${s.name||k}</div><div class="entity-sub">${s.classReq||'Any'}</div>${s.desc?`<div style="font-family:var(--ff-b);font-style:italic;font-size:0.7rem;color:var(--mist);margin-top:0.2rem;">${s.desc}</div>`:''}</div><div style="display:flex;gap:0.3rem;"><button class="btn b-seal" style="padding:0.22rem 0.45rem;font-size:0.35rem;" onclick="editSkl('${k}')">Edit</button><button class="btn b-breach" style="padding:0.22rem 0.45rem;font-size:0.35rem;" onclick="delSkl('${k}')">✗</button></div></div></div>`).join('');}}catch(e){log('Error: '+e.message,'err');}}
+function openBldEd(){document.getElementById('bld-editor').style.display='block';document.getElementById('bld-ed-title').textContent='New Building';document.getElementById('bld-key').value='';['bld-name','bld-icon','bld-desc','bld-cost','bld-effects'].forEach(id=>document.getElementById(id).value='');document.getElementById('bld-maxlv').value=3;}
+async function editBld(key){try{const d=await fbGet('world/buildings/'+key);document.getElementById('bld-editor').style.display='block';document.getElementById('bld-ed-title').textContent='Edit: '+d.name;document.getElementById('bld-key').value=key;document.getElementById('bld-name').value=d.name||'';document.getElementById('bld-icon').value=d.icon||'';document.getElementById('bld-desc').value=d.desc||'';document.getElementById('bld-maxlv').value=d.maxLevel||3;document.getElementById('bld-cost').value=JSON.stringify(d.upgradeCost||[]);document.getElementById('bld-effects').value=(d.effects||[]).join('\n');}catch(e){log('Error: '+e.message,'err');}}
+async function saveBld(){const key=document.getElementById('bld-key').value||(document.getElementById('bld-name').value.toLowerCase().replace(/\s+/g,'-'));let cost=[];try{cost=JSON.parse(document.getElementById('bld-cost').value||'[]');}catch(e){}const d={name:document.getElementById('bld-name').value,icon:document.getElementById('bld-icon').value,desc:document.getElementById('bld-desc').value,maxLevel:parseInt(document.getElementById('bld-maxlv').value)||3,upgradeCost:cost,effects:document.getElementById('bld-effects').value.split('\n').map(s=>s.trim()).filter(Boolean)};try{await fbPut('world/buildings/'+key,d);log('Building sealed: '+d.name,'ok');toast('✦ '+d.name+' sealed.');loadBldSkl();}catch(e){log('Error: '+e.message,'err');}}
+async function delBld(key){if(!confirm('Delete '+key+'?'))return;try{await fbDel('world/buildings/'+key);log('Deleted.','warn');loadBldSkl();}catch(e){log('Error: '+e.message,'err');}}
+function openSklEd(){document.getElementById('skl-editor').style.display='block';document.getElementById('skl-ed-title').textContent='New Skill';document.getElementById('skl-key').value='';['skl-name','skl-class','skl-desc','skl-cost','skl-unlock'].forEach(id=>document.getElementById(id).value='');}
+async function editSkl(key){try{const d=await fbGet('world/skills/'+key);document.getElementById('skl-editor').style.display='block';document.getElementById('skl-ed-title').textContent='Edit: '+d.name;document.getElementById('skl-key').value=key;document.getElementById('skl-name').value=d.name||'';document.getElementById('skl-class').value=d.classReq||'';document.getElementById('skl-desc').value=d.desc||'';document.getElementById('skl-cost').value=JSON.stringify(d.cost||[]);document.getElementById('skl-unlock').value=d.unlockCondition||'';}catch(e){log('Error: '+e.message,'err');}}
+async function saveSkl(){const key=document.getElementById('skl-key').value||(document.getElementById('skl-name').value.toLowerCase().replace(/\s+/g,'-'));let cost=[];try{cost=JSON.parse(document.getElementById('skl-cost').value||'[]');}catch(e){}const d={name:document.getElementById('skl-name').value,classReq:document.getElementById('skl-class').value,desc:document.getElementById('skl-desc').value,cost,unlockCondition:document.getElementById('skl-unlock').value};try{await fbPut('world/skills/'+key,d);log('Skill sealed: '+d.name,'ok');toast('✦ '+d.name+' sealed.');loadBldSkl();}catch(e){log('Error: '+e.message,'err');}}
+async function delSkl(key){if(!confirm('Delete '+key+'?'))return;try{await fbDel('world/skills/'+key);log('Deleted.','warn');loadBldSkl();}catch(e){log('Error: '+e.message,'err');}}
+
 // BROADCAST
-// ══════════════════════════════════════
-function buildBroadcastResGrid() {
-  document.getElementById('broadcast-res-grid').innerHTML = RES_SYMBOLS.map((s,i) => `
-    <div class="res-cell">
-      <span class="res-symbol">${s}</span>
-      <span class="res-name">${RES_NAMES[i]}</span>
-      <input class="res-input" type="number" id="bc-res-${i}" value="0" step="1">
-    </div>`).join('');
-}
+function buildBcGrid(){document.getElementById('bc-grid').innerHTML=RS.map((s,i)=>`<div class="ess-cell"><span class="es">${s}</span><span class="en">${RN[i]}</span><input class="ei" type="number" id="bcr${i}" value="0" step="1"></div>`).join('');}
+async function pushBC(){const msg=document.getElementById('bc-msg').value.trim();if(!msg){toast('Enter a proclamation.');return;}const ids=Object.keys(allPlayers);if(!ids.length){toast('No seekers loaded.');return;}try{const ts=Date.now();await Promise.all(ids.map(id=>fbPut('broadcasts/'+id+'/msg-'+ts,{message:msg,createdAt:ts,read:false})));log('Proclaimed to '+ids.length+'.','ok');toast('✦ Proclaimed.');}catch(e){log('Error: '+e.message,'err');}}
+async function pushShift(){const deltas=RS.map((_,i)=>parseFloat(document.getElementById('bcr'+i).value)||0);if(deltas.every(d=>d===0)){toast('All deltas are 0.');return;}const ids=Object.keys(allPlayers);try{log('Applying shift…','info');let n=0;for(const id of ids){const s=await fbGet('saves/'+id);if(!s)continue;const vals=s.resources?.values||Array(7).fill(0);const nv=vals.map((v,i)=>Math.max(0,(v||0)+deltas[i]));await fbPatch('saves/'+id,{resources:{values:nv}});n++;}log('Shift applied to '+n+'.','ok');toast('✓ Shift applied to '+n+'.');await loadAll();}catch(e){log('Error: '+e.message,'err');}}
 
-async function pushBroadcast() {
-  const msg = document.getElementById('broadcast-msg').value.trim();
-  if (!msg) { toast('Enter a message.'); return; }
-  const ids = Object.keys(allPlayers);
-  if (!ids.length) { toast('No players loaded.'); return; }
-  try {
-    log('Broadcasting to ' + ids.length + ' player(s)...', 'info');
-    const ts = Date.now();
-    await Promise.all(ids.map(id =>
-      fbPut('broadcasts/' + id + '/msg-' + ts, { message: msg, createdAt: ts, read: false })
-    ));
-    log('Broadcast sent.', 'ok');
-    toast('✦ Broadcast sent to ' + ids.length + ' player(s).');
-  } catch(e) { log('Error: ' + e.message, 'err'); }
-}
-
-async function pushResourceModifier() {
-  const deltas = RES_SYMBOLS.map((_,i) => parseFloat(document.getElementById('bc-res-'+i).value) || 0);
-  if (deltas.every(d => d === 0)) { toast('All deltas are 0 — nothing to apply.'); return; }
-  const ids = Object.keys(allPlayers);
-  if (!ids.length) { toast('No players loaded.'); return; }
-
-  try {
-    log('Applying resource modifier to ' + ids.length + ' player(s)...', 'info');
-    let modified = 0;
-    for (const id of ids) {
-      const save = await fbGet('saves/' + id);
-      if (!save) continue;
-      const vals = save.resources?.values || Array(7).fill(0);
-      const newVals = vals.map((v, i) => Math.max(0, (v||0) + deltas[i]));
-      await fbPatch('saves/' + id, { resources: { values: newVals } });
-      modified++;
-    }
-    log('Resource modifier applied to ' + modified + ' player(s).', 'ok');
-    toast('✓ Applied to ' + modified + ' player(s).');
-    await loadAllPlayers();
-  } catch(e) { log('Error: ' + e.message, 'err'); }
-}
-
-// ══════════════════════════════════════
-// REFRESH
-// ══════════════════════════════════════
-function refreshAll() { loadAllPlayers(); }
-
-// ══════════════════════════════════════
-// INIT
-// ══════════════════════════════════════
-loadAllPlayers();
-setInterval(loadAllPlayers, 30000); // auto-refresh every 30s
+loadAll();
+setInterval(loadAll,30000);
 </script>
 </body>
 </html>
