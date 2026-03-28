@@ -3557,7 +3557,7 @@
       });
       localStorage.setItem('llair_player_id', id);
     }
-    return id;
+    return id.toLowerCase();
   }
 
   function collectGameState() {
@@ -4220,7 +4220,7 @@
       Object.entries(all).forEach(([exchId, ex]) => {
         if (!ex || !ex.status) return;
         // Show if: pending AND (sent to me OR sent TO anyone and I am not the sender)
-        const isForMe = ex.to === myId;
+        const isForMe = (ex.to||'').toLowerCase() === myId.toLowerCase();
         const isPending = ex.status === 'pending';
         const notExpired = (ex.expires||0) > now;
         const notFromMe = ex.from !== myId;
@@ -4244,7 +4244,7 @@
       toast('Exchanges in Firebase: ' + entries.length);
       entries.forEach(([id, ex]) => {
         if (!ex) return;
-        const isForMe = ex.to === myId;
+        const isForMe = (ex.to||'').toLowerCase() === myId.toLowerCase();
         toast((isForMe ? '→ FOR ME: ' : '← SENT: ') + (ex.fromName||'?') + ' → ' + ex.status + ' | to match: ' + isForMe);
       });
     } catch(e) { toast('Error: ' + e.message); }
