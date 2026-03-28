@@ -25,6 +25,7 @@
 <button onclick="readAll()">👁 Read All Players</button>
 <button onclick="readMine()">🔍 Read My Entry</button>
 <button onclick="clearAndReset()">🗑 Reset My ID</button>
+<button onclick="fullReset()">💀 Full Reset (ID + Name)</button>
 
 <div id="output"></div>
 
@@ -111,6 +112,15 @@ async function readMine() {
     const data = await res.json();
     log('My data: ' + JSON.stringify(data), data ? 'ok' : 'err');
   } catch(e) { log('FAILED: ' + e.message, 'err'); }
+}
+
+function fullReset() {
+  localStorage.removeItem('llair_player_id');
+  localStorage.removeItem('llair_name');
+  localStorage.removeItem('llair_coven');
+  localStorage.removeItem('llair_last_save');
+  log('Full reset done. Reload the game to get a new identity.', 'ok');
+  init();
 }
 
 function clearAndReset() {
