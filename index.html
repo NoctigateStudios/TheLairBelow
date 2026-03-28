@@ -2728,7 +2728,10 @@
   function handleWorldEvent(evJson) {
     const ev = JSON.parse(evJson);
     document.querySelector('.leaflet-popup-close-button')?.click();
-    if (ev.type === 'combat') { showCombat(); return; }
+    if (ev.type === 'combat') {
+      showCombat(ev);  // pass the full event so combat loads the right enemies
+      return;
+    }
     toast(ev.actionText || 'You approach the site. The air thickens.');
   }
 
@@ -3069,7 +3072,12 @@
     return Math.max(0,t);
   }
 
-  async function showCombat(encounterKey) {
+  async function showCombat(eventOrKey) {
+    // eventOrKey can be a world event object (with .enemies array) or a key string
+    const eventData = (eventOrKey && typeof eventOrKey === 'object') ? eventOrKey : null;
+    const forcedEnemyKeys = eventData?.enemies || null; // array of creature keys
+    const encounterTitle = eventData?.title || null;
+
     if (!_combatSystem) {
       try { const d=await fetch(FB_URL+'/world/combat.json?cb='+Date.now()).then(r=>r.json()); if(d&&!d.error)_combatSystem=d; } catch(e){}
     }
@@ -3095,8 +3103,14 @@
     try {
       const crt=await fetch(FB_URL+'/world/creatures.json?cb='+Date.now()).then(r=>r.json());
       if(crt&&!crt.error){
-        const keys=Object.keys(crt).sort(()=>Math.random()-0.5).slice(0,Math.min(2,Object.keys(crt).length));
-        enemyDefs=keys.map(k=>({key:k,...crt[k]}));
+        if(forcedEnemyKeys&&forcedEnemyKeys.length){
+          // Use exact enemies specified in the event
+          enemyDefs=forcedEnemyKeys.map(k=>crt[k]?{key:k,...crt[k]}:null).filter(Boolean);
+        } else {
+          // Pick 1-2 random creatures
+          const keys=Object.keys(crt).sort(()=>Math.random()-0.5).slice(0,Math.min(2,Object.keys(crt).length));
+          enemyDefs=keys.map(k=>({key:k,...crt[k]}));
+        }
       }
     } catch(e){}
     if(!enemyDefs.length){
@@ -3115,7 +3129,7 @@
         resistances:e.resistances||{}};
     });
     const all=[...enemies,player,...acolytes].sort((a,b)=>b.initiative-a.initiative);
-    _CS={title:enemyDefs[0]?.name||'Combat',combatants:all,round:1,turnIdx:0};
+    _CS={title:encounterTitle||enemyDefs[0]?.name||'Combat',combatants:all,round:1,turnIdx:0};
     document.getElementById('combat-modal').classList.add('open');
     combatLog('The encounter begins. Turn order set by initiative.','system');
     renderCombat();

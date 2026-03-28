@@ -258,7 +258,21 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
 <div class="g2"><div class="fld"><label>Reward Text</label><input type="text" id="mevt-reward" placeholder="☉ 50 Solar"></div><div class="fld"><label>Action Text (toast)</label><input type="text" id="mevt-action" placeholder="You descend."></div></div>
 <div id="mevt-abs"><div class="g2"><div class="fld"><label>Latitude (absolute)</label><input type="number" id="mevt-lat" step="0.0001"></div><div class="fld"><label>Longitude (absolute)</label><input type="number" id="mevt-lng" step="0.0001"></div></div></div>
 <div id="mevt-rel" style="display:none;"><div class="g2"><div class="fld"><label>Δ Latitude (from player)</label><input type="number" id="mevt-dlat" step="0.0001" placeholder="0.0018"></div><div class="fld"><label>Δ Longitude (from player)</label><input type="number" id="mevt-dlng" step="0.0001" placeholder="0.0025"></div></div></div>
-<button class="btn b-ward" onclick="saveMapEvt()">✓ Seal to Firebase</button><button class="btn b-seal" onclick="document.getElementById('map-evt-editor').style.display='none'">Cancel</button></div>
+<div id="mevt-enemies-section">
+  <div class="ph" style="margin-top:0.6rem;">Enemies <span style="font-family:var(--ff-b);font-style:italic;font-size:0.75rem;color:var(--mist);text-transform:none;letter-spacing:0;">(combat type only — leave empty to use random creatures)</span></div>
+  <div style="display:flex;gap:0.4rem;margin-bottom:0.5rem;">
+    <select id="mevt-enemy-pick" style="flex:2;"><option value="">— pick a creature —</option></select>
+    <select id="mevt-enemy-qty" style="flex:0.5;"><option value="1">×1</option><option value="2">×2</option><option value="3">×3</option></select>
+    <button class="btn b-seal" style="padding:0.3rem 0.6rem;font-size:0.38rem;" onclick="addEnemyToEvent()">+ Add</button>
+    <button class="btn b-rune" style="padding:0.3rem 0.6rem;font-size:0.38rem;" onclick="loadCreaturesIntoEvtPicker()">↻</button>
+  </div>
+  <div id="mevt-enemies-list" style="display:flex;flex-direction:column;gap:0.3rem;min-height:0.5rem;"></div>
+  <input type="hidden" id="mevt-enemies-data" value="[]">
+</div>
+<div style="margin-top:0.7rem;display:flex;gap:0.5rem;">
+  <button class="btn b-ward" onclick="saveMapEvt()">✓ Seal to Firebase</button>
+  <button class="btn b-seal" onclick="document.getElementById('map-evt-editor').style.display='none'">Cancel</button>
+</div></div>
 </div>
 
 <div id="page-exchanges" class="page">
@@ -735,9 +749,65 @@ async function loadActiveEvents(){const el=document.getElementById('active-event
 
 // WORLD MAP EVENTS
 async function loadWorldEvents(){try{const d=await fbGet('world/events');const renderEvts=(obj,el,src)=>{if(!obj||!Object.keys(obj).length){el.innerHTML='<p style="color:var(--mist);font-style:italic;">None.</p>';return;}el.innerHTML=Object.entries(obj).map(([k,ev])=>{if(!ev)return'';const bc='bdg-'+(ev.type||'story');const pos=src==='dm'?`${ev.lat||'?'}, ${ev.lng||'?'}`:`Δ${ev.dlat||0}, Δ${ev.dlng||0}`;return`<div class="entity-card"><div style="display:flex;align-items:flex-start;gap:0.5rem;"><div style="flex:1;"><span class="bdg ${bc}">${ev.type||'—'}</span> <span style="font-family:var(--ff-h);font-size:0.62rem;color:var(--bone);">${ev.title||k}</span><div style="font-family:var(--ff-h);font-size:0.32rem;color:var(--ash);margin-top:0.15rem;">📍 ${pos}</div>${ev.reward?`<div style="font-family:var(--ff-h);font-size:0.35rem;color:var(--gold-dim);margin-top:0.1rem;">↳ ${ev.reward}</div>`:''}</div><div style="display:flex;gap:0.3rem;"><button class="btn b-seal" style="padding:0.22rem 0.45rem;font-size:0.35rem;" onclick="editMapEvt('${src}','${k}')">Edit</button><button class="btn b-breach" style="padding:0.22rem 0.45rem;font-size:0.35rem;" onclick="delMapEvt('${src}','${k}')">✗</button></div></div></div>`;}).join('');};renderEvts(d?.dm,document.getElementById('dm-map-events'),'dm');renderEvts(d?.random,document.getElementById('random-map-events'),'random');}catch(e){log('Error: '+e.message,'err');}}
-function openMapEvtEd(src){const ed=document.getElementById('map-evt-editor');ed.style.display='block';document.getElementById('mevt-src').value=src;document.getElementById('mevt-key').value='';document.getElementById('mevt-editor-title').textContent=src==='dm'?'New DM Event':'New Random Event';['mevt-title','mevt-desc','mevt-reward','mevt-action','mevt-lat','mevt-lng','mevt-dlat','mevt-dlng'].forEach(id=>document.getElementById(id).value='');document.getElementById('mevt-type').value='combat';document.getElementById('mevt-abs').style.display=src==='dm'?'block':'none';document.getElementById('mevt-rel').style.display=src==='random'?'block':'none';}
-async function editMapEvt(src,key){try{const d=await fbGet('world/events/'+src+'/'+key);openMapEvtEd(src);document.getElementById('mevt-key').value=key;document.getElementById('mevt-title').value=d.title||'';document.getElementById('mevt-desc').value=d.desc||'';document.getElementById('mevt-reward').value=d.reward||'';document.getElementById('mevt-action').value=d.actionText||'';document.getElementById('mevt-type').value=d.type||'combat';if(src==='dm'){document.getElementById('mevt-lat').value=d.lat||'';document.getElementById('mevt-lng').value=d.lng||'';}else{document.getElementById('mevt-dlat').value=d.dlat||'';document.getElementById('mevt-dlng').value=d.dlng||'';}}catch(e){log('Error: '+e.message,'err');}}
-async function saveMapEvt(){const src=document.getElementById('mevt-src').value,editKey=document.getElementById('mevt-key').value,key=editKey||'evt-'+Date.now(),type=document.getElementById('mevt-type').value;const ev={type,title:document.getElementById('mevt-title').value,desc:document.getElementById('mevt-desc').value,reward:document.getElementById('mevt-reward').value||null,actionText:document.getElementById('mevt-action').value||null};if(src==='dm'){ev.lat=parseFloat(document.getElementById('mevt-lat').value)||0;ev.lng=parseFloat(document.getElementById('mevt-lng').value)||0;}else{ev.dlat=parseFloat(document.getElementById('mevt-dlat').value)||0;ev.dlng=parseFloat(document.getElementById('mevt-dlng').value)||0;}try{await fbPut('world/events/'+src+'/'+key,ev);log('Event sealed: '+ev.title,'ok');toast('✦ Event sealed.');document.getElementById('map-evt-editor').style.display='none';loadWorldEvents();}catch(e){log('Error: '+e.message,'err');}}
+function openMapEvtEd(src){
+  const ed=document.getElementById('map-evt-editor');
+  ed.style.display='block';
+  document.getElementById('mevt-src').value=src;
+  document.getElementById('mevt-key').value='';
+  document.getElementById('mevt-editor-title').textContent=src==='dm'?'New DM Event':'New Random Event';
+  ['mevt-title','mevt-desc','mevt-reward','mevt-action','mevt-lat','mevt-lng','mevt-dlat','mevt-dlng'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mevt-type').value='combat';
+  document.getElementById('mevt-abs').style.display=src==='dm'?'block':'none';
+  document.getElementById('mevt-rel').style.display=src==='random'?'block':'none';
+  // Reset enemy list
+  document.getElementById('mevt-enemies-data').value='[]';
+  document.getElementById('mevt-enemies-list').innerHTML='';
+  loadCreaturesIntoEvtPicker();
+  ed.scrollIntoView({behavior:'smooth'});
+}
+async function editMapEvt(src,key){
+  try{
+    const d=await fbGet('world/events/'+src+'/'+key);
+    openMapEvtEd(src);
+    document.getElementById('mevt-key').value=key;
+    document.getElementById('mevt-title').value=d.title||'';
+    document.getElementById('mevt-desc').value=d.desc||'';
+    document.getElementById('mevt-reward').value=d.reward||'';
+    document.getElementById('mevt-action').value=d.actionText||'';
+    document.getElementById('mevt-type').value=d.type||'combat';
+    if(src==='dm'){document.getElementById('mevt-lat').value=d.lat||'';document.getElementById('mevt-lng').value=d.lng||'';}
+    else{document.getElementById('mevt-dlat').value=d.dlat||'';document.getElementById('mevt-dlng').value=d.dlng||'';}
+    // Restore enemy list
+    if(d.enemies&&d.enemies.length){
+      document.getElementById('mevt-enemies-data').value=JSON.stringify(d.enemies);
+      renderEvtEnemyList(d.enemies);
+    }
+  }catch(e){log('Error: '+e.message,'err');}
+}
+async function saveMapEvt(){
+  const src=document.getElementById('mevt-src').value;
+  const editKey=document.getElementById('mevt-key').value;
+  const key=editKey||'evt-'+Date.now();
+  const type=document.getElementById('mevt-type').value;
+  let enemies=[];
+  try{enemies=JSON.parse(document.getElementById('mevt-enemies-data').value||'[]');}catch(e){}
+  const ev={type,
+    title:document.getElementById('mevt-title').value,
+    desc:document.getElementById('mevt-desc').value,
+    reward:document.getElementById('mevt-reward').value||null,
+    actionText:document.getElementById('mevt-action').value||null,
+    enemies:enemies.length?enemies:null,
+  };
+  if(src==='dm'){ev.lat=parseFloat(document.getElementById('mevt-lat').value)||0;ev.lng=parseFloat(document.getElementById('mevt-lng').value)||0;}
+  else{ev.dlat=parseFloat(document.getElementById('mevt-dlat').value)||0;ev.dlng=parseFloat(document.getElementById('mevt-dlng').value)||0;}
+  try{
+    await fbPut('world/events/'+src+'/'+key,ev);
+    log('Event sealed: '+ev.title+(enemies.length?' with '+enemies.length+' enemy group(s)':''),'ok');
+    toast('✦ Event sealed.');
+    document.getElementById('map-evt-editor').style.display='none';
+    loadWorldEvents();
+  }catch(e){log('Error: '+e.message,'err');}
+}
 async function delMapEvt(src,key){if(!confirm('Delete this event?'))return;try{await fbDel('world/events/'+src+'/'+key);log('Deleted.','warn');loadWorldEvents();}catch(e){log('Error: '+e.message,'err');}}
 
 // EXCHANGES
@@ -1438,6 +1508,66 @@ function updateClassPreview() {
   set('cls-preview-init', init);
   set('cls-preview-crit', crit);
   set('cls-preview-dodge', dodge);
+}
+
+
+// ══════════════════════════════════════════
+// MAP EVENT ENEMY PICKER
+// ══════════════════════════════════════════
+async function loadCreaturesIntoEvtPicker() {
+  const sel = document.getElementById('mevt-enemy-pick');
+  if (!sel) return;
+  try {
+    const d = await fbGet('world/creatures');
+    sel.innerHTML = '<option value="">— pick a creature —</option>';
+    if (d) {
+      Object.entries(d).forEach(([k,c]) => {
+        const opt = document.createElement('option');
+        opt.value = k;
+        opt.textContent = (c.name||k) + ' · Tier '+( c.stats?.tier||'?')+' · HP '+(c.stats?.hp||'?');
+        sel.appendChild(opt);
+      });
+    } else {
+      // No creatures defined yet — show hint
+      sel.innerHTML = '<option value="">No creatures defined — go to Creatures & Combat first</option>';
+    }
+  } catch(e) { log('Error loading creatures: '+e.message,'err'); }
+}
+
+function addEnemyToEvent() {
+  const key = document.getElementById('mevt-enemy-pick').value;
+  const qty = parseInt(document.getElementById('mevt-enemy-qty').value)||1;
+  if (!key) { toast('Pick a creature first.'); return; }
+  let enemies = [];
+  try { enemies = JSON.parse(document.getElementById('mevt-enemies-data').value||'[]'); } catch(e) {}
+  // Add qty entries (allows same creature multiple times)
+  for (let i=0; i<qty; i++) enemies.push(key);
+  document.getElementById('mevt-enemies-data').value = JSON.stringify(enemies);
+  renderEvtEnemyList(enemies);
+  document.getElementById('mevt-enemy-pick').value = '';
+}
+
+function removeEnemyFromEvent(idx) {
+  let enemies = [];
+  try { enemies = JSON.parse(document.getElementById('mevt-enemies-data').value||'[]'); } catch(e) {}
+  enemies.splice(idx, 1);
+  document.getElementById('mevt-enemies-data').value = JSON.stringify(enemies);
+  renderEvtEnemyList(enemies);
+}
+
+function renderEvtEnemyList(enemies) {
+  const el = document.getElementById('mevt-enemies-list');
+  if (!el) return;
+  if (!enemies.length) { el.innerHTML = '<span style="font-family:var(--ff-b);font-style:italic;font-size:0.72rem;color:var(--mist);">No enemies — random creatures will be used.</span>'; return; }
+  // Group by key for display
+  const counts = {};
+  enemies.forEach(k => counts[k]=(counts[k]||0)+1);
+  el.innerHTML = Object.entries(counts).map(([k,n]) =>
+    `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0.5rem;background:rgba(139,26,26,0.08);border:1px solid rgba(139,26,26,0.25);">
+      <span style="font-family:var(--ff-h);font-size:0.55rem;color:var(--bone);flex:1;">×${n} ${k}</span>
+      <button class="btn b-breach" style="padding:0.18rem 0.4rem;font-size:0.32rem;" onclick="removeEnemyFromEvent(${enemies.lastIndexOf(k)})">✗</button>
+    </div>`
+  ).join('');
 }
 
 </script>
