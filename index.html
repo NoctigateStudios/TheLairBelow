@@ -2063,7 +2063,7 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.13</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.14</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
@@ -2157,14 +2157,7 @@
 
       <div id="exchange-inbox" style="display:none;margin-bottom:0.8rem;"></div>
 
-      <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);padding:0.6rem 0.8rem;margin-bottom:0.6rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.4rem;">
-        <span style="font-family:var(--ff-heading);font-size:0.45rem;letter-spacing:0.08em;color:var(--gold);" id="debug-id-display">loading...</span>
-        <div style="display:flex;gap:0.4rem;">
-          <button onclick="debugPresence()" style="background:none;border:1px solid var(--gold-dim);color:var(--gold);font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.08em;padding:0.25rem 0.5rem;cursor:pointer;">⬡ SCAN</button>
-          <button onclick="debugExchanges()" style="background:none;border:1px solid var(--gold-dim);color:var(--gold);font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.08em;padding:0.25rem 0.5rem;cursor:pointer;">⟺ CHK</button>
-          <button onclick="manualPoll()" style="background:none;border:1px solid rgba(45,122,95,0.6);color:var(--viridian-bright);font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.08em;padding:0.25rem 0.5rem;cursor:pointer;">↻ POLL</button>
-        </div>
-      </div>
+
 
       <div class="planet-hour-widget">
         <div class="ph-header">
@@ -2801,10 +2794,6 @@
       startAutoSave();
       playerName = localStorage.getItem('llair_name') || '';
       playerCoven = localStorage.getItem('llair_coven') || '';
-      setTimeout(() => {
-        const el = document.getElementById('debug-id-display');
-        if (el) el.textContent = 'ID: ' + getOrCreatePlayerId().slice(0,8) + ' · ' + (playerName||'no name');
-      }, 500);
       setTimeout(restoreBorrowedAcolytes, 1000);
       if (!playerName) {
         setTimeout(() => document.getElementById('identity-modal').classList.add('open'), 1800);
@@ -3110,7 +3099,7 @@
   const BASE_RATES = [3, 7, 1, 2, 0.5, 4, 3];
   const rates = [...BASE_RATES];
   const baseRates = [...BASE_RATES];
-  const values = [847, 312, 154, 98, 41, 203, 189];
+  let values = [847, 312, 154, 98, 41, 203, 189];
   const pills = document.querySelectorAll('.resource-pill .res-value');
 
   function startResourceTick() {
@@ -4266,6 +4255,7 @@
   }
 
   const _resolvedExchanges = new Set();
+  const _shownExchanges = new Set();
 
   async function pollIncomingExchanges() {
     const myId = getOrCreatePlayerId();
@@ -4282,10 +4272,9 @@
         const iFromMe   = (ex.from||'').toLowerCase() === myId.toLowerCase();
         const isPending = !ex.status || ex.status === 'pending';
         const notExpired = (ex.expires||0) > now;
-        const alreadyShown = document.getElementById('exch-' + exchId);
-
         // RECEIVER: show popup for pending incoming exchanges addressed to me
-        if (isPending && notExpired && !iFromMe && !alreadyShown && (isForMe || !ex.to)) {
+        if (isPending && notExpired && !iFromMe && !_shownExchanges.has(exchId) && (isForMe || !ex.to)) {
+          _shownExchanges.add(exchId);
           showExchangeNotification(exchId, ex);
         }
 
@@ -4296,7 +4285,7 @@
           for (const [r, amt] of Object.entries(ex.offer||{}))   values[parseInt(r)] -= amt;
           for (const [r, amt] of Object.entries(ex.request||{})) values[parseInt(r)] += amt;
           // Clamp to zero — can't go negative
-          values = values.map(v => Math.max(0, v));
+          values.forEach((v,i) => { if (values[i] < 0) values[i] = 0; });
           document.querySelectorAll('.resource-pill .res-value').forEach((el,i) => { el.textContent = Math.floor(values[i]); });
           toast('✦ Your exchange was accepted. Essences transferred.');
           // Persist to Firebase
