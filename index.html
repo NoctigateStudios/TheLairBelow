@@ -2198,51 +2198,11 @@
         </div>
       </div>
 
-      <!-- Dynamic journal: DM events prepend here, seed entries shown until then -->
-      <div id="journal-feed"></div>
-      <div id="journal-seed">
-        <div class="journal-entry urgent">
-          <div class="entry-header">
-            <span class="entry-title">⚠ The Third Seal Trembles</span>
-            <span class="entry-time">On arrival</span>
-          </div>
-          <p class="entry-body">
-            The resonance in the Antechamber has grown unbearable. Something found a new passage behind the fresco of <em>the Weeping Eye</em>. The <span data-codex="stress">stress</span> in the halls is at breaking point.
-          </p>
-          <div class="entry-actions">
-            <button class="btn-action primary" onclick="showCombat()">Enter the Passage</button>
-            <button class="btn-action" onclick="toast('Maurus withdraws to the Dormitorium. His wounds will keep.')">Send to the Dormitorium</button>
-          </div>
-        </div>
-        <div class="journal-entry discovery">
-          <div class="entry-header">
-            <span class="entry-title">⬡ Glyph Sequence Decoded</span>
-            <span class="entry-time">Yesterday</span>
-          </div>
-          <p class="entry-body">
-            The Mercurial hour worked its gift: the spiral inscription on the eastern wall reveals itself as a <em>Chaldean <span data-codex="planetary-hour">planetary table</span></em>. Three <span data-codex="convergence-point">convergence points</span> emerge. They pulse during the <span data-codex="lunar">Moon's hour</span>.
-          </p>
-          <div class="entry-actions">
-            <button class="btn-action primary" onclick="switchTab('field')">Mark the Points</button>
-            <button class="btn-action" onclick="switchTab('arcana')">Study Further</button>
-          </div>
-        </div>
-        <div class="ornament">⋆ ✦ ⋆</div>
-        <div class="journal-entry">
-          <div class="entry-header">
-            <span class="entry-title">☽ Idle Report — Dawn</span>
-            <span class="entry-time">8h ago</span>
-          </div>
-          <p class="entry-body">
-            While you were away, the lair's mechanisms continued their slow accumulation. The <em><span data-codex="lunar">Lunar confluence</span></em> was favourable. The <span data-codex="altar">Altar</span> processed two unfinished inscriptions.
-          </p>
-          <div class="entry-actions">
-            <button class="btn-action" onclick="toast('The essences settle into your reserves.')">Receive</button>
-          </div>
+      <div id="journal-feed">
+        <div id="journal-empty" style="font-family:var(--ff-body);font-style:italic;font-size:0.85rem;color:var(--text-secondary);padding:1.2rem 0.2rem;line-height:1.7;">
+          The chronicle is unwritten. The DM has not yet inscribed any omens.
         </div>
       </div>
-
-    </div>
 
     <!-- FIELD PANEL -->
     <div id="panel-field" class="tab-panel">
@@ -2279,15 +2239,15 @@
     <!-- COMPANY PANEL -->
     <div id="panel-company" class="tab-panel">
 
-      <div class="section-label">The Seeker</div>
+      <div class="section-label" id="company-section-label">—</div>
 
       <div class="char-header">
-        <div class="char-avatar">🜏</div>
+        <div class="char-avatar" id="char-avatar-glyph">🜏</div>
         <div class="char-info">
-          <div class="char-name">The Archivist</div>
-          <div class="char-class">Hermeticist · Level 6</div>
-          <div class="char-xp-bar"><div class="char-xp-fill" style="width:72%"></div></div>
-          <div class="char-xp-label">4,320 / 6,000 XP</div>
+          <div class="char-name">—</div>
+          <div class="char-class">— · Level —</div>
+          <div class="char-xp-bar"><div class="char-xp-fill" style="width:0%"></div></div>
+          <div class="char-xp-label">— / — XP</div>
         </div>
       </div>
 
@@ -2295,29 +2255,29 @@
         <div class="stat-block" style="--stat-color:#c43030">
           <div class="stat-element">🜂 <span data-codex="fire">Fire</span></div>
           <div class="stat-rows">
-            <div class="stat-row"><span class="stat-name" data-codex="fortitude">Fortitude</span><span class="stat-val">12</span></div>
-            <div class="stat-row"><span class="stat-name" data-codex="wrath">Wrath</span><span class="stat-val boosted">9</span></div>
+            <div class="stat-row"><span class="stat-name" data-codex="fortitude">Fortitude</span><span class="stat-val">—</span></div>
+            <div class="stat-row"><span class="stat-name" data-codex="wrath">Wrath</span><span class="stat-val">—</span></div>
           </div>
         </div>
         <div class="stat-block" style="--stat-color:#4a7a8b">
           <div class="stat-element">🜄 <span data-codex="water">Water</span></div>
           <div class="stat-rows">
-            <div class="stat-row"><span class="stat-name" data-codex="intuition">Intuition</span><span class="stat-val">14</span></div>
-            <div class="stat-row"><span class="stat-name" data-codex="empathy">Empathy</span><span class="stat-val">11</span></div>
+            <div class="stat-row"><span class="stat-name" data-codex="intuition">Intuition</span><span class="stat-val">—</span></div>
+            <div class="stat-row"><span class="stat-name" data-codex="empathy">Empathy</span><span class="stat-val">—</span></div>
           </div>
         </div>
         <div class="stat-block" style="--stat-color:#8b7355">
           <div class="stat-element">🜃 <span data-codex="earth">Earth</span></div>
           <div class="stat-rows">
-            <div class="stat-row"><span class="stat-name" data-codex="endurance">Endurance</span><span class="stat-val">10</span></div>
-            <div class="stat-row"><span class="stat-name" data-codex="memory">Memory</span><span class="stat-val cursed">7</span></div>
+            <div class="stat-row"><span class="stat-name" data-codex="endurance">Endurance</span><span class="stat-val">—</span></div>
+            <div class="stat-row"><span class="stat-name" data-codex="memory">Memory</span><span class="stat-val">—</span></div>
           </div>
         </div>
         <div class="stat-block" style="--stat-color:#6b9ac4">
           <div class="stat-element">🜁 <span data-codex="air">Air</span></div>
           <div class="stat-rows">
-            <div class="stat-row"><span class="stat-name" data-codex="cunning">Cunning</span><span class="stat-val">15</span></div>
-            <div class="stat-row"><span class="stat-name" data-codex="speed">Speed</span><span class="stat-val">13</span></div>
+            <div class="stat-row"><span class="stat-name" data-codex="cunning">Cunning</span><span class="stat-val">—</span></div>
+            <div class="stat-row"><span class="stat-name" data-codex="speed">Speed</span><span class="stat-val">—</span></div>
           </div>
         </div>
         <div class="stat-block aether" style="--stat-color:#3d3daa">
@@ -2325,43 +2285,18 @@
           <div class="stat-rows">
             <div class="stat-row">
               <span class="stat-name" data-codex="gnosis">Gnosis</span>
-              <span class="stat-val" style="color:var(--indigo-bright)">22 / 30</span>
+              <span class="stat-val" style="color:var(--indigo-bright)">— / 30</span>
             </div>
           </div>
-          <div class="aether-bar"><div class="aether-fill" style="width:73%"></div></div>
+          <div class="aether-bar"><div class="aether-fill" style="width:0%"></div></div>
         </div>
       </div>
 
       <div class="section-label" data-section="acolytes">Acolytes</div>
 
-      <!-- Acolyte cards are rendered dynamically by renderAcolyteCards() from Firebase save data.
-           The cards below are fallback placeholders shown before the first save loads. -->
-      <div class="acolyte-card" data-acolyte-id="maurus" data-acolyte-class="Flagellant" data-acolyte-level="4" data-acolyte-states="Paranoid,Masochistic">
-        <div class="acolyte-avatar">🜃</div>
-        <div class="acolyte-info">
-          <div class="acolyte-name">Brother Maurus</div>
-          <div class="acolyte-class" data-codex="flagellant">Flagellant · Lv.4</div>
-          <div class="stress-bar"><div class="stress-fill" style="width:85%"></div></div>
-          <div class="acolyte-states">
-            <span class="state-tag affliction" data-codex="affliction">Paranoid</span>
-            <span class="state-tag quirk" data-codex="affliction">Masochistic</span>
-          </div>
-          <button class="acolyte-avail-toggle" id="avail-maurus" onclick="toggleAcolyteAvailable('maurus',this)">Share with Coven: Off</button>
-        </div>
-      </div>
-
-      <div class="acolyte-card" data-acolyte-id="irene" data-acolyte-class="Plague Scribe" data-acolyte-level="3" data-acolyte-states="Courageous,Ink-Stained">
-        <div class="acolyte-avatar">🜁</div>
-        <div class="acolyte-info">
-          <div class="acolyte-name">Sister Irene Voss</div>
-          <div class="acolyte-class">Plague Scribe · Lv.3</div>
-          <div class="stress-bar"><div class="stress-fill" style="width:30%"></div></div>
-          <div class="acolyte-states">
-            <span class="state-tag virtue">Courageous</span>
-            <span class="state-tag quirk">Ink-Stained</span>
-          </div>
-          <button class="acolyte-avail-toggle" id="avail-irene" onclick="toggleAcolyteAvailable('irene',this)">Share with Coven: Off</button>
-        </div>
+      <!-- Acolyte cards injected here by renderAcolyteCards() from Firebase -->
+      <div id="acolytes-loading" style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);padding:0.6rem 0;">
+        Consulting the rolls…
       </div>
 
       <div class="acolyte-card" data-recruit="true" style="border-style:dashed;opacity:0.5;cursor:pointer" onclick="switchTab('field')">
@@ -2380,58 +2315,17 @@
       <div class="section-label">Lair Depth I — The Antechamber</div>
 
       <div class="building-grid" id="lair-building-grid">
-        <div class="building-card">
-          <span class="building-level">Lv. 2</span>
-          <span class="building-icon">🕯</span>
-          <div class="building-name" data-codex="scriptorium">The Scriptorium</div>
-          <p class="building-desc">Research grimoires. Unlock new skills and esoteric knowledge.</p>
-        </div>
-        <div class="building-card" onclick="openForge()" style="cursor:pointer">
-          <span class="building-level">Lv. 1</span>
-          <span class="building-icon">⚗</span>
-          <div class="building-name" data-codex="alchemical-forge">Alchemical Forge</div>
-          <p class="building-desc">Craft equipment and consumables from gathered essences.</p>
-        </div>
-        <div class="building-card">
-          <span class="building-level">Lv. 1</span>
-          <span class="building-icon">🛏</span>
-          <div class="building-name" data-codex="dormitorium">Dormitorium</div>
-          <p class="building-desc">Acolytes recover <span data-codex="stress">Stress</span> here. Haunted dreams may yield visions.</p>
-        </div>
-        <div class="building-card">
-          <span class="building-level">Lv. 2</span>
-          <span class="building-icon">🗿</span>
-          <div class="building-name" data-codex="altar">The Altar</div>
-          <p class="building-desc">Perform planetary rites. Empowers resource gathering by hour.</p>
-        </div>
-        <div class="building-card locked">
-          <span class="building-level">Locked</span>
-          <span class="building-icon">🔮</span>
-          <div class="building-name">Scrying Chamber</div>
-          <p class="building-desc">See further on the field map. Reveal hidden encounters.</p>
-        </div>
-        <div class="building-card locked">
-          <span class="building-level">Locked</span>
-          <span class="building-icon">🦴</span>
-          <div class="building-name">Ossuary</div>
-          <p class="building-desc">Extract <span data-codex="saturnine">Saturnine essence</span> from the ancient dead within the walls.</p>
+        <!-- Rendered by renderLairBuildings() from /world/buildings + saves/{id}/lair -->
+        <div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);padding:0.6rem 0;grid-column:1/-1;">
+          Consulting the lair…
         </div>
       </div>
 
       <div class="section-label">Research Queue</div>
       <div id="research-queue-list">
         <!-- Rendered by renderResearchQueue() from saves/{id}/research -->
-        <div class="research-item active">
-          <div class="research-name">Chaldean <span data-codex="planetary-hour">Planetary Correspondences</span> — Vol. III</div>
-          <p class="research-desc">Detailed mapping of planetary hours to geographic loci. Will improve convergence detection radius by 40%.</p>
-          <div class="research-progress"><div class="research-fill" style="width:65%"></div></div>
-          <div class="research-meta"><span>65% Complete</span><span>~6h remaining</span></div>
-        </div>
-        <div class="research-item completed">
-          <div class="research-name">✓ Hermetic Alphabets of the Lower Realm</div>
-          <p class="research-desc">Completed. Unlocked: <span data-codex="glyph">Glyph Inscription</span> skill for all Acolytes.</p>
-          <div class="research-progress"><div class="research-fill" style="width:100%"></div></div>
-          <div class="research-meta"><span>Completed</span></div>
+        <div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);padding:0.6rem 0;">
+          No research underway.
         </div>
       </div>
 
@@ -2481,26 +2375,9 @@
 
       <div class="section-label">Rites &amp; Invocations</div>
       <div id="rites-list">
-        <div class="research-item" onclick="performRite('silver-crescent',300,1)">
-          <div class="research-name">☽ Rite of the <span data-codex="lunar">Silver Crescent</span></div>
-          <p class="research-desc">Offered during <span data-codex="planetary-hour">Lunar hours</span>, this rite triples <span data-codex="lunar">Lunar income</span> for one full planetary cycle. Requires a Lunar-aligned acolyte present in the lair.</p>
-          <div class="research-meta">
-            <span>Cost: 300 ☽</span>
-            <span>Duration: 1 Lunar cycle</span>
-          </div>
-        </div>
-        <div class="research-item" onclick="performRite('mercurial-tongue',150,6)">
-          <div class="research-name">☿ Invocation of the <span data-codex="mercurial">Mercurial Tongue</span></div>
-          <p class="research-desc">Speed all ongoing <span data-codex="scriptorium">research</span> by 2× for the duration of <span data-codex="mercurial">Mercury's hour</span>. Only usable during Mercury's planetary hour.</p>
-          <div class="research-meta">
-            <span>Cost: 150 ☿</span>
-            <span>Active: Mercury's Hour only</span>
-          </div>
-        </div>
-        <div class="research-item locked" style="opacity:0.5">
-          <div class="research-name">⛧ The Grand Conjuration — [LOCKED]</div>
-          <p class="research-desc">Complete the Third Seal research to unlock. A rite that aligns all seven planets simultaneously for 30 minutes. Effects unknown.</p>
-          <div class="research-meta"><span>Research Required</span></div>
+        <!-- Rendered by renderRitesList() from /world/skills (category:rite) -->
+        <div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);padding:0.6rem 0;">
+          Consulting the rites…
         </div>
       </div>
 
@@ -3660,7 +3537,7 @@
       const el = document.querySelector('#panel-company .char-name');
       if (el) el.textContent = c.name || playerName || 'Unknown';
       const secLbl = document.getElementById('company-section-label');
-      if (secLbl) secLbl.textContent = c.name || playerName || 'Your Character';
+      if (secLbl) secLbl.textContent = c.name || playerName || '—';
       const elCls = document.querySelector('#panel-company .char-class');
       if (elCls) elCls.textContent = (c.class||'—') + ' · Level ' + (c.level||1);
       const xpFill = document.querySelector('#panel-company .char-xp-fill');
@@ -3723,7 +3600,9 @@
   function renderAcolyteCards(acolytes) {
     const section = document.querySelector('#panel-company .section-label[data-section="acolytes"]');
     if (!section) return;
-    // Remove old dynamic cards
+    // Remove loading message and old dynamic cards
+    const loading = document.getElementById('acolytes-loading');
+    if (loading) loading.remove();
     document.querySelectorAll('.acolyte-card[data-acolyte-id]').forEach(e => e.remove());
     const recruit = document.querySelector('.acolyte-card[data-recruit]');
     const parent  = section.parentElement;
@@ -3754,8 +3633,6 @@
   }
 
   function renderLairBuildings(playerBuildings) {
-    // Merge player building levels with world building definitions
-    // _worldBuildings is populated by loadBuildingsFromFirebase
     const grid = document.getElementById('lair-building-grid') || document.querySelector('#panel-lair .building-grid');
     if (!grid || !_worldBuildings) return;
     grid.innerHTML = Object.entries(_worldBuildings).map(([key, b]) => {
@@ -3891,9 +3768,9 @@
       </div>`;
     // Prepend so newest is at top, but after the planetary hour widget
     feed.insertBefore(entry, feed.firstChild);
-    // Hide the seed entries once real events come in
-    const seed = document.getElementById('journal-seed');
-    if (seed && feed.children.length > 0) seed.style.display = 'none';
+    // Hide the empty-state message once real events come in
+    const emptyMsg = document.getElementById('journal-empty');
+    if (emptyMsg) emptyMsg.style.display = 'none';
   }
 
   // ══════════════════════════════════════════
@@ -3992,7 +3869,7 @@
     (research.queue || []).forEach(name => items.push({ name, pct: 0, state: 'queued' }));
     (research.completed || []).forEach(name => items.push({ name, pct: 100, state: 'completed' }));
     if (!items.length) {
-      el.innerHTML = '<div style="font-family:var(--ff-body);font-style:italic;font-size:0.8rem;color:var(--text-secondary);">No research underway.</div>';
+      el.innerHTML = '<div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);padding:0.6rem 0;">No research underway.</div>';
       return;
     }
     el.innerHTML = items.map(it => `
