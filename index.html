@@ -2043,7 +2043,7 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.5</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.6</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
@@ -4268,16 +4268,32 @@
   // Debug: check exchanges in Firebase manually
   async function debugExchanges() {
     const myId = getOrCreatePlayerId();
+    const now = Date.now();
+    document.querySelectorAll('[id^="exch-"]').forEach(el => el.remove());
+    const inbox = document.getElementById('exchange-inbox');
+    if (inbox) inbox.style.display = 'none';
     try {
-      const res = await fetch(`${FB_URL}/exchanges.json?cb=` + Date.now());
+      const res = await fetch(`${FB_URL}/exchanges.json?cb=` + now);
       const all = await res.json();
       if (!all) { toast('No exchanges in Firebase'); return; }
       const entries = Object.entries(all);
       toast('Exchanges in Firebase: ' + entries.length);
       entries.forEach(([id, ex]) => {
-        if (!ex) return;
+        if (!ex || typeof ex !== 'object') {
+          fetch(`${FB_URL}/exchanges/${id}.json`, {method:'DELETE'});
+          toast('Deleted junk entry: ' + id.slice(0,8));
+          return;
+        }
         const isForMe = (ex.to||'').toLowerCase() === myId.toLowerCase();
-        toast('ID:' + id.slice(0,8) + ' from=' + (ex.fromName||'?') + ' status=' + ex.status + ' toMe=' + isForMe + ' expired=' + ((ex.expires||0) < now));
+        const expired = (ex.expires||0) < now;
+        toast('ID:' + id.slice(0,8) + ' from=' + (ex.fromName||'?') + ' status=' + (ex.status||'?') + ' toMe=' + isForMe + ' expired=' + expired);
+        if (expired || !ex.status) {
+          fetch(`${FB_URL}/exchanges/${id}.json`, {method:'DELETE'})
+            .then(() => toast('Deleted stale: ' + id.slice(0,8)));
+        } else if (isForMe && ex.status === 'pending') {
+          showExchangeNotification(id, ex);
+          toast('✓ Notification shown!');
+        }
       });
     } catch(e) { toast('Error: ' + e.message); }
   }
