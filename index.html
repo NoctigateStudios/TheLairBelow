@@ -1981,7 +1981,7 @@
   .exchange-toast-btn.decline { border-color:var(--crimson-bright);color:var(--crimson-bright); }
 
   /* NEARBY PLAYER MARKER */
-  .llair-player-other { width:16px;height:16px;border-radius:50%;background:#7b4fcf;border:2px solid rgba(123,79,207,0.6);box-shadow:0 0 12px rgba(123,79,207,0.7);animation:pulse-ring 2.5s ease-in-out infinite;cursor:pointer; }
+  .llair-player-other { width:28px;height:28px;border-radius:50%;background:#7b4fcf;border:3px solid rgba(200,160,255,0.8);box-shadow:0 0 18px rgba(123,79,207,0.9);animation:pulse-ring 2s ease-in-out infinite;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px; }
 
   /* AVAILABLE ACOLYTE TOGGLE */
   .acolyte-avail-toggle { font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.2rem 0.5rem;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;transition:all 0.2s;margin-top:0.3rem; }
@@ -2128,11 +2128,6 @@
     <!-- JOURNAL PANEL -->
     <div id="panel-journal" class="tab-panel active">
 
-      <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);padding:0.5rem 0.8rem;margin-bottom:0.5rem;font-family:var(--ff-heading);font-size:0.45rem;letter-spacing:0.08em;color:var(--gold);display:flex;justify-content:space-between;align-items:center;">
-        <span id="debug-id-display">ID: loading...</span>
-        <span id="debug-name-display">Name: loading...</span>
-        <button onclick="debugPresence()" style="background:none;border:1px solid var(--gold-dim);color:var(--gold);font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.08em;padding:0.2rem 0.5rem;cursor:pointer;">⬡ SCAN</button>
-      </div>
       <div class="planet-hour-widget">
         <div class="ph-header">
           <span class="ph-title">⌛ <span data-codex="planetary-hour">Planetary Hour</span></span>
@@ -2188,6 +2183,7 @@
       </div>
 
       <div class="ornament">⋆ ✦ ⋆</div>
+      <div id="exchange-inbox" style="margin-bottom:0.5rem;"></div>
 
       <div class="journal-entry">
         <div class="entry-header">
@@ -2762,13 +2758,6 @@
       startAutoSave();
       playerName = localStorage.getItem('llair_name') || '';
       playerCoven = localStorage.getItem('llair_coven') || '';
-      setTimeout(() => {
-        const id = getOrCreatePlayerId();
-        const dbId = document.getElementById('debug-id-display');
-        const dbName = document.getElementById('debug-name-display');
-        if (dbId) dbId.textContent = 'ID: ' + id.slice(0,8);
-        if (dbName) dbName.textContent = 'Name: ' + (playerName || 'not set');
-      }, 500);
       if (!playerName) {
         setTimeout(() => document.getElementById('identity-modal').classList.add('open'), 1800);
       }
@@ -3903,7 +3892,7 @@
         nearbyPlayers[id] = { ...p, profile: data.profile || null, id };
 
         // Add/update map marker
-        const icon = L.divIcon({ className:'', html:'<div class="llair-player-other"></div>', iconSize:[16,16], iconAnchor:[8,8] });
+        const icon = L.divIcon({ className:'', html:'<div class="llair-player-other">⬡</div>', iconSize:[36,36], iconAnchor:[18,18] });
         if (otherPlayerMarkers[id]) {
           otherPlayerMarkers[id].setLatLng([p.lat, p.lng]);
         } else {
@@ -3959,13 +3948,18 @@
       html += '<div class="pm-section"><div class="pm-section-title">Acolytes</div>';
       profile.acolytes.forEach(a => {
         const avail = a.available;
-        html += `<div class="pm-acolyte ${avail?'pm-acolyte-available':''}">
+        const borrowKey = 'borrow_' + targetId + '_' + a.id;
+        const borrowed = localStorage.getItem(borrowKey);
+        const borrowExpiry = borrowed ? parseInt(borrowed) : 0;
+        const isBorrowed = borrowExpiry > Date.now();
+        const minsLeft = isBorrowed ? Math.round((borrowExpiry - Date.now()) / 60000) : 0;
+        html += `<div class="pm-acolyte ${avail?'pm-acolyte-available':''}" style="${avail?'cursor:pointer':''}" onclick="${avail ? `borrowAcolyte('${targetId}','${a.id}','${a.name}')` : ''}">
           <div class="pm-acolyte-avatar">🜃</div>
           <div class="pm-acolyte-info">
             <div class="pm-acolyte-name">${a.name}</div>
             <div class="pm-acolyte-class">${a.cls} · Stress ${a.stress}%</div>
           </div>
-          ${avail ? '<span class="pm-acolyte-badge">Available</span>' : ''}
+          ${isBorrowed ? `<span class="pm-acolyte-badge" style="border-color:var(--gold);color:var(--gold);">Borrowed ${minsLeft}m</span>` : avail ? '<span class="pm-acolyte-badge">Tap to Borrow</span>' : ''}
         </div>`;
       });
       html += '</div>';
@@ -4000,6 +3994,21 @@
   }
 
   function closePlayerModal() { document.getElementById('player-modal').classList.remove('open'); }
+
+  function borrowAcolyte(ownerId, acolyteId, acolyteName) {
+    const borrowKey = 'borrow_' + ownerId + '_' + acolyteId;
+    const existing = localStorage.getItem(borrowKey);
+    if (existing && parseInt(existing) > Date.now()) {
+      toast(acolyteName + ' is already borrowed. ' + Math.round((parseInt(existing) - Date.now()) / 60000) + ' minutes remaining.');
+      return;
+    }
+    const expiry = Date.now() + 60 * 60 * 1000; // 1 hour
+    localStorage.setItem(borrowKey, expiry.toString());
+    toast('✦ ' + acolyteName + ' borrowed for 1 hour. They join your company until ' + new Date(expiry).toLocaleTimeString() + '.');
+    // Re-render profile to show updated state
+    const p = nearbyPlayers[ownerId];
+    if (p) openPlayerModal(ownerId);
+  }
 
   // ══════════════════════════════════════════
   // EXCHANGE SYSTEM
@@ -4065,6 +4074,7 @@
       });
       toast('✦ Exchange proposal sent. Awaiting their response.');
       closeExchangeModal();
+      setTimeout(pollIncomingExchanges, 1000);
     } catch(e) { toast('✗ Failed to send proposal: ' + e.message); }
   }
 
@@ -4088,7 +4098,9 @@
   function showExchangeNotification(exchId, ex) {
     const offerText = Object.entries(ex.offer||{}).map(([r,a]) => RES_SYMBOLS[r]+' '+a+' '+RES_NAMES[r]).join(', ') || 'nothing';
     const reqText  = Object.entries(ex.request||{}).map(([r,a]) => RES_SYMBOLS[r]+' '+a+' '+RES_NAMES[r]).join(', ') || 'nothing';
+    // Show in both toast area AND persistent inbox
     const container = document.getElementById('toasts');
+    const inbox = document.getElementById('exchange-inbox');
     const el = document.createElement('div');
     el.className = 'exchange-toast';
     el.id = 'exch-' + exchId;
@@ -4100,6 +4112,12 @@
         <button class="exchange-toast-btn decline" onclick="declineExchange('${exchId}')">Decline</button>
       </div>`;
     container.appendChild(el);
+    // Also add persistent copy to journal inbox
+    if (inbox && !document.getElementById('inbox-' + exchId)) {
+      const inboxEl = el.cloneNode(true);
+      inboxEl.id = 'inbox-' + exchId;
+      inbox.appendChild(inboxEl);
+    }
   }
 
   async function acceptExchange(exchId, ex) {
@@ -4137,8 +4155,9 @@
     toast('Exchange declined.');
   }
 
-  // Poll incoming exchanges every 20s
-  setInterval(pollIncomingExchanges, 20000);
+  // Poll incoming exchanges every 5s
+  setInterval(pollIncomingExchanges, 5000);
+  setTimeout(pollIncomingExchanges, 2000);
 </script>
 </body>
 </html>
