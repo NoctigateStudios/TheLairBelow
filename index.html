@@ -2090,7 +2090,7 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.21</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.22</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
@@ -2198,12 +2198,14 @@
         </div>
       </div>
 
+      <!-- DM events prepend into journal-feed from Firebase -->
       <div id="journal-feed">
         <div id="journal-empty" style="font-family:var(--ff-body);font-style:italic;font-size:0.85rem;color:var(--text-secondary);padding:1.2rem 0.2rem;line-height:1.7;">
           The chronicle is unwritten. The DM has not yet inscribed any omens.
         </div>
       </div>
 
+    </div>
     <!-- FIELD PANEL -->
     <div id="panel-field" class="tab-panel">
 
@@ -2242,7 +2244,7 @@
       <div class="section-label" id="company-section-label">—</div>
 
       <div class="char-header">
-        <div class="char-avatar" id="char-avatar-glyph">🜏</div>
+        <div class="char-avatar">🜏</div>
         <div class="char-info">
           <div class="char-name">—</div>
           <div class="char-class">— · Level —</div>
@@ -2294,12 +2296,11 @@
 
       <div class="section-label" data-section="acolytes">Acolytes</div>
 
-      <!-- Acolyte cards injected here by renderAcolyteCards() from Firebase -->
+      <!-- Acolyte cards injected by renderAcolyteCards() from Firebase -->
       <div id="acolytes-loading" style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);padding:0.6rem 0;">
         Consulting the rolls…
       </div>
-
-      <div class="acolyte-card" data-recruit="true" style="border-style:dashed;opacity:0.5;cursor:pointer" onclick="switchTab('field')">
+            <div class="acolyte-card" data-recruit="true" style="border-style:dashed;opacity:0.5;cursor:pointer" onclick="switchTab('field')">
         <div class="acolyte-avatar" style="border-style:dashed">＋</div>
         <div class="acolyte-info">
           <div class="acolyte-name" style="color:var(--text-secondary)">Recruit a New Acolyte</div>
@@ -2315,7 +2316,6 @@
       <div class="section-label">Lair Depth I — The Antechamber</div>
 
       <div class="building-grid" id="lair-building-grid">
-        <!-- Rendered by renderLairBuildings() from /world/buildings + saves/{id}/lair -->
         <div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);padding:0.6rem 0;grid-column:1/-1;">
           Consulting the lair…
         </div>
@@ -2323,13 +2323,10 @@
 
       <div class="section-label">Research Queue</div>
       <div id="research-queue-list">
-        <!-- Rendered by renderResearchQueue() from saves/{id}/research -->
         <div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);padding:0.6rem 0;">
           No research underway.
         </div>
-      </div>
-
-    </div>
+      </div>    </div>
 
     <!-- ARCANA PANEL -->
     <div id="panel-arcana" class="tab-panel">
@@ -2375,13 +2372,10 @@
 
       <div class="section-label">Rites &amp; Invocations</div>
       <div id="rites-list">
-        <!-- Rendered by renderRitesList() from /world/skills (category:rite) -->
         <div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);padding:0.6rem 0;">
           Consulting the rites…
         </div>
-      </div>
-
-    </div>
+      </div>    </div>
 
     <!-- CODEX PANEL -->
     <div id="panel-codex" class="tab-panel">
@@ -3537,7 +3531,7 @@
       const el = document.querySelector('#panel-company .char-name');
       if (el) el.textContent = c.name || playerName || 'Unknown';
       const secLbl = document.getElementById('company-section-label');
-      if (secLbl) secLbl.textContent = c.name || playerName || '—';
+      if (secLbl) secLbl.textContent = c.name || playerName || 'Your Character';
       const elCls = document.querySelector('#panel-company .char-class');
       if (elCls) elCls.textContent = (c.class||'—') + ' · Level ' + (c.level||1);
       const xpFill = document.querySelector('#panel-company .char-xp-fill');
@@ -3600,9 +3594,7 @@
   function renderAcolyteCards(acolytes) {
     const section = document.querySelector('#panel-company .section-label[data-section="acolytes"]');
     if (!section) return;
-    // Remove loading message and old dynamic cards
-    const loading = document.getElementById('acolytes-loading');
-    if (loading) loading.remove();
+    // Remove old dynamic cards
     document.querySelectorAll('.acolyte-card[data-acolyte-id]').forEach(e => e.remove());
     const recruit = document.querySelector('.acolyte-card[data-recruit]');
     const parent  = section.parentElement;
@@ -3633,6 +3625,8 @@
   }
 
   function renderLairBuildings(playerBuildings) {
+    // Merge player building levels with world building definitions
+    // _worldBuildings is populated by loadBuildingsFromFirebase
     const grid = document.getElementById('lair-building-grid') || document.querySelector('#panel-lair .building-grid');
     if (!grid || !_worldBuildings) return;
     grid.innerHTML = Object.entries(_worldBuildings).map(([key, b]) => {
@@ -3768,7 +3762,8 @@
       </div>`;
     // Prepend so newest is at top, but after the planetary hour widget
     feed.insertBefore(entry, feed.firstChild);
-    // Hide the empty-state message once real events come in
+    // Hide the seed entries once real events come in
+    // Hide empty state once real events arrive
     const emptyMsg = document.getElementById('journal-empty');
     if (emptyMsg) emptyMsg.style.display = 'none';
   }
@@ -3869,7 +3864,7 @@
     (research.queue || []).forEach(name => items.push({ name, pct: 0, state: 'queued' }));
     (research.completed || []).forEach(name => items.push({ name, pct: 100, state: 'completed' }));
     if (!items.length) {
-      el.innerHTML = '<div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);padding:0.6rem 0;">No research underway.</div>';
+      el.innerHTML = '<div style="font-family:var(--ff-body);font-style:italic;font-size:0.8rem;color:var(--text-secondary);">No research underway.</div>';
       return;
     }
     el.innerHTML = items.map(it => `
