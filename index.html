@@ -2090,7 +2090,7 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.24</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.25</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
@@ -2629,11 +2629,11 @@
       setTimeout(() => toast('The lair stirs. The stars take notice. You descend.'), 800);
       setTimeout(() => { try { initCodex(); attachLongPress(); } catch(e) { console.error('init error:',e); } }, 600);
       startAutoSave();
+      loadBuildingsFromFirebase();        // immediate — needed before save loads
+      setTimeout(loadRitesFromFirebase, 500);
+      setTimeout(loadRecipesFromFirebase, 600);
       setTimeout(seedWorldDataIfEmpty, 2000);
-      setTimeout(loadRecipesFromFirebase, 2500);
-      setTimeout(loadBuildingsFromFirebase, 2600);
-      setTimeout(loadRitesFromFirebase, 2700);
-      setTimeout(refreshFieldEventCards, 3000);
+      setTimeout(refreshFieldEventCards, 800);
       playerName = localStorage.getItem('llair_name') || '';
       playerCoven = localStorage.getItem('llair_coven') || '';
       // Auto-load saved state from Firebase on every startup
