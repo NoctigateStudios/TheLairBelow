@@ -4139,6 +4139,9 @@
   // ══════════════════════════════════════════
   function openExchangeModal(targetId) {
     currentExchangeTarget = targetId;
+    // Refresh name/coven from localStorage in case they weren't set yet
+    if (!playerName) playerName = localStorage.getItem('llair_name') || '';
+    if (!playerCoven) playerCoven = localStorage.getItem('llair_coven') || '';
     const p = nearbyPlayers[targetId];
     document.getElementById('exchange-sub').textContent = 'with ' + (p?.name || 'unknown seeker');
     closePlayerModal();
@@ -4184,13 +4187,16 @@
       if (values[parseInt(res)] < amt) { toast('You do not have enough ' + RES_NAMES[parseInt(res)] + ' to offer.'); return; }
     }
     const exchangeData = {
-      from: myId, fromName: playerName, fromCoven: playerCoven,
+      from: myId,
+      fromName: playerName || localStorage.getItem('llair_name') || 'Unknown',
+      fromCoven: playerCoven || localStorage.getItem('llair_coven') || 'Unknown',
       to: currentExchangeTarget,
       offer, request,
       status: 'pending',
       created: Date.now(),
       expires: Date.now() + 10 * 60 * 1000,
     };
+    console.log('Sending exchange:', JSON.stringify(exchangeData));
     const exchId = myId.slice(0,8) + '-' + Date.now();
     try {
       await fetch(`${FB_URL}/exchanges/${exchId}.json`, {
@@ -4216,17 +4222,12 @@
         // Show if: pending AND (sent to me OR sent TO anyone and I am not the sender)
         const isForMe = ex.to === myId;
         const isPending = ex.status === 'pending';
-        const notExpired = ex.expires > now;
+        const notExpired = (ex.expires||0) > now;
         const notFromMe = ex.from !== myId;
         const alreadyShown = document.getElementById('exch-' + exchId);
-        if (isPending && notExpired && notFromMe && !alreadyShown) {
-          // Show if to==myId OR if to field seems wrong (fallback: show all pending not from me)
-          if (isForMe || ex.to === undefined) {
-            showExchangeNotification(exchId, ex);
-          } else {
-            // Debug: check if there's an ID mismatch
-            console.log('Exchange ' + exchId.slice(0,8) + ': to=' + (ex.to||'').slice(0,8) + ' myId=' + myId.slice(0,8) + ' match=' + isForMe);
-          }
+        // Show if pending, not expired, not sent by me, and either addressed to me or has no valid target
+        if (isPending && notExpired && notFromMe && !alreadyShown && (isForMe || !ex.to)) {
+          showExchangeNotification(exchId, ex);
         }
       });
     } catch(e) { console.error('pollExchanges error:', e); }
