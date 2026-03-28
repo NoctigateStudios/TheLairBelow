@@ -180,8 +180,30 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
 <div class="panel" id="class-editor" style="display:none;"><div class="ph" id="cls-ed-title">New Class</div><input type="hidden" id="cls-key">
 <div class="g2"><div class="fld"><label>Class Name</label><input type="text" id="cls-name" placeholder="Hermeticist"></div><div class="fld"><label>Role</label><input type="text" id="cls-role" placeholder="Seeker of hidden correspondences"></div></div>
 <div class="fld"><label>Description</label><textarea id="cls-desc"></textarea></div>
-<div class="g4"><div class="fld"><label>Fortitude</label><input type="number" id="cls-fortitude" value="10" min="1"></div><div class="fld"><label>Wrath</label><input type="number" id="cls-wrath" value="8" min="1"></div><div class="fld"><label>Intuition</label><input type="number" id="cls-intuition" value="12" min="1"></div><div class="fld"><label>Empathy</label><input type="number" id="cls-empathy" value="10" min="1"></div><div class="fld"><label>Endurance</label><input type="number" id="cls-endurance" value="10" min="1"></div><div class="fld"><label>Memory</label><input type="number" id="cls-memory" value="8" min="1"></div><div class="fld"><label>Cunning</label><input type="number" id="cls-cunning" value="12" min="1"></div><div class="fld"><label>Gnosis</label><input type="number" id="cls-gnosis" value="14" min="1"></div></div>
-<div class="fld"><label>Starting Skills (comma-separated)</label><input type="text" id="cls-skills" placeholder="Glyph Reading, Rite of Bindings"></div>
+<div class="g4">
+<div class="fld"><label>Fortitude</label><input type="number" id="cls-fortitude" oninput="updateClassPreview()" value="10" min="1" max="20"></div>
+<div class="fld"><label>Wrath</label><input type="number" id="cls-wrath" oninput="updateClassPreview()" value="8" min="1" max="20"></div>
+<div class="fld"><label>Intuition</label><input type="number" id="cls-intuition" oninput="updateClassPreview()" value="12" min="1" max="20"></div>
+<div class="fld"><label>Empathy</label><input type="number" id="cls-empathy" oninput="updateClassPreview()" value="10" min="1" max="20"></div>
+<div class="fld"><label>Endurance</label><input type="number" id="cls-endurance" oninput="updateClassPreview()" value="10" min="1" max="20"></div>
+<div class="fld"><label>Memory</label><input type="number" id="cls-memory" oninput="updateClassPreview()" value="8" min="1" max="20"></div>
+<div class="fld"><label>Cunning</label><input type="number" id="cls-cunning" oninput="updateClassPreview()" value="12" min="1" max="20"></div>
+<div class="fld"><label>Gnosis</label><input type="number" id="cls-gnosis" oninput="updateClassPreview()" value="0" min="0" max="30"></div>
+<div class="fld"><label>Speed</label><input type="number" id="cls-speed" oninput="updateClassPreview()" value="10" min="1" max="20"></div>
+</div>
+<div style="background:rgba(201,168,76,0.04);border:1px solid rgba(201,168,76,0.1);padding:0.5rem 0.6rem;margin-bottom:0.6rem;font-family:var(--ff-h);font-size:0.35rem;letter-spacing:0.08em;color:var(--ash);">
+  DERIVED (at Lv.1 with above stats) — HP: <span id="cls-preview-hp">—</span> · Mana: <span id="cls-preview-mana">—</span> · Initiative: <span id="cls-preview-init">—</span> · Crit: <span id="cls-preview-crit">—</span>% · Dodge: <span id="cls-preview-dodge">—</span>%
+</div>
+<div class="fld"><label>Starting Skills <span style="color:var(--ash);font-size:0.9em;">(select from defined skills, or type keys comma-separated)</span></label>
+<div style="display:flex;gap:0.5rem;align-items:flex-start;">
+  <select id="cls-skills-pick" style="flex:1;" onchange="addSkillToClass(this.value)">
+    <option value="">— pick a skill to add —</option>
+  </select>
+  <button class="btn b-seal" style="padding:0.3rem 0.6rem;font-size:0.38rem;" onclick="loadSkillsIntoClassPicker()">↻</button>
+</div>
+<div id="cls-skills-tags" style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.35rem;min-height:1.2rem;"></div>
+<input type="hidden" id="cls-skills">
+</div>
 <div class="fld"><label>Lore Fragment</label><textarea id="cls-lore" style="min-height:50px;"></textarea></div>
 <button class="btn b-ward" onclick="saveClass()">✓ Seal Class</button><button class="btn b-seal" onclick="document.getElementById('class-editor').style.display='none'">Cancel</button></div>
 </div>
@@ -645,9 +667,56 @@ async function saveAcol(){const id=document.getElementById('acol-sel').value;if(
 
 // CLASSES
 async function loadClasses(){try{const d=await fbGet('world/classes');const c=document.getElementById('classes-list');if(!d){c.innerHTML='<p style="color:var(--mist);font-style:italic;">No classes defined.</p>';return;}c.innerHTML=Object.entries(d).map(([k,cls])=>`<div class="entity-card"><div style="display:flex;align-items:flex-start;gap:0.5rem;"><div style="flex:1;"><div class="entity-name">${cls.name||k}</div><div class="entity-sub">${cls.role||''}</div>${cls.desc?`<div style="font-family:var(--ff-b);font-style:italic;font-size:0.72rem;color:var(--mist);margin-top:0.3rem;">${cls.desc}</div>`:''}</div><div style="display:flex;gap:0.3rem;"><button class="btn b-seal" style="padding:0.25rem 0.5rem;font-size:0.38rem;" onclick="editClass('${k}')">Edit</button><button class="btn b-breach" style="padding:0.25rem 0.5rem;font-size:0.38rem;" onclick="delClass('${k}')">✗</button></div></div>${cls.stats?`<div class="estat-grid">${Object.entries(cls.stats).map(([sk,sv])=>`<div class="estat"><div class="estat-k">${sk}</div><div class="estat-v">${sv}</div></div>`).join('')}</div>`:''}</div>`).join('');}catch(e){log('Error: '+e.message,'err');}}
-function openClassEditor(){document.getElementById('class-editor').style.display='block';document.getElementById('cls-ed-title').textContent='New Class';document.getElementById('cls-key').value='';['cls-name','cls-role','cls-desc','cls-skills','cls-lore'].forEach(id=>document.getElementById(id).value='');['cls-fortitude','cls-wrath','cls-intuition','cls-empathy','cls-endurance','cls-memory','cls-cunning','cls-gnosis'].forEach(id=>document.getElementById(id).value=10);}
-async function editClass(key){try{const d=await fbGet('world/classes/'+key);document.getElementById('class-editor').style.display='block';document.getElementById('cls-ed-title').textContent='Edit: '+d.name;document.getElementById('cls-key').value=key;document.getElementById('cls-name').value=d.name||'';document.getElementById('cls-role').value=d.role||'';document.getElementById('cls-desc').value=d.desc||'';document.getElementById('cls-skills').value=(d.skills||[]).join(', ');document.getElementById('cls-lore').value=d.lore||'';if(d.stats){['fortitude','wrath','intuition','empathy','endurance','memory','cunning','gnosis'].forEach(s=>{const e=document.getElementById('cls-'+s);if(e)e.value=d.stats[s]||10;});}}catch(e){log('Error: '+e.message,'err');}}
-async function saveClass(){const key=document.getElementById('cls-key').value||(document.getElementById('cls-name').value.toLowerCase().replace(/\s+/g,'-'));const stats={};['fortitude','wrath','intuition','empathy','endurance','memory','cunning','gnosis'].forEach(s=>stats[s]=parseInt(document.getElementById('cls-'+s).value)||10);const d={name:document.getElementById('cls-name').value,role:document.getElementById('cls-role').value,desc:document.getElementById('cls-desc').value,stats,skills:document.getElementById('cls-skills').value.split(',').map(s=>s.trim()).filter(Boolean),lore:document.getElementById('cls-lore').value};try{await fbPut('world/classes/'+key,d);log('Class sealed: '+d.name,'ok');toast('✦ '+d.name+' sealed.');loadClasses();}catch(e){log('Error: '+e.message,'err');}}
+function openClassEditor(){
+  document.getElementById('class-editor').style.display='block';
+  document.getElementById('cls-ed-title').textContent='New Class';
+  document.getElementById('cls-key').value='';
+  ['cls-name','cls-role','cls-desc','cls-lore'].forEach(id=>document.getElementById(id).value='');
+  const DEFAULTS={fortitude:10,wrath:8,intuition:12,empathy:10,endurance:10,memory:8,cunning:12,gnosis:0,speed:10};
+  ['fortitude','wrath','intuition','empathy','endurance','memory','cunning','gnosis','speed'].forEach(s=>{const e=document.getElementById('cls-'+s);if(e)e.value=DEFAULTS[s];});
+  document.getElementById('cls-skills').value='';
+  document.getElementById('cls-skills-tags').innerHTML='';
+  loadSkillsIntoClassPicker();
+  updateClassPreview();
+  document.getElementById('class-editor').scrollIntoView({behavior:'smooth'});
+}
+async function editClass(key){
+  try{
+    const d=await fbGet('world/classes/'+key);
+    document.getElementById('class-editor').style.display='block';
+    document.getElementById('cls-ed-title').textContent='Edit: '+d.name;
+    document.getElementById('cls-key').value=key;
+    document.getElementById('cls-name').value=d.name||'';
+    document.getElementById('cls-role').value=d.role||'';
+    document.getElementById('cls-desc').value=d.desc||'';
+    document.getElementById('cls-lore').value=d.lore||'';
+    if(d.stats){['fortitude','wrath','intuition','empathy','endurance','memory','cunning','gnosis','speed'].forEach(s=>{const e=document.getElementById('cls-'+s);if(e)e.value=d.stats[s]!==undefined?d.stats[s]:(s==='gnosis'?0:10);});}
+    // Populate skill tags
+    const skills=d.skills||[];
+    document.getElementById('cls-skills').value=skills.join(',');
+    renderClassSkillTags(skills);
+    loadSkillsIntoClassPicker();
+    updateClassPreview();
+    document.getElementById('class-editor').scrollIntoView({behavior:'smooth'});
+  }catch(e){log('Error: '+e.message,'err');}
+}
+async function saveClass(){
+  const key=document.getElementById('cls-key').value||(document.getElementById('cls-name').value.toLowerCase().replace(/\s+/g,'-'));
+  const stats={};
+  ['fortitude','wrath','intuition','empathy','endurance','memory','cunning','gnosis','speed'].forEach(s=>{
+    stats[s]=parseInt(document.getElementById('cls-'+s).value)||(s==='gnosis'?0:10);
+  });
+  const skillsRaw=document.getElementById('cls-skills').value;
+  const skills=skillsRaw.split(',').map(s=>s.trim()).filter(Boolean);
+  const d={name:document.getElementById('cls-name').value,role:document.getElementById('cls-role').value,desc:document.getElementById('cls-desc').value,stats,skills,lore:document.getElementById('cls-lore').value};
+  try{
+    await fbPut('world/classes/'+key,d);
+    log('Class sealed: '+d.name,'ok');
+    toast('✦ '+d.name+' sealed.');
+    document.getElementById('class-editor').style.display='none';
+    loadClasses();
+  }catch(e){log('Error: '+e.message,'err');}
+}
 async function delClass(key){if(!confirm('Delete class '+key+'?'))return;try{await fbDel('world/classes/'+key);log('Deleted.','warn');loadClasses();}catch(e){log('Error: '+e.message,'err');}}
 
 // EVENTS
@@ -1253,6 +1322,87 @@ async function delFullSkill(key) {
   if (!confirm('Delete skill '+key+'?')) return;
   try { await fbDel('world/skills/'+key); log('Deleted.','warn'); loadAllSkills(); }
   catch(e) { log('Error: '+e.message,'err'); }
+}
+
+
+// ══════════════════════════════════════════
+// CLASS EDITOR HELPERS
+// ══════════════════════════════════════════
+async function loadSkillsIntoClassPicker() {
+  const sel = document.getElementById('cls-skills-pick');
+  if (!sel) return;
+  try {
+    const d = await fbGet('world/skills');
+    const existing = (document.getElementById('cls-skills').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+    sel.innerHTML = '<option value="">— pick a skill to add —</option>';
+    if (d) {
+      Object.entries(d).forEach(([k,s]) => {
+        if (existing.includes(k)) return; // already added
+        const cat = s.category||s.cat||s.type||'utility';
+        const opt = document.createElement('option');
+        opt.value = k;
+        opt.textContent = (s.name||k) + ' [' + cat + ']' + (s.classKey ? ' · '+s.classKey : '');
+        sel.appendChild(opt);
+      });
+    }
+  } catch(e) {}
+}
+
+function addSkillToClass(key) {
+  if (!key) return;
+  const hidden = document.getElementById('cls-skills');
+  const current = hidden.value ? hidden.value.split(',').map(s=>s.trim()).filter(Boolean) : [];
+  if (current.includes(key)) return;
+  current.push(key);
+  hidden.value = current.join(',');
+  renderClassSkillTags(current);
+  // Remove from picker
+  const sel = document.getElementById('cls-skills-pick');
+  const opt = sel.querySelector(`option[value="${key}"]`);
+  if (opt) opt.remove();
+  sel.value = '';
+}
+
+function removeSkillFromClass(key) {
+  const hidden = document.getElementById('cls-skills');
+  const current = (hidden.value||'').split(',').map(s=>s.trim()).filter(Boolean).filter(k=>k!==key);
+  hidden.value = current.join(',');
+  renderClassSkillTags(current);
+  // Reload picker to include removed skill
+  loadSkillsIntoClassPicker();
+}
+
+function renderClassSkillTags(skills) {
+  const el = document.getElementById('cls-skills-tags');
+  if (!el) return;
+  el.innerHTML = skills.map(k => `
+    <span style="display:inline-flex;align-items:center;gap:0.3rem;background:rgba(123,47,255,0.12);border:1px solid rgba(168,85,247,0.35);padding:0.18rem 0.5rem;font-family:var(--ff-h);font-size:0.4rem;color:var(--dm-bright);">
+      ${k}
+      <button onclick="removeSkillFromClass('${k}')" style="background:none;border:none;color:var(--crimson-bright);cursor:pointer;font-size:0.5rem;padding:0;line-height:1;">✗</button>
+    </span>`).join('');
+}
+
+function updateClassPreview() {
+  // Compute derived stats inline using the formula defaults
+  const get = id => parseInt(document.getElementById(id)?.value)||0;
+  const s = {
+    fortitude: get('cls-fortitude'), wrath: get('cls-wrath'),
+    intuition: get('cls-intuition'), empathy: get('cls-empathy'),
+    endurance: get('cls-endurance'), memory: get('cls-memory'),
+    cunning: get('cls-cunning'), gnosis: get('cls-gnosis'), speed: get('cls-speed'),
+  };
+  const lv = 1;
+  const hp   = Math.round(s.endurance*5 + s.fortitude*2 + lv*3);
+  const mana = Math.round(s.gnosis*5 + s.memory*2 + lv*2);
+  const init = Math.round(s.cunning*2 + s.speed);
+  const crit = Math.min(60, Math.max(5, Math.round(s.cunning*1.5 + s.wrath*0.5)));
+  const dodge= Math.min(50, Math.max(0, Math.round(s.cunning + s.intuition*0.5)));
+  const set = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+  set('cls-preview-hp', hp);
+  set('cls-preview-mana', mana);
+  set('cls-preview-init', init);
+  set('cls-preview-crit', crit);
+  set('cls-preview-dodge', dodge);
 }
 
 </script>
