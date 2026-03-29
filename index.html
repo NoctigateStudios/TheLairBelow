@@ -2584,7 +2584,7 @@
 </style>
 <style>
   /* ═══════════════════════════════════════════════════
-     HOLISTIC VISUAL OVERHAUL — v0.7.33
+     HOLISTIC VISUAL OVERHAUL — v0.7.34
      Principles: editorial, handcrafted, ruled-paper feel
      No glowing widgets; type and line as primary language
   ═══════════════════════════════════════════════════ */
@@ -3429,13 +3429,14 @@
       <div class="section-label" id="company-section-label">—</div>
 
       <div class="char-header">
-        <div class="char-avatar">🜏</div>
+        <div class="char-avatar">✦</div>
         <div class="char-info">
           <div class="char-name">—</div>
           <div class="char-class">— · Level —</div>
           <div class="char-xp-bar"><div class="char-xp-fill" style="width:0%"></div></div>
           <div class="char-xp-label">— / — XP</div>
         </div>
+        <div id="player-roster-toggle" class="acol-roster-toggle" onclick="togglePlayerRoster(this)">◇ Roster</div>
       </div>
 
       <div class="stats-grid">
@@ -4333,13 +4334,123 @@
   let values = [847, 312, 154, 98, 41, 203, 189];
   const pills = document.querySelectorAll('.resource-pill .res-value');
 
+  // Resource caps — base values, scaled by lair buildings
+  const BASE_CAPS = [2000, 1500, 800, 600, 400, 1200, 1000];
+  let   resCaps   = [...BASE_CAPS];
+
+  // Active tarot effects: array of {resIdx, mult, until} or {type, value, until}
+  let tarotEffects = [];
+
+  function getActiveTarotEffects() {
+    const now = Date.now();
+    tarotEffects = tarotEffects.filter(e => e.until > now);
+    return tarotEffects;
+  }
+
+  function effectiveRate(i) {
+    // Base rate × planetary bonus × tarot bonus
+    let r = rates[i];
+    getActiveTarotEffects().forEach(e => {
+      if (e.type === 'rate' && e.resIdx === i) r *= e.mult;
+      if (e.type === 'allRates') r *= e.mult;
+    });
+    return r;
+  }
+
+  function researchRateBonus() {
+    // Returns multiplier on research progress per tick
+    let m = 1;
+    getActiveTarotEffects().forEach(e => {
+      if (e.type === 'research') m *= e.mult;
+    });
+    return m;
+  }
+
+  function stressModifier() {
+    // Returns additive modifier to stress gain/loss per tick
+    let mod = 0;
+    getActiveTarotEffects().forEach(e => {
+      if (e.type === 'stress') mod += e.value;
+    });
+    return mod;
+  }
+
+  function updateCaps() {
+    // Scriptorium/other buildings don't affect caps — altar and dormitorium do
+    const altarLv = _lairData?.buildings?.altar || 1;
+    const dormLv  = _lairData?.buildings?.dormitorium || 1;
+    for (let i = 0; i < 7; i++) {
+      resCaps[i] = Math.round(BASE_CAPS[i] * (1 + (altarLv - 1) * 0.3));
+    }
+  }
+
+  function computeOfflineGain(savedAtISO) {
+    // Calculate resources accumulated since last save (capped at 8 hours)
+    if (!savedAtISO) return;
+    const elapsed = Math.min(8 * 3600, (Date.now() - new Date(savedAtISO).getTime()) / 1000);
+    if (elapsed < 60) return; // less than a minute, skip
+    updateCaps();
+    let gained = [];
+    for (let i = 0; i < 7; i++) {
+      const gain = rates[i] * elapsed;
+      const prev = values[i];
+      values[i] = Math.min(resCaps[i], values[i] + gain);
+      if (values[i] - prev > 1) gained.push(RES_SYMBOLS[i] + '+' + Math.floor(values[i]-prev));
+    }
+    if (gained.length) {
+      const hrs = (elapsed / 3600).toFixed(1);
+      toast('Offline income (' + hrs + 'h): ' + gained.join(' '));
+    }
+    // Advance research offline
+    advanceResearchOffline(elapsed);
+  }
+
+  function advanceResearchOffline(elapsedSeconds) {
+    const sr = getSkillResearch();
+    if (!sr.active || !sr.researchAcolyte) return;
+    // 25% per 10 minutes base, Memory bonus, planetary not applied offline
+    const ticksPassed = Math.floor(elapsedSeconds / 60); // 1 tick per minute
+    const acolyte = (_acolytesData||[]).find(a => a.id === sr.researchAcolyte);
+    const memBonus = Math.max(0, Math.floor(((acolyte?.stats?.memory||8) - 8) / 2)) * 0.05;
+    const pctPerTick = (25 / 10) * (1 + memBonus); // 2.5% base per minute
+    const totalGain = Math.min(100 - (sr.active.progress||0), ticksPassed * pctPerTick);
+    if (totalGain > 0) {
+      sr.active.progress = Math.min(100, (sr.active.progress||0) + totalGain);
+      if (sr.active.progress >= 100) completeResearch();
+    }
+  }
+
   function startResourceTick() {
+    updateCaps();
     setInterval(() => {
-      rates.forEach((r, i) => {
-        values[i] += r / 3600; // per second
-        if (pills[i]) pills[i].textContent = Math.floor(values[i]);
-      });
+      updateCaps();
+      for (let i = 0; i < 7; i++) {
+        const r = effectiveRate(i);
+        values[i] = Math.min(resCaps[i], values[i] + r / 3600);
+        if (pills[i]) {
+          pills[i].textContent = Math.floor(values[i]);
+          // Visual: dim when near cap
+          const pill = pills[i].closest('.resource-pill');
+          if (pill) pill.style.opacity = values[i] >= resCaps[i] * 0.97 ? '0.55' : '1';
+        }
+      }
+      // Update rate display
+      updateRateDisplay();
+      // Research tick (every minute = 60 ticks)
+      _resTick = (_resTick||0) + 1;
+      if (_resTick % 60 === 0) researchTick();
     }, 1000);
+  }
+
+  let _resTick = 0;
+
+  function updateRateDisplay() {
+    document.querySelectorAll('.resource-pill .res-rate').forEach((el, i) => {
+      const r = effectiveRate(i);
+      const atCap = values[i] >= resCaps[i] * 0.97;
+      el.textContent = atCap ? 'full' : '+' + (r >= 1 ? Math.round(r) : r.toFixed(1)) + '/h';
+      el.style.color = atCap ? 'var(--text-secondary)' : '';
+    });
   }
 
   // Start planetary hour engine once we have coords
@@ -4790,10 +4901,64 @@
     el.classList.add('revealed');
     if (reversed) el.classList.add('reversed');
     el.innerHTML = `<span class="tarot-card-num">${card.num}</span><span class="tarot-card-symbol">${card.sym}</span><span class="tarot-card-name">${card.name}${reversed?' Rev.':''}</span>`;
-    document.querySelectorAll('.effect-val')[2].textContent = card.name;
+
+    // Apply real mechanical effect based on card
+    const effect = applyTarotEffect(card, reversed);
+    document.querySelectorAll('.effect-val')[2].textContent = card.name + ' — ' + effect.label;
     document.querySelectorAll('.effect-val')[2].style.color = reversed ? 'var(--crimson-bright)' : 'var(--viridian-bright)';
     document.querySelectorAll('.effect-val')[2].className = 'effect-val ' + (reversed ? 'neg' : 'pos');
-    toast((reversed ? '⚠ ' : '✦ ') + card.name + (reversed ? ' Reversed' : '') + ' revealed. The spread is complete.');
+    toast((reversed ? '⚠ ' : '✦ ') + card.name + (reversed?'Rev.':'') + ': ' + effect.label);
+    persistState();
+  }
+
+  // TAROT_EFFECTS — each card has upright and reversed mechanical effects
+  const TAROT_EFFECTS = {
+    'The Fool':        { up:{type:'allRates',mult:1.15,label:'+15% all income for 2h'},       rev:{type:'allRates',mult:0.85,label:'-15% all income for 2h'} },
+    'The Magician':    { up:{type:'research',mult:1.5,label:'+50% research speed for 2h'},     rev:{type:'research',mult:0.7,label:'-30% research speed for 2h'} },
+    'High Priestess':  { up:{type:'rate',resIdx:1,mult:2,label:'×2 Lunar income for 2h'},      rev:{type:'stress',value:-5,label:'Stress +5 to all acolytes'} },
+    'The Empress':     { up:{type:'rate',resIdx:5,mult:2,label:'×2 Venusian income for 2h'},   rev:{type:'rate',resIdx:5,mult:0.5,label:'½ Venusian income for 2h'} },
+    'The Emperor':     { up:{type:'allRates',mult:1.2,label:'+20% all income for 3h'},         rev:{type:'stress',value:10,label:'Stress +10 to all acolytes'} },
+    'Hierophant':      { up:{type:'research',mult:1.3,label:'+30% research speed for 3h'},     rev:{type:'research',mult:0.8,label:'-20% research speed for 3h'} },
+    'The Lovers':      { up:{type:'rate',resIdx:5,mult:1.5,label:'+50% Venusian for 2h'},      rev:{type:'stress',value:-10,label:'Stress −10 all acolytes'} },
+    'The Chariot':     { up:{type:'allRates',mult:1.25,label:'+25% all income for 1h'},        rev:{type:'allRates',mult:0.9,label:'-10% all income for 2h'} },
+    'Justice':         { up:{type:'research',mult:1.0,label:'Research progress restored 10%'}, rev:{type:'allRates',mult:0.95,label:'-5% all income for 3h'} },
+    'Wheel of Fortune':{ up:{type:'allRates',mult:1.3,label:'+30% all income for 1h'},         rev:{type:'allRates',mult:0.7,label:'-30% all income for 1h'} },
+    'Strength':        { up:{type:'stress',value:-15,label:'Stress −15 all acolytes'},         rev:{type:'stress',value:15,label:'Stress +15 all acolytes'} },
+    'The Hanged Man':  { up:{type:'research',mult:2.0,label:'+100% research speed for 1h'},    rev:{type:'allRates',mult:0.8,label:'-20% all income for 1h'} },
+    'Death':           { up:{type:'allRates',mult:0,label:'All income halted for 30min'},       rev:{type:'research',mult:3.0,label:'+200% research for 30min'} },
+    'Temperance':      { up:{type:'rate',resIdx:3,mult:1.5,label:'+50% Martial for 2h'},       rev:{type:'rate',resIdx:3,mult:0.7,label:'-30% Martial for 2h'} },
+    'The Devil':       { up:{type:'rate',resIdx:4,mult:2,label:'×2 Saturnine for 2h'},         rev:{type:'stress',value:20,label:'Stress +20 all acolytes'} },
+    'The Star':        { up:{type:'allRates',mult:1.1,label:'+10% all income for 4h'},         rev:{type:'allRates',mult:0.9,label:'-10% all income for 4h'} },
+    'The Moon':        { up:{type:'rate',resIdx:1,mult:1.5,label:'+50% Lunar for 3h'},         rev:{type:'stress',value:10,label:'Stress +10, -10% Lunar for 2h'} },
+    'The Sun':         { up:{type:'rate',resIdx:0,mult:2,label:'×2 Solar income for 2h'},      rev:{type:'rate',resIdx:0,mult:0.5,label:'½ Solar income for 2h'} },
+    'Judgement':       { up:{type:'research',mult:1.5,label:'+50% research, stress −5'},        rev:{type:'research',mult:0.5,label:'-50% research for 2h'} },
+    'The World':       { up:{type:'allRates',mult:1.3,label:'+30% all income for 3h'},         rev:{type:'allRates',mult:1.1,label:'+10% all income (reversed still favours)'} },
+  };
+
+  function applyTarotEffect(card, reversed) {
+    const def = TAROT_EFFECTS[card.name];
+    if (!def) return { label: 'Fate shifts.' };
+    const eff = reversed ? def.rev : def.up;
+    const durationH = eff.type==='allRates'&&eff.mult===0 ? 0.5 : reversed ? 2 : (eff.type==='research'&&eff.mult>=2?1:2);
+    const until = Date.now() + durationH * 3600000;
+
+    // Remove existing effects of same type
+    tarotEffects = tarotEffects.filter(e => e.type !== eff.type || e.resIdx !== eff.resIdx);
+
+    if (eff.type === 'stress') {
+      // Apply immediately to all acolytes
+      (_acolytesData||[]).forEach(a => {
+        a.stress = Math.min(100, Math.max(0, (a.stress||0) + eff.value));
+      });
+      if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
+    } else {
+      tarotEffects.push({ ...eff, until });
+    }
+
+    // Save tarot effects to researchData so they persist
+    if (_researchData) _researchData.tarotEffects = tarotEffects.map(e=>({...e}));
+
+    return eff;
   }
 
   // ══════════════════════════════════════════
@@ -5184,12 +5349,14 @@
   function applyGameState(state) {
     if (!state || state.version !== 1) return false;
 
-    // Resources
+    // Resources — restore then apply offline gain
     if (state.resources?.values) {
       state.resources.values.forEach((v, i) => { values[i] = v; });
       document.querySelectorAll('.resource-pill .res-value').forEach((el, i) => {
         el.textContent = Math.floor(values[i]);
       });
+      // Compute offline income since last save
+      if (state.savedAt) computeOfflineGain(state.savedAt);
     }
 
     // Inventory
@@ -5198,6 +5365,12 @@
     // Character
     if (state.character) {
       _characterData = state.character;
+      // Restore player roster toggle
+      const rToggle = document.getElementById('player-roster-toggle');
+      if (rToggle) {
+        rToggle.textContent = _characterData.onRoster ? '◆ Roster' : '◇ Roster';
+        rToggle.classList.toggle('active', !!_characterData.onRoster);
+      }
       const c = state.character;
       const xpForLevel = n => n * 1000;
       const xpNext = xpForLevel((c.level||1) + 1);
@@ -5264,16 +5437,15 @@
       renderLairBuildings(_lairData.buildings);
     }
 
-    // Research — restore full structure including skillResearch
+    // Research — restore full structure including skillResearch + tarot effects
     if (state.research) {
       _researchData = state.research;
-      // Ensure skillResearch subkey exists
       if (!_researchData.skillResearch) {
         _researchData.skillResearch = { active: null, mastered: [], queue: [] };
       }
       renderResearchQueue(state.research);
-      // Re-render Arcana skill research panel if it's been built
       renderSkillResearch();
+      restoreTarotEffects();
     }
 
     return true;
@@ -7188,28 +7360,38 @@
   }
 
   function renderRoster() {
-    const onRoster = (_acolytesData || []).filter(a => a.onRoster);
     const empty = document.getElementById('roster-empty');
     const cards = document.getElementById('roster-cards');
     const label = document.getElementById('roster-section-label');
     if (!cards) return;
-    if (!onRoster.length) {
+
+    // Build roster: player char (if toggled) + acolytes on roster
+    const members = [];
+    if (_characterData?.onRoster) {
+      members.push({ type:'player', name:_characterData.name||playerName||'Seeker',
+        level:_characterData.level||1, glyph:'✦', class:_characterData.class||'—' });
+    }
+    (_acolytesData||[]).filter(a=>a.onRoster).forEach((a,i) => {
+      const GLYPHS = ['△','▽','◈','◇','○','◬'];
+      const idx = (_acolytesData||[]).indexOf(a);
+      members.push({ type:'acolyte', name:a.name, level:a.level||1,
+        glyph:GLYPHS[idx%GLYPHS.length], class:a.class||'—' });
+    });
+
+    if (!members.length) {
       if (empty) empty.style.display = '';
       cards.innerHTML = '';
       if (label) label.textContent = 'Mission Roster';
       return;
     }
     if (empty) empty.style.display = 'none';
-    if (label) label.textContent = `Mission Roster (${onRoster.length})`;
-    const GLYPHS = ['△','▽','◈','◇','○','◬'];
-    cards.innerHTML = onRoster.map((a, i) => {
-      const idx = (_acolytesData||[]).indexOf(a);
-      return `<div style="display:flex;flex-direction:column;align-items:center;gap:0.25rem;padding:0.4rem 0.5rem;border:1px solid var(--border);">
-        <span style="font-family:var(--ff-heading);font-size:1rem;color:var(--amber-bright);">${GLYPHS[idx%GLYPHS.length]}</span>
-        <span style="font-family:var(--ff-heading);font-size:0.35rem;letter-spacing:0.1em;color:var(--text-primary);text-align:center;">${a.name.split(' ')[0]}</span>
-        <span style="font-family:var(--ff-heading);font-size:0.3rem;letter-spacing:0.08em;color:var(--text-secondary);">Lv.${a.level||1}</span>
-      </div>`;
-    }).join('');
+    if (label) label.textContent = `Mission Roster (${members.length})`;
+    cards.innerHTML = members.map(m => `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.22rem;padding:0.4rem 0.5rem;border:1px solid var(--border);min-width:52px;">
+        <span style="font-family:var(--ff-heading);font-size:0.9rem;color:${m.type==='player'?'var(--text-accent)':'var(--amber-bright)'};">${m.glyph}</span>
+        <span style="font-family:var(--ff-heading);font-size:0.34rem;letter-spacing:0.08em;color:var(--text-primary);text-align:center;max-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.name.split(' ')[0]}</span>
+        <span style="font-family:var(--ff-heading);font-size:0.28rem;letter-spacing:0.06em;color:var(--text-secondary);">Lv.${m.level}</span>
+      </div>`).join('');
   }
 
   // ══════════════════════════════════════════
@@ -7560,7 +7742,20 @@
     if (activeBar) {
       if (sr.active) {
         const pct = Math.min(100, sr.active.progress || 0);
-        const remaining = Math.ceil((100 - pct) / 25);
+        const assignedAcol = (_acolytesData||[]).find(a => a.id === sr.researchAcolyte);
+        const mem = assignedAcol?.stats?.memory || 0;
+        const memBonus = assignedAcol ? Math.max(0, Math.floor((mem-8)/2))*5 : 0;
+        const ph = typeof getPlanetaryHour === 'function' ? getPlanetaryHour(phLat,phLng) : null;
+        const planetBonus = ph?.meta?.name === 'Mercury' ? 30 : ph?.meta?.name === 'Saturn' ? 20 : 0;
+        const tarotBonus = Math.round((researchRateBonus()-1)*100);
+        const gainPerStudy = Math.round(25 + memBonus + planetBonus + tarotBonus);
+        const gainPerMin = (2.5 + memBonus*0.1 + planetBonus*0.1 + tarotBonus*0.1).toFixed(1);
+        // Acolyte picker
+        const pickerOpts = [
+          `<option value="">— assign a researcher —</option>`,
+          ...(_acolytesData||[]).map(a =>
+            `<option value="${a.id}" ${a.id===sr.researchAcolyte?'selected':''}>${a.name} (MEM ${a.stats?.memory||'?'})</option>`)
+        ].join('');
         activeBar.innerHTML = `
           <div class="scrip-active-card">
             <div class="scrip-active-name">${sr.active.name}</div>
@@ -7568,11 +7763,18 @@
             <div class="scrip-progress-track">
               <div class="scrip-progress-fill" style="width:${pct}%"></div>
             </div>
-            <div style="font-family:var(--ff-heading);font-size:0.32rem;letter-spacing:0.1em;color:var(--text-secondary);margin-bottom:0.55rem;">
-              ${pct}% complete · ~${remaining} session${remaining!==1?'s':''} remaining
+            <div style="font-family:var(--ff-heading);font-size:0.32rem;letter-spacing:0.1em;color:var(--text-secondary);margin-bottom:0.5rem;">
+              ${pct.toFixed(1)}% · Auto: +${gainPerMin}%/min · Manual: +${gainPerStudy}%/session
+              ${planetBonus?` · ${ph.meta.symbol} ${ph.meta.name} Hour active`:''}
+              ${tarotBonus?` · Tarot +${tarotBonus}%`:''}
+            </div>
+            <div style="margin-bottom:0.6rem;">
+              <select onchange="setResearchAcolyte(this.value)" style="width:100%;font-family:var(--ff-heading);font-size:0.45rem;background:var(--bg,var(--abyss));border:1px solid var(--border);color:var(--text-primary);padding:0.35rem;">
+                ${pickerOpts}
+              </select>
             </div>
             <div class="scrip-active-btns">
-              <button class="scrip-btn primary" onclick="scriptoriumStudy()">Study Session (+25%)</button>
+              <button class="scrip-btn primary" onclick="scriptoriumStudy()">Study (+${gainPerStudy}%)</button>
               <button class="scrip-btn" onclick="scriptoriumAbandon()">Abandon</button>
             </div>
           </div>`;
@@ -7670,25 +7872,66 @@
   function scriptoriumStudy() {
     const sr = getSkillResearch();
     if (!sr.active) return;
-    // Memory stat bonus: each 2 points of Memory above 8 gives +5% extra
-    const memBonus = Math.max(0, Math.floor(((_characterData?.stats?.memory||8) - 8) / 2)) * 5;
-    const gain = 25 + memBonus;
+    if (!sr.researchAcolyte) {
+      toast('Assign a researcher first — tap an acolyte card below.');
+      return;
+    }
+    const acolyte = (_acolytesData||[]).find(a => a.id === sr.researchAcolyte);
+    const mem = acolyte?.stats?.memory || 8;
+    const memBonus = Math.max(0, Math.floor((mem - 8) / 2)) * 5;
+    // Planetary bonus: if current hour matches a relevant planet, +20%
+    const ph = getPlanetaryHour && getPlanetaryHour(phLat, phLng);
+    const planetBonus = ph?.meta?.name === 'Mercury' ? 30 : ph?.meta?.name === 'Saturn' ? 20 : 0;
+    const tarotBonus = Math.round((researchRateBonus() - 1) * 100);
+    const gain = Math.round(25 + memBonus + planetBonus + tarotBonus);
+    const breakdown = [`Base: 25%`, memBonus?`Memory: +${memBonus}%`:'', planetBonus?`${ph.meta.name} Hour: +${planetBonus}%`:'', tarotBonus?`Tarot: +${tarotBonus}%`:''].filter(Boolean).join(' · ');
     sr.active.progress = Math.min(100, (sr.active.progress||0) + gain);
     if (sr.active.progress >= 100) {
-      // Complete!
-      if (!sr.mastered) sr.mastered = [];
-      const completed = { key: sr.active.key, name: sr.active.name, desc: sr.active.desc||'' };
-      sr.mastered.push(completed);
-      const name = sr.active.name;
-      sr.active = null;
-      appendScriptoriumLog(`Mastered: ${name}.`);
-      toast(`✦ ${name} mastered. Teach it to an acolyte.`);
+      completeResearch();
     } else {
-      appendScriptoriumLog(`Studied ${sr.active.name} — ${sr.active.progress}% complete.`);
-      toast(`Study session complete. ${sr.active.progress}% progress.`);
+      appendScriptoriumLog(`${acolyte?.name||'Researcher'} studied ${sr.active.name} +${gain}% (${breakdown})`);
+      toast(`+${gain}% progress. ${sr.active.progress}% complete.`);
+      persistState();
+      renderScriptorium();
     }
+  }
+
+  function completeResearch() {
+    const sr = getSkillResearch();
+    if (!sr.active) return;
+    if (!sr.mastered) sr.mastered = [];
+    const completed = { key: sr.active.key, name: sr.active.name, desc: sr.active.desc||'' };
+    sr.mastered.push(completed);
+    const name = sr.active.name;
+    const acolyte = (_acolytesData||[]).find(a => a.id === sr.researchAcolyte);
+    appendScriptoriumLog(`✦ Mastered: ${name}. Research by ${acolyte?.name||'unknown'}.`);
+    sr.active = null;
+    sr.researchAcolyte = null;
     persistState();
     renderScriptorium();
+    renderSkillResearch();
+    toast(`✦ ${name} mastered. Teach it to an acolyte from the Company panel.`);
+  }
+
+  // Real-time research tick (called every minute by resource tick loop)
+  function researchTick() {
+    const sr = getSkillResearch();
+    if (!sr.active || !sr.researchAcolyte) return;
+    const acolyte = (_acolytesData||[]).find(a => a.id === sr.researchAcolyte);
+    const mem = acolyte?.stats?.memory || 8;
+    const memBonus = Math.max(0, Math.floor((mem - 8) / 2)) * 5;
+    const ph = getPlanetaryHour && getPlanetaryHour(phLat, phLng);
+    const planetBonus = ph?.meta?.name === 'Mercury' ? 30 : ph?.meta?.name === 'Saturn' ? 20 : 0;
+    const tarotBonus = Math.round((researchRateBonus() - 1) * 100);
+    const gain = (2.5 + memBonus*0.1 + planetBonus*0.1 + tarotBonus*0.1); // per minute: base 2.5% per min = 25%/10min
+    sr.active.progress = Math.min(100, (sr.active.progress||0) + gain);
+    if (sr.active.progress >= 100) completeResearch();
+    else {
+      // Update scrip UI if open
+      const bar = document.querySelector('.scrip-progress-fill');
+      if (bar) bar.style.width = sr.active.progress + '%';
+      persistState();
+    }
   }
 
   function scriptoriumAbandon() {
@@ -7730,6 +7973,32 @@
     }
   }
 
+
+
+  // Restore tarot effects from saved research data
+  function restoreTarotEffects() {
+    if (_researchData?.tarotEffects) {
+      const now = Date.now();
+      tarotEffects = (_researchData.tarotEffects||[]).filter(e => e.until > now);
+    }
+  }
+
+  function setResearchAcolyte(acolyteId) {
+    const sr = getSkillResearch();
+    sr.researchAcolyte = acolyteId || null;
+    persistState();
+    const a = (_acolytesData||[]).find(x => x.id === acolyteId);
+    if (a) toast(`${a.name} assigned to the Scriptorium.`);
+  }
+
+  function togglePlayerRoster(btn) {
+    if (!_characterData) return;
+    _characterData.onRoster = !_characterData.onRoster;
+    btn.textContent = _characterData.onRoster ? '◆ Roster' : '◇ Roster';
+    btn.classList.toggle('active', _characterData.onRoster);
+    renderRoster();
+    persistState();
+  }
 
 </script>
 
