@@ -2438,13 +2438,153 @@
     animation:pulse-ring 2s ease-in-out infinite;
   }
 
+  /* ══════════════════════════════════════
+     SCRIPTORIUM MODAL
+  ══════════════════════════════════════ */
+  #scriptorium-modal {
+    position: fixed; inset: 0; z-index: 450;
+    background: var(--bg, var(--void));
+    display: none; flex-direction: column;
+    max-width: 430px; margin: 0 auto;
+    overflow: hidden;
+  }
+  #scriptorium-modal.open { display: flex; }
+
+  .scriptorium-top {
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0.8rem 1rem 0.7rem;
+  }
+  .scrip-back {
+    font-family: var(--ff-heading); font-size: 0.38rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--text-secondary); background: none; border: none;
+    cursor: pointer; padding: 0; margin-bottom: 0.5rem; display: block;
+    transition: color 0.12s;
+  }
+  .scrip-back:active { color: var(--text-primary); }
+  .scrip-title {
+    font-family: var(--ff-title); font-size: 1.8rem;
+    color: var(--text-accent); letter-spacing: 1px; line-height: 1;
+    margin-bottom: 0.15rem;
+  }
+  .scrip-subtitle {
+    font-family: var(--ff-heading); font-size: 0.38rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .scrip-tabs {
+    flex-shrink: 0; display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg, var(--void));
+  }
+  .scrip-tab {
+    flex: 1; padding: 0.65rem 0.3rem;
+    font-family: var(--ff-heading); font-size: 0.38rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--text-secondary); background: none;
+    border: none; border-bottom: 1px solid transparent;
+    cursor: pointer; transition: color 0.12s;
+  }
+  .scrip-tab.active { color: var(--text-accent); border-bottom-color: var(--text-accent); }
+  .scrip-section { display: none; flex: 1; overflow-y: auto; }
+  .scrip-section.active { display: block; }
+  .scrip-sep {
+    font-family: var(--ff-heading); font-size: 0.34rem;
+    letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--text-secondary); padding: 0.9rem 1rem 0.4rem;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .scrip-sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* Active research bar */
+  .scrip-active-card {
+    margin: 0.8rem 1rem;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--viridian-bright);
+    padding: 0.8rem;
+  }
+  .scrip-active-name {
+    font-family: var(--ff-heading); font-size: 0.68rem;
+    letter-spacing: 0.05em; color: var(--text-primary);
+    margin-bottom: 0.4rem;
+  }
+  .scrip-progress-track {
+    height: 3px; background: var(--border); margin-bottom: 0.6rem;
+  }
+  .scrip-progress-fill {
+    height: 100%; background: var(--viridian-bright); transition: width 0.4s ease;
+  }
+  .scrip-active-btns { display: flex; gap: 0.5rem; }
+  .scrip-btn {
+    font-family: var(--ff-heading); font-size: 0.38rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 0.45rem 0.8rem; border: 1px solid var(--border);
+    background: none; color: var(--text-secondary); cursor: pointer;
+    transition: border-color 0.12s, color 0.12s;
+  }
+  .scrip-btn.primary { border-color: var(--viridian-bright); color: var(--viridian-bright); }
+  .scrip-btn:active { opacity: 0.65; }
+
+  /* Available skill row */
+  .scrip-skill-row {
+    border-top: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    display: flex; align-items: flex-start; gap: 0.7rem;
+  }
+  .scrip-skill-body { flex: 1; }
+  .scrip-skill-name {
+    font-family: var(--ff-heading); font-size: 0.65rem;
+    letter-spacing: 0.04em; color: var(--text-primary);
+    margin-bottom: 0.1rem;
+  }
+  .scrip-skill-meta {
+    font-family: var(--ff-heading); font-size: 0.32rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-secondary); margin-bottom: 0.2rem;
+  }
+  .scrip-skill-desc {
+    font-family: var(--ff-body); font-style: italic;
+    font-size: 0.75rem; color: var(--text-secondary); line-height: 1.55;
+  }
+  .scrip-research-btn {
+    font-family: var(--ff-heading); font-size: 0.35rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 0.35rem 0.6rem; border: 1px solid var(--border);
+    background: none; color: var(--text-secondary); cursor: pointer;
+    flex-shrink: 0; transition: border-color 0.12s, color 0.12s;
+    margin-top: 0.1rem;
+  }
+  .scrip-research-btn:active { border-color: var(--viridian-bright); color: var(--viridian-bright); }
+
+  /* Mastered skill row */
+  .scrip-mastered-row {
+    border-top: 1px solid var(--border);
+    padding: 0.65rem 1rem;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .scrip-mastered-glyph {
+    font-family: var(--ff-heading); font-size: 0.7rem;
+    color: var(--viridian-bright); flex-shrink: 0;
+  }
+  .scrip-mastered-body { flex: 1; }
+  .scrip-mastered-name {
+    font-family: var(--ff-heading); font-size: 0.6rem;
+    letter-spacing: 0.04em; color: var(--text-primary);
+  }
+  .scrip-mastered-desc {
+    font-family: var(--ff-body); font-style: italic;
+    font-size: 0.72rem; color: var(--text-secondary); line-height: 1.5;
+  }
+
+
   /* AVAILABLE ACOLYTE TOGGLE */
   .acolyte-avail-toggle { font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.2rem 0.5rem;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;transition:all 0.2s;margin-top:0.3rem; }
   .acolyte-avail-toggle.active { border-color:var(--viridian-bright);color:var(--viridian-bright);background:rgba(45,122,95,0.08); }
 </style>
 <style>
   /* ═══════════════════════════════════════════════════
-     HOLISTIC VISUAL OVERHAUL — v0.7.32
+     HOLISTIC VISUAL OVERHAUL — v0.7.33
      Principles: editorial, handcrafted, ruled-paper feel
      No glowing widgets; type and line as primary language
   ═══════════════════════════════════════════════════ */
@@ -3638,6 +3778,42 @@
   </div>
   <div class="forge-section" id="forge-content"></div>
   <button class="forge-close" onclick="closeForge()">← Leave the Forge</button>
+</div>
+
+<!-- SCRIPTORIUM MODAL -->
+<div id="scriptorium-modal">
+  <div class="scriptorium-top">
+    <button class="scrip-back" onclick="closeScriptorium()">← Lair</button>
+    <div class="scrip-title">The Scriptorium</div>
+    <div class="scrip-subtitle">Research · Knowledge · Mastery</div>
+  </div>
+  <div class="scrip-tabs">
+    <button class="scrip-tab active" onclick="switchScripTab('research',this)">Research</button>
+    <button class="scrip-tab" onclick="switchScripTab('mastered',this)">Mastered</button>
+    <button class="scrip-tab" onclick="switchScripTab('lore',this)">Lore</button>
+  </div>
+  <div class="scrip-section active" id="scrip-research">
+    <div id="scrip-active-bar"></div>
+    <div class="scrip-sep">Available to Research</div>
+    <div id="scrip-available-list"></div>
+  </div>
+  <div class="scrip-section" id="scrip-mastered">
+    <div class="scrip-sep">Mastered Skills</div>
+    <div id="scrip-mastered-list"></div>
+    <div class="scrip-sep" style="margin-top:1.2rem;">Forge Recipes Unlocked</div>
+    <div id="scrip-recipes-list"></div>
+  </div>
+  <div class="scrip-section" id="scrip-lore">
+    <div style="font-family:var(--ff-body);font-style:italic;font-size:0.85rem;color:var(--text-secondary);padding:1rem;line-height:1.75;">
+      The Scriptorium processes one line of research at a time. Each session of study
+      advances progress. Acolytes with high Memory contribute passively when stationed here.
+      The depth of the lair depends on the depth of the archive.
+    </div>
+    <div class="scrip-sep">Session Log</div>
+    <div id="scrip-lore-list">
+      <div style="font-family:var(--ff-body);font-style:italic;font-size:0.8rem;color:var(--text-secondary);padding:0.8rem 1rem;">No research sessions recorded.</div>
+    </div>
+  </div>
 </div>
 
 <!-- PLAYER PROFILE MODAL -->
@@ -5088,10 +5264,16 @@
       renderLairBuildings(_lairData.buildings);
     }
 
-    // Research
+    // Research — restore full structure including skillResearch
     if (state.research) {
       _researchData = state.research;
+      // Ensure skillResearch subkey exists
+      if (!_researchData.skillResearch) {
+        _researchData.skillResearch = { active: null, mastered: [], queue: [] };
+      }
       renderResearchQueue(state.research);
+      // Re-render Arcana skill research panel if it's been built
+      renderSkillResearch();
     }
 
     return true;
@@ -5237,12 +5419,17 @@
       const maxLvl = b.maxLevel || 3;
       const locked = lvl === 0;
       const isForge = key === 'alchemical-forge' || key === 'forge';
-      return `<div class="building-card ${locked?'locked':''}" ${isForge&&!locked?'onclick="openForge()" style="cursor:pointer"':''}>
+      const isScriptorium = key === 'scriptorium';
+      const isAltar = key === 'altar';
+      const clickFn = !locked ? (isForge ? 'openForge()' : isScriptorium ? 'openScriptorium()' : isAltar ? "switchTab('arcana')" : '') : '';
+      const clickAttr = clickFn ? `onclick="${clickFn}" style="cursor:pointer"` : '';
+      return `<div class="building-card ${locked?'locked':''}" ${clickAttr}>
         <span class="building-level">${locked ? 'Locked' : 'Lv. '+lvl}</span>
-        <span class="building-icon">${b.icon || '◻'}</span>
+        <span class="building-icon">${b.icon || '⬡'}</span>
         <div class="building-name">${b.name || key}</div>
         <p class="building-desc">${b.desc || ''}</p>
-        ${!locked&&lvl<maxLvl?`<div style="font-family:var(--ff-heading);font-size:0.35rem;color:var(--gold-dim);margin-top:0.3rem;letter-spacing:0.06em;">Upgrade available</div>`:''}
+        ${!locked&&clickFn?`<div style="font-family:var(--ff-heading);font-size:0.3rem;color:var(--text-secondary);margin-top:0.35rem;letter-spacing:0.1em;">→ Open</div>`:''}
+        ${!locked&&lvl<maxLvl?`<div style="font-family:var(--ff-heading);font-size:0.3rem;color:var(--gold-dim);margin-top:0.1rem;letter-spacing:0.06em;">Upgrade available</div>`:''}
       </div>`;
     }).join('');
   }
@@ -6997,7 +7184,7 @@
     btn.textContent  = a.onRoster ? '◆ Roster' : '◇ Roster';
     btn.classList.toggle('active', a.onRoster);
     renderRoster();
-    fbWrite(getOrCreatePlayerId(), collectGameState()).catch(() => {});
+    persistState();
   }
 
   function renderRoster() {
@@ -7092,7 +7279,7 @@
       if (check) check.textContent = '◆';
     }
     renderAcolyteCards(_acolytesData);
-    fbWrite(getOrCreatePlayerId(), collectGameState()).catch(() => {});
+    persistState();
   }
 
   // ══════════════════════════════════════════
@@ -7171,7 +7358,7 @@
     row.style.pointerEvents = 'none';
 
     renderAcolyteCards(_acolytesData);
-    fbWrite(getOrCreatePlayerId(), collectGameState()).catch(() => {});
+    persistState();
     toast(`${a.name} has learned ${skillName}.`);
 
     setTimeout(() => {
@@ -7298,7 +7485,7 @@
     }
     const sk = _cachedWorldSkills?.[key] || {};
     sr.active = { key, name, desc: sk.desc||'', progress: 0 };
-    fbWrite(getOrCreatePlayerId(), collectGameState()).catch(() => {});
+    persistState();
     toast(`Researching: ${name}.`);
     renderSkillResearch();
   }
@@ -7313,10 +7500,10 @@
       sr.mastered.push({ key: sr.active.key, name: sr.active.name, desc: sr.active.desc||'' });
       const name = sr.active.name;
       sr.active = null;
-      fbWrite(getOrCreatePlayerId(), collectGameState()).catch(() => {});
+      persistState();
       toast(`✦ ${name} has been mastered. Teach it to an acolyte.`);
     } else {
-      fbWrite(getOrCreatePlayerId(), collectGameState()).catch(() => {});
+      persistState();
     }
     renderSkillResearch();
   }
@@ -7326,9 +7513,221 @@
     if (!sr.active) return;
     const name = sr.active.name;
     sr.active = null;
-    fbWrite(getOrCreatePlayerId(), collectGameState()).catch(() => {});
+    persistState();
     toast(`Research on ${name} abandoned.`);
     renderSkillResearch();
+  }
+
+
+
+  // ══════════════════════════════════════════
+  // SCRIPTORIUM
+  // ══════════════════════════════════════════
+
+  function openScriptorium() {
+    document.getElementById('scriptorium-modal').classList.add('open');
+    renderScriptorium();
+  }
+
+  function closeScriptorium() {
+    document.getElementById('scriptorium-modal').classList.remove('open');
+  }
+
+  function switchScripTab(tab, btn) {
+    document.querySelectorAll('.scrip-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.scrip-section').forEach(s => s.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    const el = document.getElementById('scrip-' + tab);
+    if (el) el.classList.add('active');
+  }
+
+  async function renderScriptorium() {
+    // Ensure skills loaded
+    if (!_cachedWorldSkills) {
+      try {
+        const res = await fetch(`${FB_URL}/world/skills.json?cb=` + Date.now());
+        if (res.ok) { const d = await res.json(); if (d && !d.error) _cachedWorldSkills = d; }
+      } catch(e) {}
+    }
+
+    const sr = getSkillResearch();
+    const mastered = sr.mastered || [];
+    const masteredKeys = mastered.map(s => s.key);
+    const scriptoriumLv = _lairData?.buildings?.scriptorium || 1;
+
+    // ── Active research bar ──
+    const activeBar = document.getElementById('scrip-active-bar');
+    if (activeBar) {
+      if (sr.active) {
+        const pct = Math.min(100, sr.active.progress || 0);
+        const remaining = Math.ceil((100 - pct) / 25);
+        activeBar.innerHTML = `
+          <div class="scrip-active-card">
+            <div class="scrip-active-name">${sr.active.name}</div>
+            <div style="font-family:var(--ff-body);font-style:italic;font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.5rem;line-height:1.55;">${sr.active.desc||''}</div>
+            <div class="scrip-progress-track">
+              <div class="scrip-progress-fill" style="width:${pct}%"></div>
+            </div>
+            <div style="font-family:var(--ff-heading);font-size:0.32rem;letter-spacing:0.1em;color:var(--text-secondary);margin-bottom:0.55rem;">
+              ${pct}% complete · ~${remaining} session${remaining!==1?'s':''} remaining
+            </div>
+            <div class="scrip-active-btns">
+              <button class="scrip-btn primary" onclick="scriptoriumStudy()">Study Session (+25%)</button>
+              <button class="scrip-btn" onclick="scriptoriumAbandon()">Abandon</button>
+            </div>
+          </div>`;
+      } else {
+        activeBar.innerHTML = `
+          <div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);padding:0.9rem 1rem;border-bottom:1px solid var(--border);">
+            No research underway. Select a skill below.
+          </div>`;
+      }
+    }
+
+    // ── Available skills ──
+    const CAT_COL = {attack:'var(--crimson-bright)',heal:'var(--viridian-bright)',
+      buff:'var(--amber-bright)',debuff:'var(--mist)',utility:'var(--gold)'};
+    const avEl = document.getElementById('scrip-available-list');
+    if (avEl && _cachedWorldSkills) {
+      const available = Object.entries(_cachedWorldSkills).filter(([k, s]) => {
+        if ((s.category||s.cat||'') === 'rite') return false;
+        return !masteredKeys.includes(k) && sr.active?.key !== k;
+      });
+      if (!available.length) {
+        avEl.innerHTML = `<div class="scrip-skill-row"><div class="scrip-skill-desc">All skills have been mastered.</div></div>`;
+      } else {
+        avEl.innerHTML = available.map(([k, s]) => {
+          const cat = s.category || s.cat || 'utility';
+          const col = CAT_COL[cat] || 'var(--gold)';
+          const sessions = Math.max(1, 5 - scriptoriumLv); // Lv1=4 sessions, Lv3=2
+          return `<div class="scrip-skill-row">
+            <div class="scrip-skill-body">
+              <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.2rem;">
+                <span style="font-family:var(--ff-heading);font-size:0.3rem;letter-spacing:0.15em;text-transform:uppercase;color:${col};">${cat}</span>
+                ${s.classKey?`<span style="font-family:var(--ff-heading);font-size:0.3rem;letter-spacing:0.1em;color:var(--text-secondary);">${s.classKey}</span>`:'<span style="font-family:var(--ff-heading);font-size:0.3rem;color:var(--text-secondary);">Any class</span>'}
+              </div>
+              <div class="scrip-skill-name">${s.name||k}</div>
+              <div class="scrip-skill-desc">${s.desc||''}</div>
+              <div class="scrip-skill-meta" style="margin-top:0.25rem;">~${sessions} session${sessions!==1?'s':''} · Scriptorium Lv.${scriptoriumLv}</div>
+            </div>
+            <button class="scrip-research-btn" onclick="scriptoriumStart('${k}','${(s.name||k).replace(/'/g,'')}','${(s.desc||'').replace(/'/g,'').substring(0,80)}')" ${sr.active?'disabled style="opacity:0.35;cursor:not-allowed;"':''}>
+              ${sr.active?'Busy':'Research'}
+            </button>
+          </div>`;
+        }).join('');
+      }
+    }
+
+    // ── Mastered ──
+    const mastEl = document.getElementById('scrip-mastered-list');
+    if (mastEl) {
+      if (!mastered.length) {
+        mastEl.innerHTML = `<div class="scrip-mastered-row"><div class="scrip-mastered-desc">Nothing mastered yet.</div></div>`;
+      } else {
+        mastEl.innerHTML = mastered.map(sk => `
+          <div class="scrip-mastered-row">
+            <span class="scrip-mastered-glyph">◆</span>
+            <div class="scrip-mastered-body">
+              <div class="scrip-mastered-name">${sk.name}</div>
+              <div class="scrip-mastered-desc">${sk.desc||''}</div>
+            </div>
+          </div>`).join('');
+      }
+    }
+
+    // ── Recipes unlocked (from forge) ──
+    const recEl = document.getElementById('scrip-recipes-list');
+    if (recEl) {
+      const recipes = Object.entries(inventory||{}).filter(([k,v])=>v>0);
+      if (!recipes.length) {
+        recEl.innerHTML = `<div class="scrip-mastered-row"><div class="scrip-mastered-desc">No items crafted yet.</div></div>`;
+      } else {
+        recEl.innerHTML = recipes.map(([name,qty]) => `
+          <div class="scrip-mastered-row">
+            <span class="scrip-mastered-glyph" style="color:var(--amber-bright);">◈</span>
+            <div class="scrip-mastered-body">
+              <div class="scrip-mastered-name">${name}</div>
+              <div class="scrip-mastered-desc" style="color:var(--amber-bright);">×${qty} in inventory</div>
+            </div>
+          </div>`).join('');
+      }
+    }
+
+    // Also update Arcana panel
+    renderSkillResearch();
+  }
+
+  function scriptoriumStart(key, name, desc) {
+    const sr = getSkillResearch();
+    if (sr.active) { toast('Complete or abandon current research first.'); return; }
+    sr.active = { key, name, desc, progress: 0 };
+    _researchData = _researchData || {};
+    _researchData.skillResearch = sr;
+    persistState();
+    renderScriptorium();
+  }
+
+  function scriptoriumStudy() {
+    const sr = getSkillResearch();
+    if (!sr.active) return;
+    // Memory stat bonus: each 2 points of Memory above 8 gives +5% extra
+    const memBonus = Math.max(0, Math.floor(((_characterData?.stats?.memory||8) - 8) / 2)) * 5;
+    const gain = 25 + memBonus;
+    sr.active.progress = Math.min(100, (sr.active.progress||0) + gain);
+    if (sr.active.progress >= 100) {
+      // Complete!
+      if (!sr.mastered) sr.mastered = [];
+      const completed = { key: sr.active.key, name: sr.active.name, desc: sr.active.desc||'' };
+      sr.mastered.push(completed);
+      const name = sr.active.name;
+      sr.active = null;
+      appendScriptoriumLog(`Mastered: ${name}.`);
+      toast(`✦ ${name} mastered. Teach it to an acolyte.`);
+    } else {
+      appendScriptoriumLog(`Studied ${sr.active.name} — ${sr.active.progress}% complete.`);
+      toast(`Study session complete. ${sr.active.progress}% progress.`);
+    }
+    persistState();
+    renderScriptorium();
+  }
+
+  function scriptoriumAbandon() {
+    const sr = getSkillResearch();
+    if (!sr.active) return;
+    const name = sr.active.name;
+    appendScriptoriumLog(`Abandoned research: ${name}.`);
+    sr.active = null;
+    persistState();
+    renderScriptorium();
+    toast(`Research on ${name} abandoned.`);
+  }
+
+  function appendScriptoriumLog(text) {
+    if (!_researchData) return;
+    if (!_researchData.sessionLog) _researchData.sessionLog = [];
+    _researchData.sessionLog.unshift({ text, time: new Date().toLocaleTimeString() });
+    _researchData.sessionLog = _researchData.sessionLog.slice(0, 20); // keep last 20
+    // Render log
+    const el = document.getElementById('scrip-lore-list');
+    if (el) {
+      el.innerHTML = (_researchData.sessionLog||[]).map(entry =>
+        `<div style="border-top:1px solid var(--border);padding:0.55rem 1rem;display:flex;gap:0.6rem;align-items:baseline;">
+          <span style="font-family:var(--ff-heading);font-size:0.3rem;letter-spacing:0.08em;color:var(--text-secondary);flex-shrink:0;">${entry.time}</span>
+          <span style="font-family:var(--ff-body);font-style:italic;font-size:0.78rem;color:var(--text-secondary);">${entry.text}</span>
+        </div>`
+      ).join('');
+    }
+  }
+
+  // Central persist function — always saves full state to Firebase
+  async function persistState() {
+    try {
+      const state = collectGameState();
+      await fbWrite(getOrCreatePlayerId(), state);
+    } catch(e) {
+      console.error('Persist failed:', e);
+      toast('Save failed — check connection.');
+    }
   }
 
 
