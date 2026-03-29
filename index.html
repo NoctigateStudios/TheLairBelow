@@ -2733,9 +2733,16 @@
 
   function activateWorldEvent(evId) {
     const ev = _worldEventStore.get(evId);
-    if (!ev) { toast('Event data not found.'); return; }
+    if (!ev) { toast('Event data not found — try refreshing the map.'); return; }
     document.querySelector('.leaflet-popup-close-button')?.click();
-    if (ev.type === 'combat') { showCombat(ev); return; }
+    if (ev.type === 'combat') {
+      showCombat(ev).catch(err => {
+        console.error('Combat error:', err);
+        toast('Combat failed to load: ' + (err.message || err));
+        document.getElementById('combat-modal').classList.remove('open');
+      });
+      return;
+    }
     toast(ev.actionText || 'You approach the site. The air thickens.');
   }
 
@@ -2789,15 +2796,16 @@
 
     // Leaflet 1.9.x strips onclick from popup HTML — wire buttons after popup opens
     map.on('popupopen', function(e) {
-      const btn = e.popup.getElement()?.querySelector('.popup-btn[data-evid]');
-      if (btn) {
-        // Remove any previous listener to avoid duplicates
-        btn.replaceWith(btn.cloneNode(true));
-        const freshBtn = e.popup.getElement().querySelector('.popup-btn[data-evid]');
-        freshBtn.addEventListener('click', function() {
-          activateWorldEvent(this.dataset.evid);
-        });
-      }
+      // Wire popup button after Leaflet finishes DOM insertion
+      setTimeout(function() {
+        const btn = e.popup.getElement()?.querySelector('.popup-btn[data-evid]');
+        if (btn && !btn._wired) {
+          btn._wired = true;
+          btn.addEventListener('click', function() {
+            activateWorldEvent(btn.dataset.evid);
+          });
+        }
+      }, 50);
     });
 
     // Player marker
@@ -3089,9 +3097,11 @@
   }
 
   function rollDice(expr) {
-    if (!expr) return 0;
-    const m = String(expr).match(/(\d+)d(\d+)([+-]\d+)?/);
-    if (!m) return parseInt(expr)||0;
+    if (!expr || expr === '') return 0;
+    const s = String(expr).trim();
+    if (!s) return 0;
+    const m = s.match(/(\d+)d(\d+)([+-]\d+)?/i);
+    if (!m) return Math.max(0, parseInt(s)||0);
     let t=0;
     for (let i=0;i<parseInt(m[1]);i++) t+=Math.floor(Math.random()*parseInt(m[2]))+1;
     if (m[3]) t+=parseInt(m[3]);
@@ -3099,11 +3109,22 @@
   }
 
   async function showCombat(eventOrKey) {
-    // eventOrKey can be a world event object (with .enemies array) or a key string
+    // Open modal immediately so the player gets instant feedback
+    document.getElementById('combat-modal').classList.add('open');
+    document.getElementById('combat-title').textContent = 'Entering the passage…';
+    document.getElementById('combat-phase-bar').textContent = 'Loading encounter…';
+    document.getElementById('combat-init-track').innerHTML = '';
+    document.getElementById('combat-enemies').innerHTML = '';
+    document.getElementById('combat-allies').innerHTML = '';
+    document.getElementById('combat-log-panel').innerHTML = '';
+    document.getElementById('combat-skill-grid').innerHTML = '';
+    document.getElementById('combat-actor-label').textContent = '';
+
     const eventData = (eventOrKey && typeof eventOrKey === 'object') ? eventOrKey : null;
-    const forcedEnemyKeys = eventData?.enemies || null; // array of creature keys
+    const forcedEnemyKeys = eventData?.enemies || null;
     const encounterTitle = eventData?.title || null;
 
+    // Load world data (silently — modal is already open)
     if (!_combatSystem) {
       try { const d=await fetch(FB_URL+'/world/combat.json?cb='+Date.now()).then(r=>r.json()); if(d&&!d.error)_combatSystem=d; } catch(e){}
     }
@@ -3149,7 +3170,7 @@
       const ehp=e.stats?.hp||20;
       return {id:'enemy_'+i,name:e.name||'Enemy '+(i+1),icon:e.icon||'⛧',side:'enemy',rank:i+1,
         stats:e.stats||{},hp:ehp,maxHp:ehp,mana:0,maxMana:0,stress:0,
-        dodge:e.stats?.dodge||0,armour:e.stats?.armour||0,damageExpr:e.stats?.damage||'1d6',
+        dodge:e.stats?.dodge||0,armour:e.stats?.armour||0,damageExpr:(e.stats?.damage&&e.stats.damage.trim())||'1d6',
         abilities:e.abilities||[],loot:e.loot||[],xpReward:e.stats?.xp||50,
         initiative:(e.stats?.speed||10)*2+Math.random()*4,effects:[],dead:false,
         resistances:e.resistances||{}};
@@ -4098,15 +4119,7 @@
   }
 
   function renderFieldEventCards(data) {
-    // One-time delegation setup on the container
     const container = document.getElementById('field-events-list');
-    if (container && !container._delegated) {
-      container._delegated = true;
-      container.addEventListener('click', function(e) {
-        const card = e.target.closest('[data-evid]');
-        if (card) activateWorldEvent(card.dataset.evid);
-      });
-    }
     const el = document.getElementById('field-events-list');
     if (!el) return;
     const TYPE_COLOR = {
@@ -4154,6 +4167,11 @@
         </div>
       </div>`;
     }).join('');
+
+    // Wire click listeners directly on each card (delegation unreliable on mobile)
+    container.querySelectorAll('[data-evid]').forEach(card => {
+      card.addEventListener('click', () => activateWorldEvent(card.dataset.evid));
+    });
   }
 
   // ══════════════════════════════════════════
