@@ -95,9 +95,11 @@
     z-index: 2;
     max-width: 430px;
     margin: 0 auto;
-    min-height: 100vh;
+    height: 100dvh;        /* definite height so flex children can expand */
+    min-height: 100vh;     /* fallback for browsers without dvh */
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
 
   /* ═══════════════════════════════════════
@@ -353,8 +355,8 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* combat panel manages its own scroll */
-    min-height: 0;    /* allow flex children to shrink below content height */
+    overflow: hidden;
+    min-height: 0;
   }
 
   /* Regular tab panels scroll normally */
@@ -422,8 +424,18 @@
   .tab-panel { display: none; padding: 1rem; }
   .tab-panel.active { display: block; }
   /* Combat panel overrides: full height, flex column, no padding */
-  #panel-combat { padding: 0; }
-  #panel-combat.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+  /* Combat panel — position:fixed so it always fills the full screen regardless of flex chain */
+  #panel-combat { padding: 0; display: none; }
+  #panel-combat.active {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 300;
+    background: var(--void);
+    max-width: 430px;
+    margin: 0 auto;
+  }
 
   /* ═══════════════════════════════════════
      JOURNAL / NARRATIVE PANEL
@@ -1304,6 +1316,7 @@
     background: linear-gradient(180deg, rgba(139,26,26,0.18) 0%, transparent 100%);
     border-bottom: 1px solid rgba(139,26,26,0.25);
     padding: 0.7rem 1rem 0.6rem;
+    min-height: 60px;
   }
   #combat-title {
     font-family: var(--ff-title); font-size: 1.6rem;
@@ -1346,7 +1359,7 @@
   /* Battlefield */
   #combat-battlefield {
     flex: 1; overflow-y: auto; padding: 0.6rem 0.8rem;
-    display: flex; flex-direction: column; gap: 0.3rem;
+    display: flex; flex-direction: column; gap: 0.3rem; min-height: 0;
   }
   #combat-battlefield::-webkit-scrollbar { width: 2px; }
   #combat-battlefield::-webkit-scrollbar-thumb { background: var(--stone); }
@@ -2479,7 +2492,7 @@
     </div>
 
 <!-- COMBAT TAB PANEL — shown as a tab when combat is active -->
-<div id="panel-combat" class="tab-panel" id="combat-modal" style="padding:0;display:none;flex-direction:column;height:100%;">
+<div id="panel-combat" class="tab-panel">
 
   <div id="combat-header">
     <div id="combat-title">Combat</div>
