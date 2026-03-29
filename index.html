@@ -353,6 +353,14 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    overflow: hidden; /* combat panel manages its own scroll */
+    min-height: 0;    /* allow flex children to shrink below content height */
+  }
+
+  /* Regular tab panels scroll normally */
+  .tab-panel.active {
+    flex: 1;
+    overflow-y: auto;
   }
 
   /* Tabs */
@@ -386,6 +394,22 @@
     background: rgba(201,168,76,0.04);
   }
 
+  /* Combat tab — crimson, pulses to draw attention when combat starts */
+  .tab-combat {
+    color: var(--crimson-bright) !important;
+    border-bottom-color: var(--crimson-bright) !important;
+  }
+  .tab-combat.active {
+    color: var(--crimson-bright) !important;
+    border-bottom: 2px solid var(--crimson-bright) !important;
+    background: rgba(196,48,48,0.08) !important;
+  }
+  @keyframes combat-tab-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+  }
+  .tab-combat.pulsing { animation: combat-tab-pulse 1s ease infinite; }
+
   .tab-icon { font-size: 1.1rem; }
   .tab-label {
     font-family: var(--ff-heading);
@@ -397,6 +421,9 @@
   /* Tab panels */
   .tab-panel { display: none; padding: 1rem; }
   .tab-panel.active { display: block; }
+  /* Combat panel overrides: full height, flex column, no padding */
+  #panel-combat { padding: 0; }
+  #panel-combat.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 
   /* ═══════════════════════════════════════
      JOURNAL / NARRATIVE PANEL
@@ -1258,15 +1285,20 @@
   /* ═══════════════════════════════════════
      COMBAT MODAL — deep system
   ═══════════════════════════════════════ */
-  #combat-modal {
-    position: fixed; inset: 0; z-index: 500;
-    background: var(--void);
-    display: none; flex-direction: column;
+  /* Combat tab panel — fills #main exactly like other panels */
+  #panel-combat {
+    display: none;
+    flex-direction: column;
+    padding: 0;
     overflow: hidden;
+    background: var(--void);
+    height: 100%;
   }
-  #combat-modal.open { display: flex; }
+  #panel-combat.active { display: flex; }
 
-  /* Layout: fixed header + scrollable middle + fixed footer */
+  /* Legacy selector — keep for any JS still using it */
+  #combat-modal { display: contents; }
+
   #combat-header {
     flex-shrink: 0;
     background: linear-gradient(180deg, rgba(139,26,26,0.18) 0%, transparent 100%);
@@ -2125,7 +2157,7 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.30</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.31</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
@@ -2208,6 +2240,10 @@
     <button class="tab" onclick="switchTab('codex')">
       <span class="tab-icon">📖</span>
       <span class="tab-label">Codex</span>
+    </button>
+    <button class="tab tab-combat" id="tab-combat" onclick="switchTab('combat')" style="display:none;">
+      <span class="tab-icon">⚔</span>
+      <span class="tab-label">Combat</span>
     </button>
   </div>
 
@@ -2442,6 +2478,36 @@
 
     </div>
 
+<!-- COMBAT TAB PANEL — shown as a tab when combat is active -->
+<div id="panel-combat" class="tab-panel" id="combat-modal" style="padding:0;display:none;flex-direction:column;height:100%;">
+
+  <div id="combat-header">
+    <div id="combat-title">Combat</div>
+    <div id="combat-phase-bar">Initialising…</div>
+    <div id="combat-init-track"></div>
+  </div>
+
+  <div id="combat-battlefield">
+    <div class="combat-section-label">ENEMIES</div>
+    <div id="combat-enemies"></div>
+    <div class="combat-section-label" style="margin-top:0.4rem;">YOUR COMPANY</div>
+    <div id="combat-allies"></div>
+  </div>
+
+  <div id="combat-log-panel"></div>
+
+  <div id="combat-actions">
+    <div id="combat-actor-label">Awaiting…</div>
+    <div id="combat-skill-grid"></div>
+    <div id="combat-footer-btns">
+      <button class="combat-pass-btn" onclick="combatPass()">⊘ Pass Turn</button>
+      <button class="combat-retreat-btn" onclick="closeCombat()">⚊ Retreat</button>
+    </div>
+  </div>
+
+  <div id="combat-target-prompt">Tap an enemy to target — or press Pass to cancel</div>
+
+
   </div>
 </div>
 
@@ -2498,33 +2564,7 @@
 </div>
 
 <!-- COMBAT MODAL -->
-<div id="combat-modal" style="position:relative;">
 
-  <div id="combat-header">
-    <div id="combat-title">Combat</div>
-    <div id="combat-phase-bar">Initialising…</div>
-    <div id="combat-init-track"></div>
-  </div>
-
-  <div id="combat-battlefield">
-    <div class="combat-section-label">ENEMIES</div>
-    <div id="combat-enemies"></div>
-    <div class="combat-section-label" style="margin-top:0.4rem;">YOUR COMPANY</div>
-    <div id="combat-allies"></div>
-  </div>
-
-  <div id="combat-log-panel"></div>
-
-  <div id="combat-actions">
-    <div id="combat-actor-label">Awaiting…</div>
-    <div id="combat-skill-grid"></div>
-    <div id="combat-footer-btns">
-      <button class="combat-pass-btn" onclick="combatPass()">⊘ Pass Turn</button>
-      <button class="combat-retreat-btn" onclick="closeCombat()">⚊ Retreat</button>
-    </div>
-  </div>
-
-  <div id="combat-target-prompt">Tap an enemy to target — or press Pass to cancel</div>
 </div>
 
 <!-- IDENTITY MODAL -->
@@ -2745,7 +2785,7 @@
       showCombat(ev).catch(err => {
         console.error('Combat error:', err);
         toast('Combat failed to load: ' + (err.message || err));
-        document.getElementById('combat-modal').classList.remove('open');
+        switchTab('field'); // retreat on error
       });
       return;
     }
@@ -3115,7 +3155,13 @@
 
   async function showCombat(eventOrKey) {
     // Open modal immediately so the player gets instant feedback
-    document.getElementById('combat-modal').classList.add('open');
+    // Show combat tab — reveal it, pulse to draw attention, switch to it
+    const combatTab = document.getElementById('tab-combat');
+    if (combatTab) {
+      combatTab.style.display = '';
+      combatTab.classList.add('pulsing');
+    }
+    switchTab('combat');
     document.getElementById('combat-title').textContent = 'Entering the passage…';
     document.getElementById('combat-phase-bar').textContent = 'Loading encounter…';
     document.getElementById('combat-init-track').innerHTML = '';
@@ -3182,14 +3228,18 @@
     });
     const all=[...enemies,player,...acolytes].sort((a,b)=>b.initiative-a.initiative);
     _CS={title:encounterTitle||enemyDefs[0]?.name||'Combat',combatants:all,round:1,turnIdx:0};
-    document.getElementById('combat-modal').classList.add('open');
+    switchTab('combat');
     combatLog('The encounter begins. Turn order set by initiative.','system');
     renderCombat();
     setTimeout(()=>maybeEnemyTurn(),300);
   }
 
   function closeCombat(){
-    document.getElementById('combat-modal').classList.remove('open');
+    // Hide combat tab and return to field
+    const combatTab = document.getElementById('tab-combat');
+    if (combatTab) { combatTab.style.display = 'none'; combatTab.classList.remove('pulsing','active'); }
+    document.getElementById('panel-combat')?.classList.remove('active');
+    switchTab('field');
     _CS=null; _pendingSkill=null;
     document.getElementById('combat-target-prompt').classList.remove('active');
     toast('You retreat through the passage. The threshold holds — for now.');
@@ -3792,8 +3842,14 @@
   function switchTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    const idx = ['journal','field','company','lair','arcana','codex'].indexOf(tab);
+    const ORDER = ['journal','field','company','lair','arcana','codex'];
+    const idx = ORDER.indexOf(tab);
     if (idx >= 0) document.querySelectorAll('.tab')[idx].classList.add('active');
+    // Combat tab is the last button, handled separately
+    if (tab === 'combat') {
+      document.getElementById('tab-combat')?.classList.add('active');
+      document.getElementById('tab-combat')?.classList.remove('pulsing');
+    }
     const panel = document.getElementById('panel-' + tab);
     if (panel) panel.classList.add('active');
     if (tab === 'field' && map) setTimeout(() => map.invalidateSize(), 50);
