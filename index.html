@@ -2125,7 +2125,7 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.29</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.30</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">💾</button>
       <div class="topbar-location">
@@ -2724,10 +2724,11 @@
     const evId = 'ev_' + Math.random().toString(36).slice(2,9);
     _worldEventStore.set(evId, ev);
     const rewardHtml = ev.reward ? `<div style="margin-top:0.4rem;font-family:var(--ff-heading);font-size:0.5rem;color:#c9a84c;letter-spacing:0.08em;">${ev.reward}</div>` : '';
+    // Use data-evid instead of onclick — Leaflet 1.9.x strips onclick from popup HTML
     return `<div class="popup-title">${ev.title || 'Unknown Event'}</div>
       <div>${ev.desc || ''}</div>
       ${rewardHtml}
-      <button class="popup-btn" onclick="activateWorldEvent('${evId}')">Investigate</button>`;
+      <button class="popup-btn" data-evid="${evId}">Investigate</button>`;
   }
 
   function activateWorldEvent(evId) {
@@ -2785,6 +2786,19 @@
       subdomains: 'abcd',
       maxZoom: 19,
     }).addTo(map);
+
+    // Leaflet 1.9.x strips onclick from popup HTML — wire buttons after popup opens
+    map.on('popupopen', function(e) {
+      const btn = e.popup.getElement()?.querySelector('.popup-btn[data-evid]');
+      if (btn) {
+        // Remove any previous listener to avoid duplicates
+        btn.replaceWith(btn.cloneNode(true));
+        const freshBtn = e.popup.getElement().querySelector('.popup-btn[data-evid]');
+        freshBtn.addEventListener('click', function() {
+          activateWorldEvent(this.dataset.evid);
+        });
+      }
+    });
 
     // Player marker
     playerMarker = L.marker([lat, lng], { icon: makePlayerIcon(), zIndexOffset: 1000 }).addTo(map);
@@ -4084,6 +4098,15 @@
   }
 
   function renderFieldEventCards(data) {
+    // One-time delegation setup on the container
+    const container = document.getElementById('field-events-list');
+    if (container && !container._delegated) {
+      container._delegated = true;
+      container.addEventListener('click', function(e) {
+        const card = e.target.closest('[data-evid]');
+        if (card) activateWorldEvent(card.dataset.evid);
+      });
+    }
     const el = document.getElementById('field-events-list');
     if (!el) return;
     const TYPE_COLOR = {
@@ -4116,10 +4139,10 @@
       const rewardLine = ev.reward
         ? `<span style="color:var(--gold-dim);font-family:var(--ff-heading);font-size:0.38rem;letter-spacing:0.06em;">↳ ${ev.reward}</span>`
         : '';
-      // Store event object — avoids all JSON/quote escaping in onclick attrs
+      // Store event object — data-evid avoids onclick stripping by mobile browsers
       const evId = 'ev_' + Math.random().toString(36).slice(2,9);
       _worldEventStore.set(evId, ev);
-      return `<div class="mission-card" style="--mission-color:${color}" onclick="activateWorldEvent('${evId}')">
+      return `<div class="mission-card" style="--mission-color:${color}" data-evid="${evId}">
         <div class="mission-header">
           <span class="mission-title">${sigil} ${ev.title}</span>
           ${badge}
