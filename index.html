@@ -1222,16 +1222,49 @@
 
   /* Acolyte cards */
   .acolyte-card {
-    border: 1px solid var(--border);
-    padding: 0.8rem;
-    margin-bottom: 0.6rem;
-    display: flex;
-    gap: 0.8rem;
-    align-items: center;
-    background: rgba(255,255,255,0.01);
-    cursor: pointer;
-    transition: all 0.2s ease;
+    border-top: 1px solid var(--border);
+    border-left: 2px solid var(--border);
+    padding: 0.75rem 0.7rem 0;
+    background: none;
+    margin-bottom: 0.3rem;
   }
+  .acol-top-row {
+    display: flex; align-items: flex-start; gap: 0.7rem; padding-bottom: 0.5rem;
+  }
+  .acol-roster-toggle {
+    font-family: var(--ff-heading); font-size: 0.35rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-secondary); cursor: pointer;
+    padding: 0.2rem 0; flex-shrink: 0; border: none; background: none;
+    transition: color 0.15s; user-select: none;
+  }
+  .acol-roster-toggle.active { color: var(--amber-bright); }
+  .acol-detail {
+    border-top: 1px solid var(--border); padding: 0.6rem 0;
+  }
+  .acol-detail-section { margin-bottom: 0.55rem; }
+  .acol-detail-label {
+    font-family: var(--ff-heading); font-size: 0.32rem; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.25rem;
+  }
+  .acol-skills-list, .acol-inv-list {
+    display: flex; flex-wrap: wrap; gap: 0.25rem; margin-bottom: 0.3rem; min-height: 1rem;
+  }
+  .acol-skill-tag {
+    font-family: var(--ff-heading); font-size: 0.37rem; letter-spacing: 0.06em;
+    color: var(--viridian-bright); border: 1px solid rgba(45,122,95,0.3);
+    padding: 0.08rem 0.32rem;
+  }
+  .acol-inv-tag {
+    font-family: var(--ff-heading); font-size: 0.37rem; letter-spacing: 0.06em;
+    color: var(--amber-bright); border: 1px solid rgba(212,137,10,0.3);
+    padding: 0.08rem 0.32rem; cursor: help;
+  }
+  .acol-action-btn {
+    font-family: var(--ff-heading); font-size: 0.33rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-secondary); background: none;
+    border: none; cursor: pointer; padding: 0; transition: color 0.12s;
+  }
+  .acol-action-btn:active { color: var(--text-primary); }
 
   .acolyte-card:active { border-color: var(--gold); }
 
@@ -2612,13 +2645,7 @@
   .aether-bar { height: 4px; margin-top: 0.4rem; }
 
   /* — ACOLYTE CARDS — compact roster entry — */
-  .acolyte-card {
-    border: 1px solid var(--border);
-    padding: 0.7rem;
-    margin-bottom: 0.5rem;
-    gap: 0.7rem;
-    background: transparent;
-  }
+  .acolyte-card { margin-bottom: 0.3rem; }
   .acolyte-name { font-size: 0.65rem; letter-spacing: 0.05em; }
   .acolyte-class { font-size: 0.64rem; }
   .stress-bar { height: 2px; }
@@ -2981,7 +3008,76 @@
   /* Acolyte skill-bar */
   .acolyte-avail-toggle { font-size: 0.38rem; letter-spacing: 0.08em; padding: 0.18rem 0.45rem; }
 
-</style>
+
+  /* Acolyte modals (equip / teach) */
+  .acol-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 600;
+    background: rgba(5,4,7,0.85);
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .acol-modal.open { display: flex; }
+  .acol-modal-inner {
+    background: var(--bg, var(--abyss));
+    border-top: 1px solid var(--border);
+    width: 100%;
+    max-width: 430px;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 1.2rem 1rem 2rem;
+  }
+  .acol-modal-title {
+    font-family: var(--ff-heading);
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .acol-modal-list { margin-bottom: 0.8rem; }
+  .equip-item-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.65rem 0;
+    border-top: 1px solid var(--border);
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .equip-item-row:active { opacity: 0.6; }
+  .equip-item-check {
+    font-family: var(--ff-heading);
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    margin-top: 0.05rem;
+  }
+  .equip-item-name {
+    font-family: var(--ff-heading);
+    font-size: 0.6rem;
+    letter-spacing: 0.05em;
+    color: var(--text-primary);
+  }
+  .acol-modal-close {
+    font-family: var(--ff-heading);
+    font-size: 0.45rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0.65rem 1rem;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  </style>
 </head>
 <body>
 
@@ -3250,6 +3346,13 @@
         </div>
       </div>
 
+      <div class="section-label" id="roster-section-label">Mission Roster</div>
+      <div id="roster-display">
+        <div id="roster-empty" style="font-family:var(--ff-body);font-style:italic;font-size:0.8rem;color:var(--text-secondary);padding:0.4rem 0;">
+          No one assigned. Tap ◇ Roster on an acolyte's card.
+        </div>
+        <div id="roster-cards" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.2rem;"></div>
+      </div>
       <div class="section-label" data-section="acolytes">Acolytes</div>
 
       <!-- Acolyte cards injected by renderAcolyteCards() from Firebase -->
@@ -3354,6 +3457,26 @@
 
       <div id="codex-list"></div>
 
+
+      <div class="section-label">Skill Research</div>
+      <div id="skill-research-panel">
+        <div style="font-family:var(--ff-body);font-style:italic;font-size:0.8rem;color:var(--text-secondary);line-height:1.6;margin-bottom:0.8rem;">
+          Research a skill in the Scriptorium. Once complete, any acolyte of the matching class may learn it.
+        </div>
+        <div id="skill-research-available"></div>
+        <div class="section-label" style="margin-top:0.9rem;">Active Research</div>
+        <div id="skill-research-active">
+          <div style="font-family:var(--ff-body);font-style:italic;font-size:0.8rem;color:var(--text-secondary);">
+            No skill research underway.
+          </div>
+        </div>
+        <div class="section-label" style="margin-top:0.9rem;">Mastered</div>
+        <div id="skill-research-mastered">
+          <div style="font-family:var(--ff-body);font-style:italic;font-size:0.8rem;color:var(--text-secondary);">
+            No skills mastered yet.
+          </div>
+        </div>
+      </div>
     </div>
 
 <!-- COMBAT TAB PANEL — shown as a tab when combat is active -->
@@ -4808,6 +4931,7 @@
     if (panel) panel.classList.add('active');
     if (tab === 'field' && map) setTimeout(() => map.invalidateSize(), 50);
     if (tab === 'codex') renderCodexList();
+    if (tab === 'arcana') { renderSkillResearch(); }
   }
 
   // Codex and long-press are initialised directly in enterGame above
@@ -4847,15 +4971,16 @@
     const charName  = document.querySelector('.char-name')?.textContent  || playerName || 'Unknown';
     const charClass = document.querySelector('.char-class')?.textContent || 'Unknown';
     // Collect acolyte stress from live DOM
+    // Preserve full acolyte data (skills, inventory) — only update live DOM values
     const acolyteEls = document.querySelectorAll('.acolyte-card[data-acolyte-id]');
-    const acolytesLive = Array.from(acolyteEls).map(el => ({
-      id:     el.dataset.acolyteId,
-      name:   el.querySelector('.acolyte-name')?.textContent || '',
-      class:  el.dataset.acolyteClass || '',
-      level:  parseInt(el.dataset.acolyteLevel)||1,
-      stress: parseInt(el.querySelector('.stress-fill')?.style.width)||0,
-      states: (el.dataset.acolyteStates||'').split(',').filter(Boolean),
-      available: !!availableAcolytes[el.dataset.acolyteId],
+    const domStress = {};
+    acolyteEls.forEach(el => {
+      domStress[el.dataset.acolyteId] = parseInt(el.querySelector('.stress-fill')?.style.width)||0;
+    });
+    const acolytesLive = (_acolytesData || []).map(a => ({
+      ...a,
+      stress: domStress[a.id] !== undefined ? domStress[a.id] : (a.stress || 0),
+      available: !!availableAcolytes[a.id],
     }));
     return {
       version: 1,
@@ -4936,10 +5061,12 @@
 
     // Acolytes
     if (state.acolytes && state.acolytes.length) {
-      _acolytesData = state.acolytes;
-      renderAcolyteCards(state.acolytes);
+      // Ensure each acolyte has skills and inventory arrays
+      _acolytesData = state.acolytes.map(a => ({
+        skills: [], inventory: [], ...a
+      }));
+      renderAcolyteCards(_acolytesData);
     }
-    // Render combat skills for this character's class and level
     renderCharacterSkills();
 
     // Available acolytes
@@ -5034,34 +5161,68 @@
   function renderAcolyteCards(acolytes) {
     const section = document.querySelector('#panel-company .section-label[data-section="acolytes"]');
     if (!section) return;
-    // Remove old dynamic cards
     document.querySelectorAll('.acolyte-card[data-acolyte-id]').forEach(e => e.remove());
     const recruit = document.querySelector('.acolyte-card[data-recruit]');
     const parent  = section.parentElement;
-    const GLYPHS  = ['🜃','🜁','🜂','🜄'];
+    const GLYPHS  = ['△','▽','◈','◇','○','◬'];
+
     acolytes.forEach((a, idx) => {
       const stressPct = Math.min(100, Math.max(0, a.stress || 0));
       const states    = (a.states || []);
       const id        = a.id || ('ac' + idx);
+      const skills    = (a.skills || []);
+      const inventory = (a.inventory || []);
+      const onRoster  = (a.onRoster === true);
       const el        = document.createElement('div');
       el.className    = 'acolyte-card';
       el.dataset.acolyteId     = id;
-      el.dataset.acolyteClass  = a.class || '';
+      el.dataset.acolyteClass  = (a.classKey || a.class || '').toLowerCase().replace(/\s+/g,'-');
       el.dataset.acolyteLevel  = a.level || 1;
       el.dataset.acolyteStates = states.join(',');
+
+      const skillTags = skills.length
+        ? skills.map(sk => `<span class="acol-skill-tag">${sk.name||sk}</span>`).join('')
+        : `<span style="font-family:var(--ff-body);font-style:italic;font-size:0.72rem;color:var(--text-secondary);">No skills learned.</span>`;
+
+      const invItems = inventory.length
+        ? inventory.map(it => `<span class="acol-inv-tag" title="${it.desc||''}">${it.name||it}</span>`).join('')
+        : `<span style="font-family:var(--ff-body);font-style:italic;font-size:0.72rem;color:var(--text-secondary);">No equipment.</span>`;
+
       el.innerHTML = `
-        <div class="acolyte-avatar">${GLYPHS[idx % GLYPHS.length]}</div>
-        <div class="acolyte-info">
-          <div class="acolyte-name">${a.name}</div>
-          <div class="acolyte-class">${a.class || '—'} · Lv.${a.level||1}</div>
-          <div class="stress-bar"><div class="stress-fill" style="width:${stressPct}%"></div></div>
-          <div class="acolyte-states">${states.map(s => `<span class="state-tag">${s}</span>`).join('')}</div>
-          <button class="acolyte-avail-toggle ${availableAcolytes[id]?'active':''}" id="avail-${id}"
-            onclick="toggleAcolyteAvailable('${id}',this)">Share with Coven: ${availableAcolytes[id]?'On':'Off'}</button>
+        <div class="acol-top-row">
+          <div class="acolyte-avatar">${GLYPHS[idx % GLYPHS.length]}</div>
+          <div class="acolyte-info">
+            <div class="acolyte-name">${a.name}</div>
+            <div class="acolyte-class">${a.class || '—'} · Lv.${a.level||1}</div>
+            <div class="stress-bar"><div class="stress-fill" style="width:${stressPct}%"></div></div>
+            <div class="acolyte-states">${states.map(s => `<span class="state-tag">${s}</span>`).join('')}</div>
+          </div>
+          <div class="acol-roster-toggle${onRoster?' active':''}" title="Mission roster"
+            onclick="toggleRoster('${id}',this)">
+            ${onRoster ? '◆ Roster' : '◇ Roster'}
+          </div>
+        </div>
+        <div class="acol-detail">
+          <div class="acol-detail-section">
+            <div class="acol-detail-label">Skills</div>
+            <div class="acol-skills-list">${skillTags}</div>
+            <button class="acol-action-btn" onclick="openSkillTeach('${id}')">+ Teach Skill</button>
+          </div>
+          <div class="acol-detail-section">
+            <div class="acol-detail-label">Equipment</div>
+            <div class="acol-inv-list">${invItems}</div>
+            <button class="acol-action-btn" onclick="openInventoryEquip('${id}')">+ Equip Item</button>
+          </div>
+          <div class="acol-detail-section">
+            <button class="acolyte-avail-toggle ${availableAcolytes[id]?'active':''}" id="avail-${id}"
+              onclick="toggleAcolyteAvailable('${id}',this)">Coven Share: ${availableAcolytes[id]?'On':'Off'}</button>
+          </div>
         </div>`;
+
       if (recruit) { parent.insertBefore(el, recruit); }
       else { parent.appendChild(el); }
     });
+    renderRoster();
   }
 
   function renderLairBuildings(playerBuildings) {
@@ -6820,6 +6981,354 @@
     document.getElementById('panel-recruit')?.classList.remove('active');
     _recruitmentState = null;
     switchTab('field');
+  }
+
+
+
+  // ══════════════════════════════════════════
+  // MISSION ROSTER
+  // ══════════════════════════════════════════
+
+  function toggleRoster(acolyteId, btn) {
+    if (!_acolytesData) return;
+    const a = _acolytesData.find(x => x.id === acolyteId);
+    if (!a) return;
+    a.onRoster = !a.onRoster;
+    btn.textContent  = a.onRoster ? '◆ Roster' : '◇ Roster';
+    btn.classList.toggle('active', a.onRoster);
+    renderRoster();
+    fbWrite(getOrCreatePlayerId(), collectGameState()).catch(() => {});
+  }
+
+  function renderRoster() {
+    const onRoster = (_acolytesData || []).filter(a => a.onRoster);
+    const empty = document.getElementById('roster-empty');
+    const cards = document.getElementById('roster-cards');
+    const label = document.getElementById('roster-section-label');
+    if (!cards) return;
+    if (!onRoster.length) {
+      if (empty) empty.style.display = '';
+      cards.innerHTML = '';
+      if (label) label.textContent = 'Mission Roster';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+    if (label) label.textContent = `Mission Roster (${onRoster.length})`;
+    const GLYPHS = ['△','▽','◈','◇','○','◬'];
+    cards.innerHTML = onRoster.map((a, i) => {
+      const idx = (_acolytesData||[]).indexOf(a);
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:0.25rem;padding:0.4rem 0.5rem;border:1px solid var(--border);">
+        <span style="font-family:var(--ff-heading);font-size:1rem;color:var(--amber-bright);">${GLYPHS[idx%GLYPHS.length]}</span>
+        <span style="font-family:var(--ff-heading);font-size:0.35rem;letter-spacing:0.1em;color:var(--text-primary);text-align:center;">${a.name.split(' ')[0]}</span>
+        <span style="font-family:var(--ff-heading);font-size:0.3rem;letter-spacing:0.08em;color:var(--text-secondary);">Lv.${a.level||1}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ══════════════════════════════════════════
+  // ACOLYTE INVENTORY
+  // ══════════════════════════════════════════
+
+  let _equippingAcolyteId = null;
+
+  function openInventoryEquip(acolyteId) {
+    _equippingAcolyteId = acolyteId;
+    const a = (_acolytesData || []).find(x => x.id === acolyteId);
+    if (!a) return;
+
+    // Build item list from player inventory + forge items
+    const playerItems = Object.entries(inventory || {})
+      .filter(([k, v]) => v > 0)
+      .map(([k]) => k);
+
+    if (!playerItems.length) {
+      toast(`${a.name} has nothing to equip — craft items at the Forge first.`);
+      return;
+    }
+
+    // Show a simple picker modal
+    const existing = (a.inventory || []).map(i => i.name || i);
+    const modal = document.getElementById('acol-equip-modal');
+    if (!modal) { buildEquipModal(); }
+
+    document.getElementById('acol-equip-title').textContent = `Equip — ${a.name}`;
+    document.getElementById('acol-equip-list').innerHTML = playerItems.map(name => {
+      const equipped = existing.includes(name);
+      return `<div class="equip-item-row" onclick="toggleEquip('${acolyteId}','${name}',this)">
+        <span class="equip-item-check">${equipped ? '◆' : '◇'}</span>
+        <span class="equip-item-name">${name}</span>
+      </div>`;
+    }).join('');
+
+    document.getElementById('acol-equip-modal').classList.add('open');
+  }
+
+  function buildEquipModal() {
+    const div = document.createElement('div');
+    div.id = 'acol-equip-modal';
+    div.className = 'acol-modal';
+    div.innerHTML = `
+      <div class="acol-modal-inner">
+        <div class="acol-modal-title" id="acol-equip-title">Equip</div>
+        <div id="acol-equip-list" class="acol-modal-list"></div>
+        <button class="acol-modal-close" onclick="document.getElementById('acol-equip-modal').classList.remove('open')">
+          Done
+        </button>
+      </div>`;
+    document.body.appendChild(div);
+  }
+
+  function toggleEquip(acolyteId, itemName, row) {
+    const a = (_acolytesData || []).find(x => x.id === acolyteId);
+    if (!a) return;
+    if (!a.inventory) a.inventory = [];
+    const idx = a.inventory.findIndex(i => (i.name||i) === itemName);
+    const check = row.querySelector('.equip-item-check');
+    if (idx >= 0) {
+      a.inventory.splice(idx, 1);
+      if (check) check.textContent = '◇';
+    } else {
+      a.inventory.push({ name: itemName });
+      if (check) check.textContent = '◆';
+    }
+    renderAcolyteCards(_acolytesData);
+    fbWrite(getOrCreatePlayerId(), collectGameState()).catch(() => {});
+  }
+
+  // ══════════════════════════════════════════
+  // SKILL TEACHING (acolyte learns a skill)
+  // ══════════════════════════════════════════
+
+  let _teachingAcolyteId = null;
+
+  function openSkillTeach(acolyteId) {
+    _teachingAcolyteId = acolyteId;
+    const a = (_acolytesData || []).find(x => x.id === acolyteId);
+    if (!a) return;
+
+    // Get mastered skills from research
+    const mastered = getMasteredSkills();
+    if (!mastered.length) {
+      toast('No skills mastered yet — research skills in the Arcana panel first.');
+      return;
+    }
+
+    const alreadyKnown = (a.skills || []).map(s => s.key || s.name || s);
+    const teachable = mastered.filter(sk => {
+      const classOk = !sk.classKey || sk.classKey.toLowerCase() === (a.classKey||a.class||'').toLowerCase().replace(/\s+/g,'-');
+      const notKnown = !alreadyKnown.includes(sk.key);
+      return classOk && notKnown;
+    });
+
+    if (!teachable.length) {
+      toast(`${a.name} already knows all mastered skills for their class.`);
+      return;
+    }
+
+    let modal = document.getElementById('acol-teach-modal');
+    if (!modal) { buildTeachModal(); modal = document.getElementById('acol-teach-modal'); }
+
+    document.getElementById('acol-teach-title').textContent = `Teach — ${a.name}`;
+    document.getElementById('acol-teach-list').innerHTML = teachable.map(sk => `
+      <div class="equip-item-row" onclick="confirmTeachSkill('${acolyteId}','${sk.key}','${sk.name}',this)">
+        <span class="equip-item-check">◇</span>
+        <div>
+          <div class="equip-item-name">${sk.name}</div>
+          <div style="font-family:var(--ff-body);font-style:italic;font-size:0.7rem;color:var(--text-secondary);margin-top:0.1rem;">${sk.desc||''}</div>
+        </div>
+      </div>`).join('');
+
+    document.getElementById('acol-teach-modal').classList.add('open');
+  }
+
+  function buildTeachModal() {
+    const div = document.createElement('div');
+    div.id = 'acol-teach-modal';
+    div.className = 'acol-modal';
+    div.innerHTML = `
+      <div class="acol-modal-inner">
+        <div class="acol-modal-title" id="acol-teach-title">Teach Skill</div>
+        <div id="acol-teach-list" class="acol-modal-list"></div>
+        <button class="acol-modal-close" onclick="document.getElementById('acol-teach-modal').classList.remove('open')">
+          Cancel
+        </button>
+      </div>`;
+    document.body.appendChild(div);
+  }
+
+  function confirmTeachSkill(acolyteId, skillKey, skillName, row) {
+    const a = (_acolytesData || []).find(x => x.id === acolyteId);
+    if (!a) return;
+    if (!a.skills) a.skills = [];
+
+    // Load full skill data
+    const sk = _cachedWorldSkills?.[skillKey] || { key: skillKey, name: skillName };
+    a.skills.push({ key: skillKey, name: skillName, desc: sk.desc||'' });
+
+    const check = row.querySelector('.equip-item-check');
+    if (check) check.textContent = '◆';
+    row.style.opacity = '0.5';
+    row.style.pointerEvents = 'none';
+
+    renderAcolyteCards(_acolytesData);
+    fbWrite(getOrCreatePlayerId(), collectGameState()).catch(() => {});
+    toast(`${a.name} has learned ${skillName}.`);
+
+    setTimeout(() => {
+      document.getElementById('acol-teach-modal')?.classList.remove('open');
+    }, 800);
+  }
+
+  // ══════════════════════════════════════════
+  // SKILL RESEARCH SYSTEM
+  // ══════════════════════════════════════════
+
+  // Research state stored in _researchData.skillResearch = { active, mastered[], queue[] }
+  function getSkillResearch() {
+    if (!_researchData) _researchData = { active: null, progress: 0, queue: [], skillResearch: { active: null, mastered: [], queue: [] } };
+    if (!_researchData.skillResearch) _researchData.skillResearch = { active: null, mastered: [], queue: [] };
+    return _researchData.skillResearch;
+  }
+
+  function getMasteredSkills() {
+    return getSkillResearch().mastered || [];
+  }
+
+  async function renderSkillResearch() {
+    const el = document.getElementById('skill-research-panel');
+    if (!el) return;
+
+    // Load skills if needed
+    if (!_cachedWorldSkills) {
+      try {
+        const res = await fetch(`${FB_URL}/world/skills.json?cb=`+Date.now());
+        if (res.ok) { const d = await res.json(); if (d&&!d.error) _cachedWorldSkills = d; }
+      } catch(e) {}
+    }
+
+    const sr = getSkillResearch();
+    const mastered = sr.mastered || [];
+    const masteredKeys = mastered.map(s => s.key);
+
+    // Available skills to research (not mastered, not active)
+    const available = _cachedWorldSkills
+      ? Object.entries(_cachedWorldSkills).filter(([k,s]) => {
+          const cat = s.category||s.cat||'';
+          if (cat === 'rite') return false; // rites researched differently
+          return !masteredKeys.includes(k) && sr.active?.key !== k;
+        }).map(([k,s]) => ({key:k,...s}))
+      : [];
+
+    // Render available
+    const avEl = document.getElementById('skill-research-available');
+    if (avEl) {
+      if (!available.length) {
+        avEl.innerHTML = '<div style="font-family:var(--ff-body);font-style:italic;font-size:0.8rem;color:var(--text-secondary);">All skills mastered.</div>';
+      } else {
+        avEl.innerHTML = available.map(sk => {
+          const cat = sk.category||sk.cat||'utility';
+          const CAT_COL = {attack:'var(--crimson-bright)',heal:'var(--viridian-bright)',buff:'var(--amber-bright)',debuff:'var(--mist)',utility:'var(--gold)'};
+          const col = CAT_COL[cat]||'var(--gold)';
+          const turns = _worldBuildings?.scriptorium?.maxLevel ? Math.max(1, 4 - (_lairData?.buildings?.scriptorium||1)) : 3;
+          return `<div style="border-top:1px solid var(--border);padding:0.7rem 0;display:flex;align-items:flex-start;gap:0.6rem;">
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.1rem;">
+                <span style="font-family:var(--ff-heading);font-size:0.33rem;letter-spacing:0.15em;text-transform:uppercase;color:${col};">${cat}</span>
+                <span style="font-family:var(--ff-heading);font-size:0.62rem;color:var(--text-primary);">${sk.name}</span>
+                ${sk.classKey?`<span style="font-family:var(--ff-heading);font-size:0.3rem;color:var(--text-secondary);">${sk.classKey}</span>`:''}
+              </div>
+              <div style="font-family:var(--ff-body);font-style:italic;font-size:0.75rem;color:var(--text-secondary);line-height:1.55;">${sk.desc||''}</div>
+              <div style="font-family:var(--ff-heading);font-size:0.32rem;letter-spacing:0.1em;color:var(--text-secondary);margin-top:0.25rem;">~${turns} session${turns!==1?'s':''} · Scriptorium Lv.${_lairData?.buildings?.scriptorium||1}</div>
+            </div>
+            <button style="font-family:var(--ff-heading);font-size:0.35rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.35rem 0.6rem;border:1px solid var(--border);background:none;color:var(--text-secondary);cursor:pointer;flex-shrink:0;"
+              onclick="startSkillResearch('${sk.key}','${sk.name}')">Research</button>
+          </div>`;
+        }).join('');
+      }
+    }
+
+    // Render active research
+    const actEl = document.getElementById('skill-research-active');
+    if (actEl) {
+      if (!sr.active) {
+        actEl.innerHTML = '<div style="font-family:var(--ff-body);font-style:italic;font-size:0.8rem;color:var(--text-secondary);">No skill research underway.</div>';
+      } else {
+        const pct = Math.min(100, sr.active.progress||0);
+        actEl.innerHTML = `<div style="border-top:1px solid var(--border);padding:0.7rem 0;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;">
+            <span style="font-family:var(--ff-heading);font-size:0.62rem;color:var(--text-primary);">${sr.active.name}</span>
+            <span style="font-family:var(--ff-heading);font-size:0.38rem;color:var(--text-secondary);">${pct}%</span>
+          </div>
+          <div style="height:2px;background:var(--border);margin-bottom:0.4rem;">
+            <div style="height:100%;background:var(--viridian-bright);width:${pct}%;transition:width 0.4s;"></div>
+          </div>
+          <div style="display:flex;gap:0.5rem;">
+            <button style="font-family:var(--ff-heading);font-size:0.35rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.3rem 0.6rem;border:1px solid var(--viridian-bright);background:none;color:var(--viridian-bright);cursor:pointer;"
+              onclick="advanceSkillResearch(25)">Study (+25%)</button>
+            <button style="font-family:var(--ff-heading);font-size:0.35rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.3rem 0.6rem;border:1px solid var(--border);background:none;color:var(--text-secondary);cursor:pointer;"
+              onclick="abandonSkillResearch()">Abandon</button>
+          </div>
+        </div>`;
+      }
+    }
+
+    // Render mastered
+    const mastEl = document.getElementById('skill-research-mastered');
+    if (mastEl) {
+      if (!mastered.length) {
+        mastEl.innerHTML = '<div style="font-family:var(--ff-body);font-style:italic;font-size:0.8rem;color:var(--text-secondary);">No skills mastered yet.</div>';
+      } else {
+        mastEl.innerHTML = mastered.map(sk => `
+          <div style="border-top:1px solid var(--border);padding:0.5rem 0;display:flex;align-items:center;gap:0.5rem;">
+            <span style="font-family:var(--ff-heading);font-size:0.65rem;color:var(--viridian-bright);">◆</span>
+            <div>
+              <div style="font-family:var(--ff-heading);font-size:0.6rem;color:var(--text-primary);">${sk.name}</div>
+              <div style="font-family:var(--ff-body);font-style:italic;font-size:0.7rem;color:var(--text-secondary);">${sk.desc||''}</div>
+            </div>
+          </div>`).join('');
+      }
+    }
+  }
+
+  function startSkillResearch(key, name) {
+    const sr = getSkillResearch();
+    if (sr.active) {
+      toast('Research already underway — complete or abandon it first.');
+      return;
+    }
+    const sk = _cachedWorldSkills?.[key] || {};
+    sr.active = { key, name, desc: sk.desc||'', progress: 0 };
+    fbWrite(getOrCreatePlayerId(), collectGameState()).catch(() => {});
+    toast(`Researching: ${name}.`);
+    renderSkillResearch();
+  }
+
+  function advanceSkillResearch(amount) {
+    const sr = getSkillResearch();
+    if (!sr.active) return;
+    sr.active.progress = Math.min(100, (sr.active.progress||0) + amount);
+    if (sr.active.progress >= 100) {
+      // Complete!
+      if (!sr.mastered) sr.mastered = [];
+      sr.mastered.push({ key: sr.active.key, name: sr.active.name, desc: sr.active.desc||'' });
+      const name = sr.active.name;
+      sr.active = null;
+      fbWrite(getOrCreatePlayerId(), collectGameState()).catch(() => {});
+      toast(`✦ ${name} has been mastered. Teach it to an acolyte.`);
+    } else {
+      fbWrite(getOrCreatePlayerId(), collectGameState()).catch(() => {});
+    }
+    renderSkillResearch();
+  }
+
+  function abandonSkillResearch() {
+    const sr = getSkillResearch();
+    if (!sr.active) return;
+    const name = sr.active.name;
+    sr.active = null;
+    fbWrite(getOrCreatePlayerId(), collectGameState()).catch(() => {});
+    toast(`Research on ${name} abandoned.`);
+    renderSkillResearch();
   }
 
 
