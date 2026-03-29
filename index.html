@@ -2611,6 +2611,12 @@
   let presenceInterval = null;
   let currentForgeTab = 'weapons';
 
+  // Combat system globals — declared here so all functions can reference safely
+  let _combatSystem      = null;
+  let _cachedWorldSkills = null;
+  let _CS                = null;
+  let _pendingSkill      = null;
+
   function enterGame() {
     if (_gameStarted) return;
     _gameStarted = true;
@@ -3067,8 +3073,7 @@
   // ══════════════════════════════════════════
   // COMBAT ENGINE — deep turn-based system
   // ══════════════════════════════════════════
-  let _CS = null;
-  let _pendingSkill = null;
+  // (_CS, _pendingSkill, _combatSystem, _cachedWorldSkills declared at top of script)
 
   function derivedStats(baseStats, level) {
     const s = baseStats || {};
