@@ -429,7 +429,240 @@
     background: rgba(201,168,76,0.04);
   }
 
-  /* Combat tab — crimson, pulses to draw attention when combat starts */
+  /* Recruit tab — amber, for field encounters */
+  .tab-recruit {
+    color: var(--amber-bright) !important;
+  }
+  .tab-recruit.active {
+    color: var(--amber-bright) !important;
+    border-bottom-color: var(--amber-bright) !important;
+    background: none !important;
+  }
+  @keyframes recruit-tab-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+  }
+  .tab-recruit.pulsing { animation: recruit-tab-pulse 1.2s ease infinite; }
+
+  /* Recruit panel layout */
+  #panel-recruit { overflow-y: auto; }
+
+  #recruit-scene {
+    background: linear-gradient(180deg, rgba(139,90,0,0.08) 0%, transparent 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 1.4rem 1.1rem 1.1rem;
+    text-align: center;
+  }
+  #recruit-scene-sigil {
+    font-family: var(--ff-heading);
+    font-size: 2rem;
+    color: var(--amber-bright);
+    opacity: 0.5;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0;
+  }
+  #recruit-scene-location {
+    font-family: var(--ff-heading);
+    font-size: 0.38rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 0.6rem;
+  }
+  #recruit-scene-desc {
+    font-family: var(--ff-body);
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    max-width: 340px;
+    margin: 0 auto;
+  }
+
+  /* Figure card */
+  #recruit-figure-card {
+    display: flex;
+    gap: 1rem;
+    padding: 1.1rem;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+  #recruit-fig-left {
+    flex-shrink: 0;
+    text-align: center;
+    width: 52px;
+  }
+  #recruit-fig-glyph {
+    font-family: var(--ff-heading);
+    font-size: 1.8rem;
+    color: var(--amber-bright);
+    line-height: 1;
+    margin-bottom: 0.35rem;
+    opacity: 0.7;
+  }
+  #recruit-fig-class {
+    font-family: var(--ff-heading);
+    font-size: 0.32rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  #recruit-fig-name {
+    font-family: var(--ff-heading);
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    color: var(--text-primary);
+    margin-bottom: 0.4rem;
+  }
+  #recruit-fig-lore {
+    font-family: var(--ff-body);
+    font-style: italic;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    margin-bottom: 0.5rem;
+  }
+  #recruit-fig-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.8rem;
+  }
+  .recruit-stat {
+    font-family: var(--ff-heading);
+    font-size: 0.35rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .recruit-stat span {
+    color: var(--text-primary);
+  }
+
+  /* Approach options */
+  #recruit-approach-label {
+    font-family: var(--ff-heading);
+    font-size: 0.38rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    padding: 0.9rem 1.1rem 0.5rem;
+  }
+  #recruit-approaches {
+    padding: 0 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .approach-btn {
+    background: none;
+    border: none;
+    border-top: 1px solid var(--border);
+    padding: 0.8rem 0;
+    text-align: left;
+    cursor: pointer;
+    transition: padding-left 0.15s ease;
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+  .approach-btn:last-child { border-bottom: 1px solid var(--border); }
+  .approach-btn:active { padding-left: 0.4rem; }
+  .approach-glyph {
+    font-family: var(--ff-heading);
+    font-size: 0.7rem;
+    color: var(--amber-bright);
+    opacity: 0.6;
+    flex-shrink: 0;
+    width: 1rem;
+  }
+  .approach-text {
+    font-family: var(--ff-heading);
+    font-size: 0.52rem;
+    letter-spacing: 0.06em;
+    color: var(--text-primary);
+    text-transform: uppercase;
+  }
+  .approach-sub {
+    font-family: var(--ff-body);
+    font-style: italic;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 0.1rem;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  /* Outcome */
+  #recruit-outcome {
+    padding: 1.2rem 1.1rem;
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+  #recruit-outcome-sigil {
+    font-family: var(--ff-heading);
+    font-size: 1.4rem;
+    margin-bottom: 0.6rem;
+  }
+  #recruit-outcome-text {
+    font-family: var(--ff-body);
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 1rem;
+  }
+  #recruit-outcome-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .recruit-outcome-btn {
+    font-family: var(--ff-heading);
+    font-size: 0.5rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .recruit-outcome-btn.primary { border-color: var(--amber-bright); color: var(--amber-bright); }
+  .recruit-outcome-btn:active { opacity: 0.7; }
+
+  /* Leave button */
+  #recruit-leave-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    border-top: 1px solid var(--border);
+    padding: 1rem;
+    font-family: var(--ff-heading);
+    font-size: 0.38rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-align: center;
+    margin-top: auto;
+  }
+
+  /* Combat tab uses same position:fixed approach */
+  #panel-recruit.active {
+    display: block;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 300;
+    background: var(--bg, var(--void));
+    max-width: 430px;
+    margin: 0 auto;
+    overflow-y: auto;
+  }
+
+  /* ══ Combat tab — crimson, pulses to draw attention when combat starts */
   .tab-combat {
     color: var(--crimson-bright) !important;
     border-bottom-color: var(--crimson-bright) !important;
@@ -2178,7 +2411,7 @@
 </style>
 <style>
   /* ═══════════════════════════════════════════════════
-     HOLISTIC VISUAL OVERHAUL — v0.8.0
+     HOLISTIC VISUAL OVERHAUL — v0.7.32
      Principles: editorial, handcrafted, ruled-paper feel
      No glowing widgets; type and line as primary language
   ═══════════════════════════════════════════════════ */
@@ -2886,6 +3119,10 @@
       <span class="tab-icon">✕</span>
       <span class="tab-label">Combat</span>
     </button>
+    <button class="tab tab-recruit" id="tab-recruit" onclick="switchTab('recruit')" style="display:none;">
+      <span class="tab-icon">◬</span>
+      <span class="tab-label">Encounter</span>
+    </button>
   </div>
 
   <!-- MAIN PANELS -->
@@ -3208,6 +3445,46 @@
 
 </div>
 
+<!-- RECRUIT TAB PANEL -->
+<div id="panel-recruit" class="tab-panel">
+  <!-- Header: encounter scene -->
+  <div id="recruit-scene">
+    <div id="recruit-scene-sigil">◬</div>
+    <div id="recruit-scene-location">The Field</div>
+    <div id="recruit-scene-desc">A figure moves at the edge of your perception.</div>
+  </div>
+
+  <!-- The figure -->
+  <div id="recruit-figure-card">
+    <div id="recruit-fig-left">
+      <div id="recruit-fig-glyph">◈</div>
+      <div id="recruit-fig-class">Unknown</div>
+    </div>
+    <div id="recruit-fig-body">
+      <div id="recruit-fig-name">—</div>
+      <div id="recruit-fig-lore"></div>
+      <div id="recruit-fig-stats"></div>
+    </div>
+  </div>
+
+  <!-- Approach options -->
+  <div id="recruit-approach-label">How do you approach?</div>
+  <div id="recruit-approaches"></div>
+
+  <!-- Outcome -->
+  <div id="recruit-outcome" style="display:none;">
+    <div id="recruit-outcome-sigil">—</div>
+    <div id="recruit-outcome-text"></div>
+    <div id="recruit-outcome-actions"></div>
+  </div>
+
+  <!-- Leave -->
+  <button id="recruit-leave-btn" onclick="closeRecruitTab()">
+    ← Withdraw from the encounter
+  </button>
+</div>
+
+
 <!-- IDENTITY MODAL -->
 <div id="identity-modal">
   <div class="identity-title">Name Your Soul</div>
@@ -3446,11 +3723,23 @@
       showCombat(ev).catch(err => {
         console.error('Combat error:', err);
         toast('Combat failed to load: ' + (err.message || err));
-        switchTab('field'); // retreat on error
+        switchTab('field');
       });
       return;
     }
-    toast(ev.actionText || 'You approach the site. The air thickens.');
+    if (ev.type === 'recruit') {
+      showRecruitTab(ev);
+      return;
+    }
+    if (ev.type === 'gather') {
+      toast(ev.actionText || 'You mark the site. The essence pools here during the right hour.');
+      return;
+    }
+    if (ev.type === 'story') {
+      toast(ev.actionText || 'The moment settles into memory. Something has shifted.');
+      return;
+    }
+    toast(ev.actionText || 'You approach. The air thickens.');
   }
 
   function handleWorldEvent(evJson) {
@@ -4506,10 +4795,14 @@
     const ORDER = ['journal','field','company','lair','arcana','codex'];
     const idx = ORDER.indexOf(tab);
     if (idx >= 0) document.querySelectorAll('.tab')[idx].classList.add('active');
-    // Combat tab is the last button, handled separately
+    // Special tabs handled separately (not in ORDER array)
     if (tab === 'combat') {
       document.getElementById('tab-combat')?.classList.add('active');
       document.getElementById('tab-combat')?.classList.remove('pulsing');
+    }
+    if (tab === 'recruit') {
+      document.getElementById('tab-recruit')?.classList.add('active');
+      document.getElementById('tab-recruit')?.classList.remove('pulsing');
     }
     const panel = document.getElementById('panel-' + tab);
     if (panel) panel.classList.add('active');
@@ -6239,6 +6532,297 @@
   setInterval(pollBroadcasts, 6000);
   setTimeout(pollDmEvents,    3000);
   setTimeout(pollBroadcasts,  3500);
+
+  // ══════════════════════════════════════════
+  // RECRUITMENT ENGINE
+  // ══════════════════════════════════════════
+
+  const ACOLYTE_NAMES = [
+    'Milo Vetch', 'Sable Orin', 'Cassia Fell', 'Drest Avon', 'Irenea Moss',
+    'Orin Lach', 'Thessaly Brun', 'Wren Cault', 'Piers Edda', 'Nola Grim',
+    'Dorian Carse', 'Ysabel Krath', 'Emris Dun', 'Calla Voss', 'Hadden Ule',
+    'Soren Falk', 'Maren Ast', 'Tobren Gault', 'Lysa Craw', 'Aldric Mourn',
+  ];
+
+  const ACOLYTE_CLASSES = {
+    'flagellant': {
+      glyph: '✕',
+      lore: [
+        'The marks on their hands are old. They bear them without apology.',
+        'Something in their posture suggests they have survived worse than this street.',
+        'They carry no visible weapon. They do not need one.',
+      ],
+      stats: { fortitude:14, wrath:12, intuition:8, empathy:6, endurance:13, memory:7, cunning:9, gnosis:0, speed:9 },
+    },
+    'plague-scribe': {
+      glyph: '◇',
+      lore: [
+        'Their fingers are stained with something that does not wash out. They are watching you count the letters in your name.',
+        'A satchel of journals. Too many journals. Their eyes move faster than their feet.',
+        'They smell faintly of a library that burned down. They seem proud of this.',
+      ],
+      stats: { fortitude:7, wrath:6, intuition:13, empathy:9, endurance:8, memory:15, cunning:14, gnosis:2, speed:8 },
+    },
+    'hermeticist': {
+      glyph: '◈',
+      lore: [
+        'The geometry of their stance is slightly wrong — too deliberate. They know how they look from the outside.',
+        'A small notebook, constantly referenced. They pause mid-sentence to write something and will not say what.',
+        'Their coat has pockets in places coats do not usually have pockets.',
+      ],
+      stats: { fortitude:8, wrath:8, intuition:14, empathy:10, endurance:9, memory:13, cunning:15, gnosis:3, speed:10 },
+    },
+  };
+
+  const APPROACH_TYPES = [
+    {
+      id: 'direct',
+      glyph: '—',
+      label: 'Address them directly',
+      sub: 'Name what you are. Let them decide.',
+      requires: null,
+      successChance: 0.6,
+      successLore: [
+        'They hold your gaze for longer than is comfortable. Then: "I wondered when someone would."',
+        'A pause. They look at something behind you that isn't there. "Yes," they say. "Yes, I think so."',
+        'They exhale. "I've been standing here for an hour. I wasn't sure you'd come."',
+      ],
+      failLore: [
+        'They take one step back. "You have the wrong person." They believe it.',
+        'Their expression closes. "I don't know what you're talking about." They leave too quickly.',
+        '"No." Quiet, final. They don't run — they don't need to.',
+      ],
+    },
+    {
+      id: 'oblique',
+      glyph: '\',
+      label: 'Speak in signs',
+      sub: 'Reference the hour. The alignment. Let them prove they understand.',
+      requires: null,
+      successChance: 0.7,
+      successLore: [
+        'They complete your sentence. Wrong planet, but the right constellation. Close enough.',
+        'They pull back their sleeve to show you something. An old scar in a very specific pattern.',
+        'Their head tilts. "How did you know about the third house?" You didn't say third house. "Neither did I," they add.',
+      ],
+      failLore: [
+        'Confusion, then suspicion. "Are you all right?" They think you're unwell.',
+        'They nod slowly, as though humouring you, then make an excuse about somewhere to be.',
+        'They laugh. Not meanly — just genuinely baffled. The moment is gone.',
+      ],
+    },
+    {
+      id: 'ritual',
+      glyph: '△',
+      label: 'Invoke the mark',
+      sub: 'Draw the sigil. Some recognize it before they know what it means.',
+      requires: { stat: 'gnosis', min: 3 },
+      successChance: 0.85,
+      successLore: [
+        'Their pupils contract. A breath. "Where did you learn that." Not a question.',
+        'They touch something at their throat — hidden, small. "I thought I was the only one who remembered."',
+        'They step forward. "Don't draw that in the open. Come with me."',
+      ],
+      failLore: [
+        'Nothing. They don't recognise it. A civilian. You've frightened them.',
+        'They recognise it — and back away. Wrong faction. Wrong lair. Bad luck.',
+        'Their face goes carefully blank. "Excuse me." They take a different street entirely.',
+      ],
+    },
+    {
+      id: 'offer',
+      glyph: '○',
+      label: 'Make an offer',
+      sub: 'Some are not found — they are purchased. Curiosity, safety, purpose.',
+      requires: null,
+      successChance: 0.75,
+      successLore: [
+        '"Purpose." They say the word like they've been waiting to hear it. "You're offering purpose."',
+        'They name a price — not in money. A question answered. You answer it.',
+        '"Three months," they say. "Then I decide." You nod. Everyone says three months.',
+      ],
+      failLore: [
+        '"You can't afford what I actually want." They're probably right.',
+        'They consider it. Genuinely, seriously. Then: "Not yet." Not never.',
+        'Wrong offer. They wanted something different — you read them wrong. They don't say so.',
+      ],
+    },
+  ];
+
+  let _recruitmentState = null;
+
+  function showRecruitTab(ev) {
+    // Generate the potential acolyte
+    const classKeys = Object.keys(ACOLYTE_CLASSES);
+    const classKey  = classKeys[Math.floor(Math.random() * classKeys.length)];
+    const cls       = ACOLYTE_CLASSES[classKey];
+    const name      = ACOLYTE_NAMES[Math.floor(Math.random() * ACOLYTE_NAMES.length)];
+    const lore      = cls.lore[Math.floor(Math.random() * cls.lore.length)];
+
+    // Give them slight random stat variation
+    const stats = {};
+    Object.entries(cls.stats).forEach(([k,v]) => {
+      stats[k] = Math.max(1, v + Math.floor((Math.random()-0.5)*4));
+    });
+    // Personality quirks — 1-2
+    const QUIRKS = ['Guarded','Restless','Meticulous','Sardonic','Devout','Amnesiac',
+                    'Insomniac','Obsessive','Detached','Fervent','Cautious','Reckless'];
+    const quirk1 = QUIRKS[Math.floor(Math.random()*QUIRKS.length)];
+    let quirk2 = QUIRKS[Math.floor(Math.random()*QUIRKS.length)];
+    while (quirk2 === quirk1) quirk2 = QUIRKS[Math.floor(Math.random()*QUIRKS.length)];
+    const states = [quirk1, quirk2];
+
+    _recruitmentState = { ev, classKey, cls, name, stats, states, lore, approached: false, outcome: null };
+
+    // Populate the panel
+    document.getElementById('recruit-scene-location').textContent =
+      ev.title || 'Field Encounter';
+    document.getElementById('recruit-scene-desc').textContent =
+      ev.desc || 'A figure moves at the edge of your perception.';
+    document.getElementById('recruit-fig-glyph').textContent = cls.glyph;
+    document.getElementById('recruit-fig-class').textContent = classKey.replace(/-/g,' ');
+    document.getElementById('recruit-fig-name').textContent = name;
+    document.getElementById('recruit-fig-lore').textContent = lore;
+
+    // Stats display
+    const statLabels = { fortitude:'FOR', wrath:'WRA', intuition:'INT', empathy:'EMP',
+                         endurance:'END', memory:'MEM', cunning:'CUN', gnosis:'GNO', speed:'SPD' };
+    document.getElementById('recruit-fig-stats').innerHTML =
+      Object.entries(stats).filter(([k]) => k !== 'gnosis' || stats.gnosis > 0).map(([k,v]) =>
+        `<span class="recruit-stat">${statLabels[k]||k} <span>${v}</span></span>`
+      ).join('');
+
+    // Approaches — filter by requirements
+    const charStats = _characterData?.stats || {};
+    const gnosis = charStats.gnosis || 0;
+    const approaches = APPROACH_TYPES.filter(a => {
+      if (!a.requires) return true;
+      if (a.requires.stat === 'gnosis') return gnosis >= a.requires.min;
+      return true;
+    });
+
+    document.getElementById('recruit-approaches').innerHTML = approaches.map(a => `
+      <button class="approach-btn" onclick="attemptApproach('${a.id}')">
+        <span class="approach-glyph">${a.glyph}</span>
+        <span class="approach-text">${a.label}
+          <span class="approach-sub">${a.sub}</span>
+        </span>
+      </button>`).join('');
+
+    // Hide outcome, show approaches
+    document.getElementById('recruit-outcome').style.display = 'none';
+    document.getElementById('recruit-approach-label').style.display = '';
+    document.getElementById('recruit-approaches').style.display = '';
+
+    // Show and switch to recruit tab
+    const tab = document.getElementById('tab-recruit');
+    if (tab) { tab.style.display = ''; tab.classList.add('pulsing'); }
+    switchTab('recruit');
+    // Scroll to top
+    document.getElementById('panel-recruit')?.scrollTo(0, 0);
+  }
+
+  function attemptApproach(approachId) {
+    if (!_recruitmentState) return;
+    const approach = APPROACH_TYPES.find(a => a.id === approachId);
+    if (!approach) return;
+
+    const success = Math.random() < approach.successChance;
+    const lorePool = success ? approach.successLore : approach.failLore;
+    const outcomeLore = lorePool[Math.floor(Math.random() * lorePool.length)];
+
+    _recruitmentState.approached = true;
+    _recruitmentState.outcome = success ? 'success' : 'fail';
+
+    // Hide approach section
+    document.getElementById('recruit-approach-label').style.display = 'none';
+    document.getElementById('recruit-approaches').style.display = 'none';
+
+    // Build outcome
+    const outcome = document.getElementById('recruit-outcome');
+    document.getElementById('recruit-outcome-sigil').textContent = success ? '◈' : '○';
+    document.getElementById('recruit-outcome-sigil').style.color =
+      success ? 'var(--amber-bright)' : 'var(--text-secondary)';
+    document.getElementById('recruit-outcome-text').textContent = outcomeLore;
+
+    const actionsEl = document.getElementById('recruit-outcome-actions');
+    if (success) {
+      actionsEl.innerHTML = `
+        <button class="recruit-outcome-btn primary" onclick="confirmRecruit()">
+          Bring them to the Lair
+        </button>
+        <button class="recruit-outcome-btn" onclick="declineRecruit()">
+          Not now — the lair isn't ready
+        </button>`;
+    } else {
+      actionsEl.innerHTML = `
+        <button class="recruit-outcome-btn" onclick="closeRecruitTab()">
+          Leave without looking back
+        </button>
+        <button class="recruit-outcome-btn" onclick="retryApproach()">
+          Try a different approach
+        </button>`;
+    }
+    outcome.style.display = '';
+  }
+
+  function retryApproach() {
+    if (!_recruitmentState) return;
+    _recruitmentState.outcome = null;
+    document.getElementById('recruit-outcome').style.display = 'none';
+    document.getElementById('recruit-approach-label').style.display = '';
+    document.getElementById('recruit-approaches').style.display = '';
+  }
+
+  async function confirmRecruit() {
+    if (!_recruitmentState || _recruitmentState.outcome !== 'success') return;
+    const { name, classKey, stats, states } = _recruitmentState;
+    const displayClass = ACOLYTE_CLASSES[classKey] ?
+      classKey.split('-').map(w => w[0].toUpperCase()+w.slice(1)).join(' ') : classKey;
+
+    const newAcolyte = {
+      id: 'acol_' + Date.now(),
+      name, class: displayClass, classKey,
+      level: 1, xp: 0, stress: 0, states,
+      stats, available: false,
+    };
+
+    // Add to character data
+    if (!_acolytesData) _acolytesData = [];
+    _acolytesData.push(newAcolyte);
+    renderAcolyteCards(_acolytesData);
+
+    // Persist
+    try {
+      await fbWrite(getOrCreatePlayerId(), collectGameState());
+    } catch(e) {}
+
+    const msg = name + ' joins the lair. ' + states.join(', ') + '.';
+    document.getElementById('recruit-outcome-text').textContent = msg;
+    document.getElementById('recruit-outcome-actions').innerHTML = `
+      <button class="recruit-outcome-btn primary" onclick="closeRecruitTab(); switchTab('company')">
+        Return to the Lair
+      </button>`;
+  }
+
+  function declineRecruit() {
+    document.getElementById('recruit-outcome-text').textContent =
+      '"Another time, perhaps." You leave them to the street. They watch you go.';
+    document.getElementById('recruit-outcome-actions').innerHTML = `
+      <button class="recruit-outcome-btn" onclick="closeRecruitTab()">
+        Leave
+      </button>`;
+  }
+
+  function closeRecruitTab() {
+    const tab = document.getElementById('tab-recruit');
+    if (tab) { tab.style.display = 'none'; tab.classList.remove('pulsing','active'); }
+    document.getElementById('panel-recruit')?.classList.remove('active');
+    _recruitmentState = null;
+    switchTab('field');
+  }
+
+
 </script>
 
 <div id="incoming-exchange-modal">
