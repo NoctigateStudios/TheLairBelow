@@ -2717,22 +2717,34 @@
     } catch(e) {}
   }
 
+  // Safe event store — avoids JSON/quote issues in HTML onclick attrs
+  const _worldEventStore = new Map();
+
   function makeEventPopup(ev) {
+    const evId = 'ev_' + Math.random().toString(36).slice(2,9);
+    _worldEventStore.set(evId, ev);
     const rewardHtml = ev.reward ? `<div style="margin-top:0.4rem;font-family:var(--ff-heading);font-size:0.5rem;color:#c9a84c;letter-spacing:0.08em;">${ev.reward}</div>` : '';
     return `<div class="popup-title">${ev.title || 'Unknown Event'}</div>
       <div>${ev.desc || ''}</div>
       ${rewardHtml}
-      <button class="popup-btn" onclick="handleWorldEvent(${JSON.stringify(JSON.stringify(ev))})">Investigate</button>`;
+      <button class="popup-btn" onclick="activateWorldEvent('${evId}')">Investigate</button>`;
+  }
+
+  function activateWorldEvent(evId) {
+    const ev = _worldEventStore.get(evId);
+    if (!ev) { toast('Event data not found.'); return; }
+    document.querySelector('.leaflet-popup-close-button')?.click();
+    if (ev.type === 'combat') { showCombat(ev); return; }
+    toast(ev.actionText || 'You approach the site. The air thickens.');
   }
 
   function handleWorldEvent(evJson) {
-    const ev = JSON.parse(evJson);
-    document.querySelector('.leaflet-popup-close-button')?.click();
-    if (ev.type === 'combat') {
-      showCombat(ev);  // pass the full event so combat loads the right enemies
-      return;
-    }
-    toast(ev.actionText || 'You approach the site. The air thickens.');
+    // legacy — should not be called anymore but kept as safety net
+    try {
+      const ev = typeof evJson === 'string' ? JSON.parse(evJson) : evJson;
+      if (ev.type === 'combat') { showCombat(ev); return; }
+      toast(ev.actionText || 'You approach the site.');
+    } catch(e) { toast('You approach the site.'); }
   }
 
   function makeIcon(type, source) {
@@ -4104,10 +4116,10 @@
       const rewardLine = ev.reward
         ? `<span style="color:var(--gold-dim);font-family:var(--ff-heading);font-size:0.38rem;letter-spacing:0.06em;">↳ ${ev.reward}</span>`
         : '';
-      const onClick = ev.type === 'combat'
-        ? `showCombat()`
-        : `handleWorldEvent(${JSON.stringify(JSON.stringify(ev))})`;
-      return `<div class="mission-card" style="--mission-color:${color}" onclick="${onClick}">
+      // Store event object — avoids all JSON/quote escaping in onclick attrs
+      const evId = 'ev_' + Math.random().toString(36).slice(2,9);
+      _worldEventStore.set(evId, ev);
+      return `<div class="mission-card" style="--mission-color:${color}" onclick="activateWorldEvent('${evId}')">
         <div class="mission-header">
           <span class="mission-title">${sigil} ${ev.title}</span>
           ${badge}
@@ -4151,7 +4163,7 @@
       <p class="entry-body">${ev.body || ''}</p>
       ${rewardLine}
       <div class="entry-actions">
-        ${ev.btn1 ? `<button class="btn-action primary" onclick="applyDmEventReward(${JSON.stringify(JSON.stringify(ev))});this.closest('.journal-entry').style.opacity='0.5';this.disabled=true;">${ev.btn1}</button>` : ''}
+        ${ev.btn1 ? (() => { const jid='j_'+Math.random().toString(36).slice(2,8); _worldEventStore.set(jid,ev); return `<button class="btn-action primary" onclick="applyDmEventReward(_worldEventStore.get('${jid}'));this.closest('.journal-entry').style.opacity='0.5';this.disabled=true;">${ev.btn1}</button>`; })() : ''}
         ${ev.btn2 ? `<button class="btn-action" onclick="this.closest('.journal-entry').style.opacity='0.5';this.disabled=true;">${ev.btn2}</button>` : ''}
         ${ev.location?.lat ? `<button class="btn-action" onclick="switchTab('field')">📍 Go to Location</button>` : ''}
       </div>`;
