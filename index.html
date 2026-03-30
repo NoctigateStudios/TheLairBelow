@@ -2584,7 +2584,7 @@
 </style>
 <style>
   /* ═══════════════════════════════════════════════════
-     HOLISTIC VISUAL OVERHAUL — v0.7.34
+     HOLISTIC VISUAL OVERHAUL — v0.7.35
      Principles: editorial, handcrafted, ruled-paper feel
      No glowing widgets; type and line as primary language
   ═══════════════════════════════════════════════════ */
@@ -3217,6 +3217,161 @@
     margin-top: 0.5rem;
   }
 
+  
+  /* ── SKILL BUTTON WRAP ── */
+  .skill-btn-wrap {
+    display: flex; align-items: stretch; border-top: 1px solid var(--border);
+  }
+  .skill-btn-wrap .skill-btn {
+    flex: 1; border: none; border-top: none; text-align: left;
+    align-items: flex-start; padding: 0.55rem 0.5rem;
+  }
+  .skill-btn-wrap .skill-btn:first-child { border-top: none; }
+  .skill-info-btn {
+    flex-shrink: 0; width: 2rem;
+    background: none; border: none; border-left: 1px solid var(--border);
+    color: var(--text-secondary); font-size: 0.65rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.12s;
+  }
+  .skill-info-btn:active { color: var(--text-primary); }
+
+  /* ── COMBATANT CARD NAME ROW ── */
+  .cc-name-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.3rem; }
+  .cc-inspect-btn {
+    background: none; border: none; color: var(--text-secondary);
+    font-size: 0.6rem; cursor: pointer; padding: 0 0.2rem; line-height: 1;
+    flex-shrink: 0; transition: color 0.12s;
+  }
+  .cc-inspect-btn:active { color: var(--text-primary); }
+
+  /* ── COMBAT OVERLAY (tooltip + inspect) ── */
+  #combat-overlay {
+    display: none; position: fixed; inset: 0; z-index: 500;
+    background: rgba(5,4,7,0.75); align-items: flex-end; justify-content: center;
+  }
+  #combat-overlay.open { display: flex; }
+  .combat-sheet {
+    background: var(--bg, var(--abyss)); border-top: 1px solid var(--border);
+    width: 100%; max-width: 430px; max-height: 72vh; overflow-y: auto;
+    padding: 1.1rem 1rem 2rem;
+  }
+  .csheet-head {
+    display: flex; align-items: baseline; gap: 0.6rem;
+    border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; margin-bottom: 0.8rem;
+  }
+  .csheet-icon { font-family: var(--ff-heading); font-size: 1.3rem; color: var(--text-secondary); }
+  .csheet-name { font-family: var(--ff-heading); font-size: 0.75rem; letter-spacing: 0.05em; color: var(--text-primary); flex: 1; }
+  .csheet-type { font-family: var(--ff-heading); font-size: 0.32rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-secondary); }
+  .csheet-sep {
+    font-family: var(--ff-heading); font-size: 0.32rem; letter-spacing: 0.28em;
+    text-transform: uppercase; color: var(--text-secondary);
+    display: flex; align-items: center; gap: 0.5rem;
+    margin: 0.8rem 0 0.4rem;
+  }
+  .csheet-sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .csheet-stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.3rem 0.5rem; margin-bottom: 0.2rem; }
+  .csheet-stat { font-family: var(--ff-heading); font-size: 0.38rem; letter-spacing: 0.06em; color: var(--text-secondary); }
+  .csheet-stat span { color: var(--text-primary); display: block; font-size: 0.6rem; }
+  .csheet-desc { font-family: var(--ff-body); font-style: italic; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.65; margin-bottom: 0.5rem; }
+  .csheet-tag {
+    display: inline-block; font-family: var(--ff-heading); font-size: 0.33rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.08rem 0.35rem; border: 1px solid var(--border); margin: 0.1rem 0.15rem 0 0;
+    color: var(--text-secondary);
+  }
+  .csheet-tag.attack { color: var(--crimson-bright); border-color: rgba(196,48,48,0.3); }
+  .csheet-tag.heal   { color: var(--viridian-bright); border-color: rgba(45,122,95,0.3); }
+  .csheet-tag.buff   { color: var(--amber-bright); border-color: rgba(212,137,10,0.3); }
+  .csheet-tag.debuff { color: var(--mist); border-color: rgba(107,92,128,0.3); }
+  .csheet-tag.item   { color: var(--amber-bright); border-color: rgba(212,137,10,0.25); }
+  .csheet-loot { font-family: var(--ff-body); font-size: 0.78rem; color: var(--text-secondary); }
+  .csheet-close {
+    width: 100%; margin-top: 1rem;
+    font-family: var(--ff-heading); font-size: 0.4rem; letter-spacing: 0.2em;
+    text-transform: uppercase; padding: 0.65rem;
+    border: 1px solid var(--border); background: none; color: var(--text-secondary); cursor: pointer;
+  }
+
+  /* ── LEVEL-UP MODAL ── */
+  #levelup-modal {
+    display: none; position: fixed; inset: 0; z-index: 600;
+    background: rgba(5,4,7,0.9); align-items: center; justify-content: center;
+    padding: 1rem;
+  }
+  #levelup-modal.open { display: flex; }
+  .levelup-inner {
+    background: var(--bg, var(--abyss)); border: 1px solid var(--border);
+    border-top: 3px solid var(--text-accent); width: 100%; max-width: 380px;
+    padding: 1.5rem 1.2rem;
+    max-height: 85vh; overflow-y: auto;
+  }
+  .levelup-roman {
+    font-family: var(--ff-title); font-size: 3rem; color: var(--text-accent);
+    text-align: center; line-height: 1; margin-bottom: 0.3rem;
+  }
+  .levelup-title {
+    font-family: var(--ff-heading); font-size: 0.55rem; letter-spacing: 0.3em;
+    text-transform: uppercase; color: var(--text-secondary); text-align: center;
+    margin-bottom: 1.2rem;
+  }
+  .levelup-gains { margin-bottom: 1rem; }
+  .levelup-gain-row {
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--border); padding: 0.4rem 0;
+    font-family: var(--ff-heading); font-size: 0.5rem; letter-spacing: 0.06em;
+    color: var(--text-secondary);
+  }
+  .levelup-gain-row span { color: var(--viridian-bright); }
+  .levelup-spec-grid { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+  .levelup-spec-card {
+    border: 1px solid var(--border); border-left: 3px solid var(--border);
+    padding: 0.7rem 0.8rem; cursor: pointer; transition: border-color 0.15s;
+  }
+  .levelup-spec-card:active, .levelup-spec-card.selected { border-left-color: var(--text-accent); }
+  .levelup-spec-name {
+    font-family: var(--ff-heading); font-size: 0.62rem; letter-spacing: 0.05em;
+    color: var(--text-primary); margin-bottom: 0.2rem;
+  }
+  .levelup-spec-desc {
+    font-family: var(--ff-body); font-style: italic; font-size: 0.75rem;
+    color: var(--text-secondary); line-height: 1.55;
+  }
+  .levelup-spec-bonus {
+    font-family: var(--ff-heading); font-size: 0.32rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--amber-bright); margin-top: 0.3rem;
+  }
+
+  /* ── COMBAT DEFEAT / RETREAT SCREEN ── */
+  #combat-defeat-overlay {
+    display: none; position: absolute; inset: 0; z-index: 50;
+    background: rgba(5,4,7,0.92); flex-direction: column;
+    align-items: center; justify-content: center; padding: 2rem;
+    text-align: center;
+  }
+  #combat-defeat-overlay.open { display: flex; }
+  .defeat-sigil {
+    font-family: var(--ff-heading); font-size: 2.5rem;
+    color: var(--crimson-bright); opacity: 0.6; margin-bottom: 0.8rem;
+  }
+  .defeat-title {
+    font-family: var(--ff-title); font-size: 1.8rem; color: var(--crimson-bright);
+    margin-bottom: 0.5rem;
+  }
+  .defeat-body {
+    font-family: var(--ff-body); font-style: italic; font-size: 0.85rem;
+    color: var(--text-secondary); line-height: 1.7; max-width: 300px;
+    margin-bottom: 1.2rem;
+  }
+  .defeat-cost { font-family: var(--ff-heading); font-size: 0.38rem; letter-spacing: 0.1em;
+    color: var(--crimson-bright); margin-bottom: 1.2rem; line-height: 1.8; }
+  .defeat-btn {
+    font-family: var(--ff-heading); font-size: 0.45rem; letter-spacing: 0.2em;
+    text-transform: uppercase; padding: 0.75rem 2rem;
+    border: 1px solid var(--border); background: none;
+    color: var(--text-secondary); cursor: pointer; width: 100%; max-width: 280px;
+  }
+
   </style>
 </head>
 <body>
@@ -3648,8 +3803,32 @@
   </div>
 
   <div id="combat-target-prompt">Tap an enemy to target — or press Pass to cancel</div>
+  <div id="combat-defeat-overlay">
+    <div class="defeat-sigil">✕</div>
+    <div class="defeat-title" id="defeat-title">Fallen</div>
+    <div class="defeat-body" id="defeat-body">The passage takes you.</div>
+    <div class="defeat-cost" id="defeat-cost"></div>
+    <button class="defeat-btn" onclick="closeCombat()">Return to the Lair</button>
+  </div>
+  </div>
+</div>
 
+<!-- COMBAT INSPECT / TOOLTIP OVERLAY -->
+<div id="combat-overlay" onclick="this.classList.remove('open')">
+  <div class="combat-sheet" onclick="event.stopPropagation()" id="combat-sheet-inner"></div>
+</div>
 
+<!-- LEVEL-UP MODAL -->
+<div id="levelup-modal">
+  <div class="levelup-inner">
+    <div class="levelup-roman" id="lu-roman">II</div>
+    <div class="levelup-title" id="lu-title">Level Attained</div>
+    <div id="lu-gains" class="levelup-gains"></div>
+    <div id="lu-spec-section" style="display:none;">
+      <div class="csheet-sep">Choose a Path</div>
+      <div class="levelup-spec-grid" id="lu-spec-grid"></div>
+    </div>
+    <button class="csheet-close" id="lu-confirm-btn" onclick="confirmLevelUp()">Ascend</button>
   </div>
 </div>
 
@@ -4544,18 +4723,33 @@
     }
     const charData = _characterData||{name:playerName||'Seeker',level:1,stats:{fortitude:10,wrath:8,intuition:12,empathy:10,endurance:10,memory:8,cunning:12,gnosis:0,speed:10},classKey:'hermeticist',class:'Seeker'};
     const charDerived = derivedStats(charData.stats, charData.level||1);
-    const player = {id:'player',name:charData.name||playerName||'Seeker',icon:'🜏',side:'ally',rank:3,
-      stats:charData.stats,derived:charDerived,hp:charDerived.hp,maxHp:charDerived.hp,
-      mana:charDerived.mana,maxMana:charDerived.mana,stress:_characterData?.stress||0,
-      initiative:charDerived.initiative+Math.random()*4,effects:[],dead:false,
-      classKey:charData.classKey||'hermeticist'};
-    const acolytes=(_acolytesData||[]).filter(a=>a.available!==false).slice(0,3).map((a,i)=>{
-      const as2=a.stats||{fortitude:10,wrath:8,intuition:10,empathy:10,endurance:10,memory:8,cunning:10,gnosis:0,speed:9};
-      const ad=derivedStats(as2,a.level||1);
-      return {id:'acol_'+i,name:a.name,icon:['🜃','🜁','🜂'][i]||'🜃',side:'ally',rank:i+1,
-        stats:as2,derived:ad,hp:ad.hp,maxHp:ad.hp,mana:ad.mana,maxMana:ad.mana,
-        stress:a.stress||0,initiative:ad.initiative+Math.random()*4,effects:[],dead:false,
-        classKey:(a.class||'').toLowerCase().replace(/\s+/g,'-')};
+
+    // Build party from roster — player if onRoster, else always include player
+    const playerOnRoster = charData.onRoster !== false; // default true
+    const player = {id:'player', name:charData.name||playerName||'Seeker', icon:'✦', side:'ally', rank:4,
+      stats:charData.stats, derived:charDerived, hp:charDerived.hp, maxHp:charDerived.hp,
+      mana:charDerived.mana, maxMana:charDerived.mana, stress:charData.stress||0,
+      initiative:charDerived.initiative+Math.random()*4, effects:[], dead:false,
+      classKey:charData.classKey||'hermeticist',
+      skills: charData.skills || [],          // player's learned skills
+      inventory: charData.inventory || [],    // player's equipped items
+      isPlayer: true };
+
+    // Roster acolytes — those with onRoster:true, preserving their skills+inventory
+    const rosterAcolytes = (_acolytesData||[]).filter(a=>a.onRoster===true);
+    const partyAcolytes  = rosterAcolytes.length > 0 ? rosterAcolytes : (_acolytesData||[]).slice(0,1);
+
+    const ACOL_ICONS = ['△','▽','◈','◇','○'];
+    const acolytes = partyAcolytes.map((a, i) => {
+      const as2 = a.stats||{fortitude:10,wrath:8,intuition:10,empathy:10,endurance:10,memory:8,cunning:10,gnosis:0,speed:9};
+      const ad  = derivedStats(as2, a.level||1);
+      return {id: a.id||('acol_'+i), name:a.name, icon:ACOL_ICONS[i%ACOL_ICONS.length],
+        side:'ally', rank:i+1,
+        stats:as2, derived:ad, hp:ad.hp, maxHp:ad.hp, mana:ad.mana, maxMana:ad.mana,
+        stress:a.stress||0, initiative:ad.initiative+Math.random()*4, effects:[], dead:false,
+        classKey:(a.classKey||a.class||'').toLowerCase().replace(/\s+/g,'-'),
+        skills:a.skills||[], inventory:a.inventory||[],
+        sourceAcolyte: a }; // keep ref for post-combat updates
     });
     let enemyDefs=[];
     try {
@@ -4631,17 +4825,21 @@
     const mpPct=c.maxMana>0?Math.max(0,Math.min(100,(c.mana/c.maxMana)*100)):0;
     const stPct=Math.min(100,c.stress||0);
     const hpCls=c.side==='enemy'?'hp-fill-enemy':'hp-fill-ally';
-    const pips=(c.effects||[]).map(ef=>`<span class="effect-pip ${ef.type}">${ef.type}${ef.stacks>1?' x'+ef.stacks:''} ${ef.turns}t</span>`).join('');
+    const pips=(c.effects||[]).map(ef=>`<span class="effect-pip ${ef.type}">${ef.type}${ef.stacks>1?' ×'+ef.stacks:''} ${ef.turns}t</span>`).join('');
     const sline=c.side==='enemy'
       ?`<span>DODGE:${c.dodge||0}%</span><span>ARM:${c.armour||0}</span>`
-      :`<span>INIT:${Math.round(c.initiative)}</span><span>CRIT:${c.derived?.crit||0}%</span><span>DODGE:${c.derived?.dodge||0}%</span>${c.shield>0?`<span class="stat-hi">◈${c.shield}</span>`:''}${c.stress>=80?'<span class="stat-danger">⚠</span>':''}`;
+      :`<span>INIT:${Math.round(c.initiative)}</span><span>CRIT:${c.derived?.crit||0}%</span><span>DODGE:${c.derived?.dodge||0}%</span>${(c.shield||0)>0?`<span class="stat-hi">◈${c.shield}</span>`:''}${(c.stress||0)>=80?'<span class="stat-danger">⚠</span>':''}`;
+    const hpColor = hpPct < 25 ? 'var(--crimson-bright)' : hpPct < 50 ? 'var(--amber-bright)' : '';
     return `<div class="combatant-card ${c.side}-card${c.dead?' dead-card':''}" data-cid="${c.id}" onclick="handleCombatantClick('${c.id}')">
       ${c.side==='ally'?`<span class="cc-rank">R${c.rank}</span>`:''}
       <span class="cc-icon">${c.icon}</span>
       <div class="cc-body">
-        <div class="cc-name">${c.name}${c.dead?' <span style="color:var(--ash);font-size:0.5rem;">[fallen]</span>':''}</div>
+        <div class="cc-name-row">
+          <span class="cc-name">${c.name}${c.dead?' <span style="color:var(--ash);font-size:0.5rem;">[fallen]</span>':''}</span>
+          <button class="cc-inspect-btn" onclick="event.stopPropagation();inspectCombatant('${c.id}')" title="Inspect">ⓘ</button>
+        </div>
         <div class="cc-bars">
-          <div class="cc-bar-row"><span class="cc-bar-lbl">HP</span><div class="cc-bar"><div class="cc-bar-fill ${hpCls}" style="width:${hpPct}%"></div></div><span class="cc-bar-val">${Math.ceil(c.hp)}/${c.maxHp}</span></div>
+          <div class="cc-bar-row"><span class="cc-bar-lbl">HP</span><div class="cc-bar"><div class="cc-bar-fill ${hpCls}" style="width:${hpPct}%;${hpColor?'background:'+hpColor:''}"></div></div><span class="cc-bar-val" style="${hpColor?'color:'+hpColor:''}">${Math.ceil(c.hp)}/${c.maxHp}</span></div>
           ${c.maxMana>0?`<div class="cc-bar-row"><span class="cc-bar-lbl">MP</span><div class="cc-bar"><div class="cc-bar-fill mana-fill" style="width:${mpPct}%"></div></div><span class="cc-bar-val">${Math.ceil(c.mana)}/${c.maxMana}</span></div>`:''}
           ${c.side==='ally'?`<div class="cc-bar-row"><span class="cc-bar-lbl">STR</span><div class="cc-bar"><div class="cc-bar-fill stress-fill-c" style="width:${stPct}%"></div></div><span class="cc-bar-val">${Math.round(c.stress)}%</span></div>`:''}
         </div>
@@ -4659,31 +4857,50 @@
     if(active.side==='enemy'){label.textContent=active.name+' is acting…';grid.innerHTML='';return;}
     label.textContent=active.name+' — Choose an Action';
     const skills=getSkillsFor(active);
+    const CAT_COL={attack:'var(--crimson-bright)',heal:'var(--viridian-bright)',buff:'var(--amber-bright)',debuff:'var(--mist)',revive:'var(--indigo-bright)',utility:'var(--gold)'};
     grid.innerHTML=skills.map(sk=>{
       const cat=sk.category||sk.cat||'attack';
+      const col=CAT_COL[cat]||'var(--gold)';
       const bcls='skill-btn'+(cat==='attack'||cat==='debuff'?' attack-btn':cat==='heal'||cat==='revive'?' heal-btn':'');
       const mc=sk.cost?.mana||0;
       const dis=mc>(active.mana||0)?'disabled-btn':'';
-      const dmg=sk.damage?.type&&sk.damage.type!=='none'?(sk.damage.dice||'')+(sk.damage.flat?'+'+sk.damage.flat:'')+' '+sk.damage.type:'';
-      return `<button class="${bcls} ${dis}" onclick="selectSkill('${sk._key}')">
-        <span class="skill-btn-name">${sk.name||sk._key}</span>
-        <span class="skill-btn-sub">${dmg||cat}</span>
-        ${mc?`<span class="skill-btn-cost">${mc} mana</span>`:''}
-      </button>`;
-    }).join('')+`<button class="skill-btn" onclick="combatBasicAttack()"><span class="skill-btn-name">⚔ Strike</span><span class="skill-btn-sub">Basic · No cost</span></button>`;
+      const dmgLine=sk.damage?.type&&sk.damage.type!=='none'?`${sk.damage.dice||''}${sk.damage.flat?'+'+sk.damage.flat:''} <span style="color:${col}">${sk.damage.type}</span>`:(cat);
+      return `<div class="skill-btn-wrap">
+        <button class="${bcls} ${dis}" onclick="selectSkill('${sk._key}')">
+          <span class="skill-btn-name">${sk.name||sk._key}</span>
+          <span class="skill-btn-sub">${dmgLine}</span>
+          ${mc?`<span class="skill-btn-cost">${mc} mana</span>`:''}
+        </button>
+        <button class="skill-info-btn" onclick="showSkillTooltip('${sk._key}',event)" title="Skill info">ⓘ</button>
+      </div>`;
+    }).join('')+`<div class="skill-btn-wrap"><button class="skill-btn" onclick="combatBasicAttack()">
+        <span class="skill-btn-name">Strike</span>
+        <span class="skill-btn-sub">Basic · No cost</span>
+      </button></div>`;
   }
 
   function getSkillsFor(combatant){
-    if(!_cachedWorldSkills)return[];
-    const cc=(combatant.classKey||'').toLowerCase();
-    return Object.entries(_cachedWorldSkills).filter(([k,s])=>{
-      if(!s)return false;
-      const cat=s.category||s.cat||s.type||'';
-      if(cat==='rite')return false;
-      const classOk=!s.classKey||s.classKey.toLowerCase()===cc;
-      const levelOk=(s.unlockLevel||1)<=(_characterData?.level||1);
-      return classOk&&levelOk;
-    }).map(([k,s])=>({_key:k,...s})).slice(0,5);
+    // For player/acolytes, use their saved skills[] array (learned skills only)
+    const savedSkills = (combatant.skills||[]);
+    if (savedSkills.length && _cachedWorldSkills) {
+      return savedSkills.map(s => {
+        const key = s.key || s;
+        const worldSk = _cachedWorldSkills[key] || {};
+        return { _key: key, name: s.name||worldSk.name||key, ...worldSk, ...s };
+      }).filter(s => (s.category||s.cat||'') !== 'rite').slice(0, 6);
+    }
+    // Fallback: use world skills filtered by class (for chars without saved skills)
+    if (!_cachedWorldSkills) return [];
+    const cc = (combatant.classKey||'').toLowerCase();
+    const lv = combatant.isPlayer ? (_characterData?.level||1) : (combatant.level||1);
+    return Object.entries(_cachedWorldSkills).filter(([k,s]) => {
+      if (!s) return false;
+      const cat = s.category||s.cat||s.type||'';
+      if (cat === 'rite') return false;
+      const classOk = !s.classKey || s.classKey.toLowerCase()===cc;
+      const levelOk = (s.unlockLevel||1) <= lv;
+      return classOk && levelOk;
+    }).map(([k,s]) => ({_key:k,...s})).slice(0, 6);
   }
 
   function handleCombatantClick(cid){
@@ -4840,29 +5057,7 @@
     advanceTurn();
   }
 
-  function checkCombatEnd(){
-    if(!_CS)return;
-    const allEDead=_CS.combatants.filter(c=>c.side==='enemy').every(c=>c.dead);
-    const allADead=_CS.combatants.filter(c=>c.side==='ally').every(c=>c.dead);
-    if(allEDead){
-      combatLog('✦ All enemies defeated. Victory.','crit');
-      const loot=[];
-      _CS.combatants.filter(c=>c.side==='enemy').forEach(e=>{
-        (e.loot||[]).forEach(l=>{const idx=['Solar','Lunar','Jovian','Martial','Saturnine','Venusian','Mercurial'].indexOf(l.name);if(idx>=0&&l.amount>0){values[idx]=(values[idx]||0)+l.amount;loot.push(RES_SYMBOLS[idx]+'+'+l.amount);}});
-      });
-      if(loot.length)combatLog('Loot: '+loot.join(' '),'system');
-      document.querySelectorAll('.resource-pill .res-value').forEach((el,i)=>{el.textContent=Math.floor(values[i]);});
-      fbWrite(getOrCreatePlayerId(),collectGameState()).catch(()=>{});
-      document.getElementById('combat-skill-grid').innerHTML='';
-      document.getElementById('combat-actor-label').textContent='Victory — the passage is clear.';
-      _CS=null;
-    } else if(allADead){
-      combatLog('✗ Your company has fallen.','hit');
-      document.getElementById('combat-skill-grid').innerHTML='';
-      document.getElementById('combat-actor-label').textContent='Defeated.';
-      _CS=null;
-    }
-  }
+  // checkCombatEnd — replaced by full implementation above
 
 
   // ══════════════════════════════════════════
@@ -6911,30 +7106,7 @@
   // e.g. Lv1→2: 1000, Lv2→3: 2000, Lv3→4: 3000 ...
   function xpForNextLevel(level) { return level * 1000; }
 
-  function checkLevelUp() {
-    if (!_characterData) return;
-    let levelled = false;
-    while (true) {
-      const currentLevel = _characterData.level || 1;
-      const needed = xpForNextLevel(currentLevel);
-      if (_characterData.xp >= needed && currentLevel < 20) {
-        _characterData.xp -= needed;
-        _characterData.level = currentLevel + 1;
-        levelled = true;
-        // Raise stats on level-up: +1 to two primary stats based on class
-        applyLevelUpStatGains(_characterData);
-      } else { break; }
-    }
-    if (levelled) {
-      refreshCharacterBar();
-      const lvl = _characterData.level;
-      showLevelUpModal(lvl);
-      const myId = getOrCreatePlayerId();
-      fbWrite(myId, collectGameState()).catch(() => {});
-    } else {
-      refreshCharacterBar();
-    }
-  }
+  // checkLevelUp — replaced by async implementation above
 
   function applyLevelUpStatGains(char) {
     // Each level up: +1 to two stats based on class key
@@ -6982,27 +7154,7 @@
     renderCharacterSkills();
   }
 
-  function showLevelUpModal(newLevel) {
-    // Reuse the DM event modal for the level-up announcement
-    const sigils = { story:'✦' };
-    document.getElementById('dm-evt-sigil').textContent = '✦';
-    document.getElementById('dm-evt-type').textContent = 'LEVEL UP';
-    document.getElementById('dm-evt-type').className = 'dm-event-type discovery';
-    document.getElementById('dm-evt-title').textContent = 'You have reached Level ' + newLevel;
-    document.getElementById('dm-evt-body').textContent =
-      'The lair recognises your growth. Your stats increase. New skills may become available.';
-    const actionsEl = document.getElementById('dm-evt-actions');
-    actionsEl.innerHTML = '';
-    // Clean up any stale reward lines
-    document.querySelectorAll('.dm-event-rwd').forEach(e => e.remove());
-    const btn = document.createElement('button');
-    btn.className = 'dm-event-btn primary';
-    btn.textContent = 'Ascend';
-    btn.onclick = () => closeDmEventModal();
-    actionsEl.appendChild(btn);
-    document.getElementById('dm-event-modal').classList.add('open');
-    _dmEventShowing = true;
-  }
+  // showLevelUpModal — replaced by full implementation above
 
   function closeDmEventModal() {
     document.getElementById('dm-event-modal').classList.remove('open');
@@ -7999,6 +8151,469 @@
     renderRoster();
     persistState();
   }
+
+
+  // ══════════════════════════════════════════
+  // SKILL TOOLTIP
+  // ══════════════════════════════════════════
+  function showSkillTooltip(key, evt) {
+    if (evt) { evt.stopPropagation(); evt.preventDefault(); }
+    const sk = (_cachedWorldSkills && _cachedWorldSkills[key]) || {};
+    const cat = sk.category || sk.cat || 'attack';
+    const CAT_COL = {attack:'var(--crimson-bright)',heal:'var(--viridian-bright)',
+      buff:'var(--amber-bright)',debuff:'var(--mist)',revive:'var(--indigo-bright)',utility:'var(--gold)'};
+    const col = CAT_COL[cat] || 'var(--gold)';
+
+    // Damage line
+    let dmgHtml = '';
+    if (sk.damage && sk.damage.type && sk.damage.type !== 'none') {
+      dmgHtml = `<div class="csheet-sep">Damage</div>
+        <div style="font-family:var(--ff-heading);font-size:0.55rem;color:${col};">
+          ${sk.damage.dice||''}${sk.damage.flat?'+'+sk.damage.flat:''} <span style="text-transform:uppercase;letter-spacing:0.1em;">${sk.damage.type}</span>
+        </div>
+        ${sk.damage.scaleStat&&sk.damage.scaleStat!=='none'?`<div style="font-family:var(--ff-heading);font-size:0.32rem;letter-spacing:0.1em;color:var(--text-secondary);margin-top:0.2rem;">Scales with ${sk.damage.scaleStat} (${sk.damage.scaleAmt||50}%)</div>`:''}
+        ${sk.damage.critMult?`<div style="font-family:var(--ff-heading);font-size:0.32rem;letter-spacing:0.1em;color:var(--text-secondary);">Crit ×${sk.damage.critMult}</div>`:''}`;
+    }
+
+    // Effects line
+    let effHtml = '';
+    if (sk.effects) {
+      const parts = [];
+      if (sk.effects.heal?.flat || sk.effects.heal?.dice) parts.push(`Heals ${sk.effects.heal.dice||''}${sk.effects.heal.flat?'+'+sk.effects.heal.flat:''} HP`);
+      if (sk.effects.heal?.stressHeal) parts.push(`Stress −${sk.effects.heal.stressHeal}%`);
+      if (sk.effects.buff?.stat && sk.effects.buff.stat !== 'none') parts.push(`${sk.effects.buff.stat} +${sk.effects.buff.amt} for ${sk.effects.buff.turns} turns`);
+      if (sk.effects.dot?.dmg) parts.push(`DoT ${sk.effects.dot.dmg}/turn for ${sk.effects.dot.turns} turns (${sk.effects.dot.type})`);
+      if (sk.effects.status?.type) parts.push(`Applies ${sk.effects.status.type} for ${sk.effects.status.turns} turns`);
+      if (parts.length) effHtml = `<div class="csheet-sep">Effects</div>${parts.map(p=>`<div style="font-family:var(--ff-body);font-style:italic;font-size:0.78rem;color:var(--text-secondary);padding:0.1rem 0;">${p}</div>`).join('')}`;
+    }
+
+    // Cost / targeting
+    const costLine = [];
+    if (sk.cost?.mana) costLine.push(`${sk.cost.mana} mana`);
+    if (sk.targeting?.target) costLine.push(`Target: ${sk.targeting.target.replace(/-/g,' ')}`);
+    if (sk.targeting?.hits && sk.targeting.hits > 1) costLine.push(`${sk.targeting.hits} hits`);
+
+    document.getElementById('combat-sheet-inner').innerHTML = `
+      <div class="csheet-head">
+        <div class="csheet-icon">◈</div>
+        <div class="csheet-name">${sk.name || key}</div>
+        <div class="csheet-type" style="color:${col};">${cat}</div>
+      </div>
+      <div class="csheet-desc">${sk.desc || 'No description available.'}</div>
+      ${dmgHtml}
+      ${effHtml}
+      ${costLine.length ? `<div class="csheet-sep">Cost &amp; Targeting</div>
+        <div class="csheet-stat-grid">${costLine.map(l=>`<div class="csheet-stat"><span>${l}</span></div>`).join('')}</div>` : ''}
+      ${sk.classKey ? `<div style="margin-top:0.6rem;"><span class="csheet-tag">${sk.classKey}</span>${sk.unlockLevel?`<span class="csheet-tag">Unlocks Lv.${sk.unlockLevel}</span>`:''}</div>` : ''}
+      <button class="csheet-close" onclick="document.getElementById('combat-overlay').classList.remove('open')">Close</button>`;
+    document.getElementById('combat-overlay').classList.add('open');
+  }
+
+  // ══════════════════════════════════════════
+  // COMBATANT INSPECT
+  // ══════════════════════════════════════════
+  function inspectCombatant(cid) {
+    if (!_CS) return;
+    const c = _CS.combatants.find(x => x.id === cid);
+    if (!c) return;
+
+    const sheet = document.getElementById('combat-sheet-inner');
+
+    if (c.side === 'enemy') {
+      // Enemy: stats, abilities, resistances, loot
+      const resLabels = ['Solar','Lunar','Jovian','Martial','Saturnine','Venusian','Mercurial'];
+      const resistHtml = Object.entries(c.resistances||{}).filter(([,v])=>v).map(([k,v])=>
+        `<span class="csheet-tag">${k} ${v>0?'-'+v+'%':'+'+Math.abs(v)+'%'}</span>`).join('') || '<span style="font-family:var(--ff-body);font-style:italic;font-size:0.78rem;color:var(--text-secondary);">No resistances recorded.</span>';
+      const abHtml = (c.abilities||[]).map(a=>`<span class="csheet-tag">${a}</span>`).join('') || '<span style="font-family:var(--ff-body);font-style:italic;font-size:0.78rem;color:var(--text-secondary);">None observed.</span>';
+      const lootHtml = (c.loot||[]).map(l=>`<div style="font-family:var(--ff-body);font-size:0.78rem;color:var(--text-secondary);">${l.name||l} ${l.amount?'×'+l.amount:''}</div>`).join('') || '<span style="font-family:var(--ff-body);font-style:italic;font-size:0.78rem;color:var(--text-secondary);">Nothing certain.</span>';
+      const hpPct = Math.round((c.hp/c.maxHp)*100);
+
+      sheet.innerHTML = `
+        <div class="csheet-head">
+          <div class="csheet-icon">${c.icon}</div>
+          <div class="csheet-name">${c.name}</div>
+          <div class="csheet-type">${c.dead?'Fallen':'Enemy'}</div>
+        </div>
+        <div class="csheet-stat-grid">
+          <div class="csheet-stat">HP<span>${Math.ceil(c.hp)} / ${c.maxHp} <span style="color:var(--text-secondary);font-size:0.45rem;">(${hpPct}%)</span></span></div>
+          <div class="csheet-stat">Armour<span>${c.armour||0}</span></div>
+          <div class="csheet-stat">Dodge<span>${c.dodge||0}%</span></div>
+          <div class="csheet-stat">Initiative<span>${Math.round(c.initiative)}</span></div>
+          <div class="csheet-stat">Damage<span>${c.damageExpr||'—'}</span></div>
+          <div class="csheet-stat">XP<span>${c.xpReward||0}</span></div>
+        </div>
+        <div class="csheet-sep">Abilities</div>
+        <div style="margin-bottom:0.4rem;">${abHtml}</div>
+        <div class="csheet-sep">Resistances</div>
+        <div style="margin-bottom:0.4rem;">${resistHtml}</div>
+        <div class="csheet-sep">Potential Loot</div>
+        <div>${lootHtml}</div>
+        <button class="csheet-close" onclick="document.getElementById('combat-overlay').classList.remove('open')">Close</button>`;
+    } else {
+      // Ally: stats, skills, equipment, stress
+      const skills = getSkillsFor(c);
+      const CAT_COL = {attack:'attack',heal:'heal',buff:'buff',debuff:'debuff'};
+      const skillsHtml = skills.length
+        ? skills.map(sk=>`<span class="csheet-tag ${CAT_COL[sk.category]||''}">${sk.name||sk._key}</span>`).join('')
+        : '<span style="font-family:var(--ff-body);font-style:italic;font-size:0.78rem;color:var(--text-secondary);">No skills learned.</span>';
+      const invHtml = (c.inventory||[]).map(it=>`<span class="csheet-tag item">${it.name||it}</span>`).join('') ||
+        '<span style="font-family:var(--ff-body);font-style:italic;font-size:0.78rem;color:var(--text-secondary);">Unequipped.</span>';
+      const d = c.derived || {};
+
+      sheet.innerHTML = `
+        <div class="csheet-head">
+          <div class="csheet-icon">${c.icon}</div>
+          <div class="csheet-name">${c.name}</div>
+          <div class="csheet-type">${c.isPlayer?'Player Character':'Acolyte'}</div>
+        </div>
+        <div class="csheet-stat-grid">
+          <div class="csheet-stat">HP<span>${Math.ceil(c.hp)} / ${c.maxHp}</span></div>
+          <div class="csheet-stat">Mana<span>${Math.ceil(c.mana||0)} / ${c.maxMana||0}</span></div>
+          <div class="csheet-stat">Stress<span>${Math.round(c.stress||0)}%</span></div>
+          <div class="csheet-stat">Initiative<span>${Math.round(c.initiative)}</span></div>
+          <div class="csheet-stat">Crit<span>${d.crit||0}%</span></div>
+          <div class="csheet-stat">Dodge<span>${d.dodge||0}%</span></div>
+          <div class="csheet-stat">Accuracy<span>${d.accuracy||0}</span></div>
+          ${(c.shield||0)>0?`<div class="csheet-stat">Shield<span>${c.shield}</span></div>`:''}
+        </div>
+        <div class="csheet-sep">Skills</div>
+        <div style="margin-bottom:0.4rem;">${skillsHtml}</div>
+        <div class="csheet-sep">Equipment</div>
+        <div>${invHtml}</div>
+        <button class="csheet-close" onclick="document.getElementById('combat-overlay').classList.remove('open')">Close</button>`;
+    }
+    document.getElementById('combat-overlay').classList.add('open');
+  }
+
+  // ══════════════════════════════════════════
+  // COMBAT CONSEQUENCES — DEATH SYSTEM
+  // ══════════════════════════════════════════
+  function handleAcolyteDeath(combatant) {
+    // Find source acolyte in _acolytesData
+    const src = combatant.sourceAcolyte || (_acolytesData||[]).find(a => a.id === combatant.id);
+    if (!src) return;
+
+    combatLog(`${src.name} has fallen — permanently.`, 'crit');
+
+    // Split inventory: 50% chance each item goes to object pool, rest lost
+    const recovered = [];
+    const lost = [];
+    (src.inventory || []).forEach(it => {
+      if (Math.random() > 0.5) recovered.push(it);
+      else lost.push(it);
+    });
+
+    // Add recovered items to player inventory pool
+    recovered.forEach(it => {
+      const key = it.name || it;
+      inventory[key] = (inventory[key] || 0) + 1;
+    });
+
+    if (recovered.length) combatLog(`Recovered from ${src.name}: ${recovered.map(i=>i.name||i).join(', ')}.`, 'system');
+    if (lost.length) combatLog(`Lost with ${src.name}: ${lost.map(i=>i.name||i).join(', ')}.`, 'system');
+
+    // Remove acolyte from roster permanently
+    if (_acolytesData) {
+      const idx = _acolytesData.findIndex(a => a.id === src.id);
+      if (idx >= 0) _acolytesData.splice(idx, 1);
+    }
+    // Update available
+    if (availableAcolytes) delete availableAcolytes[src.id];
+
+    // Mark in save
+    persistState().catch(() => {});
+  }
+
+  function handlePlayerDeath() {
+    // XP penalty: lose 20% of current XP
+    if (_characterData) {
+      const xpLost = Math.floor((_characterData.xp || 0) * 0.2);
+      _characterData.xp = Math.max(0, (_characterData.xp||0) - xpLost);
+      // Stress penalty
+      _characterData.stress = Math.min(100, (_characterData.stress||0) + 30);
+      // Temp malus flag (used by resource tick to apply -15% rates for 2h)
+      _characterData.deathMalus = { until: Date.now() + 2*3600000, xpLost };
+      // Resource drain: -15% of current resources
+      for (let i = 0; i < values.length; i++) {
+        values[i] = Math.max(0, Math.floor(values[i] * 0.85));
+      }
+      const costs = [
+        `XP −${xpLost}`,
+        `Stress +30`,
+        `All resources −15%`,
+        `Income −15% for 2 hours`,
+      ];
+      const defeatEl = document.getElementById('combat-defeat-overlay');
+      document.getElementById('defeat-title').textContent = 'The Lair Holds You';
+      document.getElementById('defeat-body').textContent =
+        'You drag yourself back through the threshold. The lair remembers what happened.';
+      document.getElementById('defeat-cost').innerHTML = costs.join('<br>');
+      if (defeatEl) defeatEl.classList.add('open');
+      persistState().catch(() => {});
+    }
+  }
+
+  // ══════════════════════════════════════════
+  // REWRITE: checkCombatEnd with full consequences
+  // ══════════════════════════════════════════
+  function checkCombatEnd() {
+    if (!_CS) return;
+    const aliveEnemies = _CS.combatants.filter(c => c.side==='enemy' && !c.dead);
+    const aliveAllies  = _CS.combatants.filter(c => c.side==='ally'  && !c.dead);
+    const playerCbt    = _CS.combatants.find(c => c.isPlayer);
+
+    // Process freshly dead allies this tick
+    _CS.combatants.filter(c => c.side==='ally' && c.dead && !c.deathProcessed).forEach(c => {
+      c.deathProcessed = true;
+      if (c.isPlayer) return; // handled at combat end
+      handleAcolyteDeath(c);
+    });
+
+    if (aliveEnemies.length === 0) {
+      // ── VICTORY ──
+      combatLog('✦ All enemies defeated.', 'crit');
+
+      // Collect loot
+      const loot = [];
+      _CS.combatants.filter(c => c.side==='enemy').forEach(e => {
+        (e.loot||[]).forEach(l => {
+          const idx = RES_NAMES.indexOf(l.name);
+          if (idx >= 0 && l.amount > 0) {
+            values[idx] = Math.min(resCaps[idx], (values[idx]||0) + l.amount);
+            loot.push(RES_SYMBOLS[idx] + '+' + l.amount);
+          }
+        });
+      });
+      if (loot.length) combatLog('Loot: ' + loot.join(' '), 'system');
+
+      // XP to player
+      const totalXp = _CS.combatants.filter(c => c.side==='enemy').reduce((s,e) => s+(e.xpReward||50), 0);
+      if (_characterData && totalXp) {
+        _characterData.xp = (_characterData.xp||0) + totalXp;
+        combatLog('+' + totalXp + ' XP', 'system');
+        checkLevelUp();
+      }
+
+      // Update resource display
+      document.querySelectorAll('.resource-pill .res-value').forEach((el,i) => {
+        el.textContent = Math.floor(values[i]);
+      });
+
+      document.getElementById('combat-skill-grid').innerHTML = '';
+      document.getElementById('combat-actor-label').textContent = 'Victory — the passage is clear.';
+      persistState().catch(() => {});
+      _CS = null;
+
+    } else if (aliveAllies.length === 0 || (playerCbt && playerCbt.dead)) {
+      // ── DEFEAT ──
+      const playerDied = playerCbt && playerCbt.dead;
+      const fullRout   = aliveAllies.length === 0;
+
+      if (playerDied || fullRout) {
+        combatLog('✗ The company falls.', 'hit');
+        document.getElementById('combat-skill-grid').innerHTML = '';
+        document.getElementById('combat-actor-label').textContent = 'Defeated.';
+        if (playerDied) handlePlayerDeath();
+        _CS = null;
+      }
+    }
+  }
+
+  // ══════════════════════════════════════════
+  // LEVEL-UP SYSTEM (reads class data from Firebase)
+  // ══════════════════════════════════════════
+  let _pendingLevelUp = null; // { newLevel, statGains, specializations }
+
+  function toRoman(n) {
+    const v=[1000,900,500,400,100,90,50,40,10,9,5,4,1];
+    const s=['M','CM','D','CD','C','XC','L','XL','X','IX','V','IV','I'];
+    let r=''; v.forEach((val,i)=>{while(n>=val){r+=s[i];n-=val;}});
+    return r;
+  }
+
+  async function checkLevelUp() {
+    if (!_characterData) return;
+    let levelled = false;
+    let newLevel = _characterData.level || 1;
+
+    while (true) {
+      const needed = xpForNextLevel(newLevel);
+      if (_characterData.xp >= needed && newLevel < 20) {
+        _characterData.xp -= needed;
+        newLevel++;
+        levelled = true;
+      } else break;
+    }
+    if (!levelled) { refreshCharacterBar(); return; }
+
+    _characterData.level = newLevel;
+
+    // Load class data from Firebase to get levelUpBonuses
+    let classData = null;
+    try {
+      const key = _characterData.classKey || 'hermeticist';
+      const res = await fetch(`${FB_URL}/world/classes/${key}.json?cb=`+Date.now());
+      if (res.ok) { const d = await res.json(); if (d && !d.error) classData = d; }
+    } catch(e) {}
+
+    // Determine stat gains
+    const FALLBACK_GAINS = {
+      'hermeticist':  ['cunning','gnosis'],
+      'flagellant':   ['fortitude','endurance'],
+      'plague-scribe':['memory','cunning'],
+    };
+    const key = (_characterData.classKey||'hermeticist').toLowerCase();
+    let statGains = [];
+
+    // Try to read from Firebase class levelUpBonuses[newLevel]
+    const levelBonuses = classData?.levelUpBonuses;
+    if (levelBonuses) {
+      const bonusEntry = Array.isArray(levelBonuses)
+        ? levelBonuses.find(b => b.level === newLevel)
+        : levelBonuses[newLevel] || levelBonuses[String(newLevel)];
+      if (bonusEntry?.statGains) {
+        statGains = Object.entries(bonusEntry.statGains).map(([stat,amt]) => ({stat,amt:Number(amt)}));
+      }
+    }
+    // Fallback: +1 to two class stats
+    if (!statGains.length) {
+      (FALLBACK_GAINS[key] || ['fortitude','cunning']).forEach(stat => statGains.push({stat, amt:1}));
+    }
+
+    // Apply stat gains
+    if (!_characterData.stats) _characterData.stats = {};
+    statGains.forEach(({stat,amt}) => {
+      _characterData.stats[stat] = (_characterData.stats[stat]||0) + amt;
+    });
+
+    // Skill unlock at this level
+    const newSkillKey = levelBonuses
+      ? (Array.isArray(levelBonuses)
+          ? levelBonuses.find(b=>b.level===newLevel)?.skillKey
+          : (levelBonuses[newLevel]||levelBonuses[String(newLevel)])?.skillKey)
+      : null;
+    if (newSkillKey && _cachedWorldSkills?.[newSkillKey]) {
+      const sk = _cachedWorldSkills[newSkillKey];
+      if (!_characterData.skills) _characterData.skills = [];
+      if (!_characterData.skills.find(s=>(s.key||s)===newSkillKey)) {
+        _characterData.skills.push({key:newSkillKey, name:sk.name||newSkillKey, desc:sk.desc||''});
+        combatLog && combatLog(`Unlocked skill: ${sk.name||newSkillKey}`, 'system');
+      }
+    }
+
+    // Specializations — check if any defined for this level
+    const specs = classData?.specializations
+      ? (Array.isArray(classData.specializations)
+          ? classData.specializations.filter(s => (s.level||0)<=newLevel)
+          : Object.values(classData.specializations).filter(s=>(s.level||0)<=newLevel))
+      : [];
+    // Only offer specs that haven't been chosen yet
+    const chosenSpecs = _characterData.chosenSpecializations || [];
+    const availableSpecs = specs.filter(s => !chosenSpecs.includes(s.name));
+
+    _pendingLevelUp = { newLevel, statGains, newSkillKey, availableSpecs };
+    showLevelUpModal(newLevel);
+    refreshCharacterBar();
+  }
+
+  function showLevelUpModal(newLevel) {
+    const lu = _pendingLevelUp || { newLevel, statGains: [], availableSpecs: [] };
+    document.getElementById('lu-roman').textContent = toRoman(newLevel);
+    document.getElementById('lu-title').textContent = `Level ${newLevel} Attained`;
+
+    // Stat gains
+    const gainsEl = document.getElementById('lu-gains');
+    gainsEl.innerHTML = lu.statGains.map(g =>
+      `<div class="levelup-gain-row">${g.stat.charAt(0).toUpperCase()+g.stat.slice(1)}<span>+${g.amt}</span></div>`
+    ).join('');
+    if (lu.newSkillKey && _cachedWorldSkills?.[lu.newSkillKey]) {
+      const sk = _cachedWorldSkills[lu.newSkillKey];
+      gainsEl.innerHTML += `<div class="levelup-gain-row">New Skill: ${sk.name||lu.newSkillKey}<span style="color:var(--viridian-bright);">unlocked</span></div>`;
+    }
+    if (!lu.statGains.length && !lu.newSkillKey) {
+      gainsEl.innerHTML = `<div class="levelup-gain-row">The lair stirs with your ascent.<span>—</span></div>`;
+    }
+
+    // Specializations
+    const specSection = document.getElementById('lu-spec-section');
+    const specGrid = document.getElementById('lu-spec-grid');
+    if (lu.availableSpecs && lu.availableSpecs.length) {
+      specSection.style.display = '';
+      specGrid.innerHTML = lu.availableSpecs.map((spec, i) => {
+        const bonusStr = spec.statBonus
+          ? Object.entries(spec.statBonus).map(([s,v])=>`${s} +${v}`).join(', ')
+          : '';
+        return `<div class="levelup-spec-card" id="spec-card-${i}" onclick="selectSpec(${i})">
+          <div class="levelup-spec-name">${spec.name||'Unknown Path'}</div>
+          <div class="levelup-spec-desc">${spec.desc||''}</div>
+          ${bonusStr?`<div class="levelup-spec-bonus">${bonusStr}${spec.skillKey?' · Skill: '+spec.skillKey:''}</div>`:''}
+        </div>`;
+      }).join('');
+      document.getElementById('lu-confirm-btn').textContent = 'Choose a Path to Ascend';
+      document.getElementById('lu-confirm-btn').disabled = true;
+      document.getElementById('lu-confirm-btn').style.opacity = '0.5';
+    } else {
+      specSection.style.display = 'none';
+      document.getElementById('lu-confirm-btn').textContent = 'Ascend';
+      document.getElementById('lu-confirm-btn').disabled = false;
+      document.getElementById('lu-confirm-btn').style.opacity = '1';
+    }
+
+    document.getElementById('levelup-modal').classList.add('open');
+  }
+
+  let _chosenSpecIdx = null;
+  function selectSpec(idx) {
+    _chosenSpecIdx = idx;
+    document.querySelectorAll('.levelup-spec-card').forEach((el,i) => {
+      el.classList.toggle('selected', i === idx);
+    });
+    const btn = document.getElementById('lu-confirm-btn');
+    btn.textContent = 'Ascend';
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
+
+  function confirmLevelUp() {
+    const lu = _pendingLevelUp;
+    if (!lu) { document.getElementById('levelup-modal').classList.remove('open'); return; }
+
+    // Apply chosen specialization
+    if (lu.availableSpecs && lu.availableSpecs.length && _chosenSpecIdx !== null) {
+      const spec = lu.availableSpecs[_chosenSpecIdx];
+      if (spec) {
+        if (!_characterData.chosenSpecializations) _characterData.chosenSpecializations = [];
+        _characterData.chosenSpecializations.push(spec.name);
+        // Apply stat bonus
+        if (spec.statBonus && _characterData.stats) {
+          Object.entries(spec.statBonus).forEach(([s,v]) => {
+            _characterData.stats[s] = (_characterData.stats[s]||0) + Number(v);
+          });
+        }
+        // Apply skill unlock
+        if (spec.skillKey && _cachedWorldSkills?.[spec.skillKey]) {
+          const sk = _cachedWorldSkills[spec.skillKey];
+          if (!_characterData.skills) _characterData.skills = [];
+          if (!_characterData.skills.find(s=>(s.key||s)===spec.skillKey)) {
+            _characterData.skills.push({key:spec.skillKey, name:sk.name||spec.skillKey, desc:sk.desc||''});
+          }
+        }
+      }
+    } else if (lu.availableSpecs && lu.availableSpecs.length && _chosenSpecIdx === null) {
+      toast('Choose a path before ascending.');
+      return;
+    }
+
+    _pendingLevelUp = null;
+    _chosenSpecIdx  = null;
+    document.getElementById('levelup-modal').classList.remove('open');
+    refreshCharacterBar();
+    persistState().catch(() => {});
+  }
+
+  // Override old showLevelUpModal to do nothing (we use the new one)
+  // (checkLevelUp now calls the new version directly)
+
 
 </script>
 

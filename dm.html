@@ -205,7 +205,24 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
 <input type="hidden" id="cls-skills">
 </div>
 <div class="fld"><label>Lore Fragment</label><textarea id="cls-lore" style="min-height:50px;"></textarea></div>
-<button class="btn b-ward" onclick="saveClass()">✓ Seal Class</button><button class="btn b-seal" onclick="document.getElementById('class-editor').style.display='none'">Cancel</button></div>
+
+<div class="ph" style="margin-top:1rem;">Level-Up Bonuses</div>
+<div style="font-size:0.38rem;color:var(--ash);letter-spacing:0.06em;margin-bottom:0.5rem;font-family:var(--ff-h);">
+  Define stat gains and skill unlocks per level. Leave blank to use class defaults.
+</div>
+<div id="levelup-bonuses-list" style="margin-bottom:0.5rem;"></div>
+<button class="btn b-rune" style="font-size:0.38rem;padding:0.3rem 0.6rem;" onclick="addLevelUpRow()">+ Add Level Bonus</button>
+
+<div class="ph" style="margin-top:1rem;">Class Specializations</div>
+<div style="font-size:0.38rem;color:var(--ash);letter-spacing:0.06em;margin-bottom:0.5rem;font-family:var(--ff-h);">
+  Branching paths offered at level-up. Players choose one per specialization offered.
+</div>
+<div id="specializations-list" style="margin-bottom:0.5rem;"></div>
+<button class="btn b-rune" style="font-size:0.38rem;padding:0.3rem 0.6rem;" onclick="addSpecRow()">+ Add Specialization</button>
+
+<div style="margin-top:1rem;">
+<button class="btn b-ward" onclick="saveClass()">✓ Seal Class</button><button class="btn b-seal" onclick="document.getElementById('class-editor').style.display='none'">Cancel</button>
+</div></div>
 </div>
 
 <div id="page-events" class="page">
@@ -724,6 +741,128 @@ async function editClass(key){
     document.getElementById('class-editor').scrollIntoView({behavior:'smooth'});
   }catch(e){log('Error: '+e.message,'err');}
 }
+// Collect level-up bonuses from dynamic rows
+function collectLevelUpBonuses() {
+  const rows = document.querySelectorAll('.lvlup-row');
+  const result = [];
+  rows.forEach(row => {
+    const lv = parseInt(row.querySelector('.lvlup-level').value) || 0;
+    const stat1 = row.querySelector('.lvlup-stat1').value;
+    const amt1  = parseInt(row.querySelector('.lvlup-amt1').value) || 0;
+    const stat2 = row.querySelector('.lvlup-stat2').value;
+    const amt2  = parseInt(row.querySelector('.lvlup-amt2').value) || 0;
+    const sk    = row.querySelector('.lvlup-skill').value.trim();
+    if (!lv) return;
+    const statGains = {};
+    if (stat1 && amt1) statGains[stat1] = amt1;
+    if (stat2 && amt2) statGains[stat2] = amt2;
+    const entry = { level: lv, statGains };
+    if (sk) entry.skillKey = sk;
+    result.push(entry);
+  });
+  return result.sort((a,b) => a.level-b.level);
+}
+
+// Collect specializations from dynamic rows
+function collectSpecializations() {
+  const rows = document.querySelectorAll('.spec-row');
+  const result = [];
+  rows.forEach(row => {
+    const name = row.querySelector('.spec-name').value.trim();
+    const desc = row.querySelector('.spec-desc').value.trim();
+    const sk   = row.querySelector('.spec-skill').value.trim();
+    const lv   = parseInt(row.querySelector('.spec-level').value) || 0;
+    const statsRaw = row.querySelector('.spec-stats').value.trim();
+    if (!name) return;
+    const statBonus = {};
+    statsRaw.split(',').forEach(pair => {
+      const [s,v] = pair.trim().split(':');
+      if (s && v) statBonus[s.trim()] = parseInt(v)||0;
+    });
+    const entry = { name, desc, level: lv };
+    if (Object.keys(statBonus).length) entry.statBonus = statBonus;
+    if (sk) entry.skillKey = sk;
+    result.push(entry);
+  });
+  return result;
+}
+
+const STAT_OPTS = ['fortitude','wrath','intuition','empathy','endurance','memory','cunning','gnosis','speed'];
+function statSelect(cls) {
+  return `<select class="${cls}" style="font-size:0.38rem;background:var(--i-bg);border:1px solid var(--bd);color:var(--fg);padding:0.2rem;">
+    <option value="">—</option>
+    ${STAT_OPTS.map(s=>`<option value="${s}">${s}</option>`).join('')}
+  </select>`;
+}
+
+function addLevelUpRow(lv,s1,a1,s2,a2,sk) {
+  const list = document.getElementById('levelup-bonuses-list');
+  const div = document.createElement('div');
+  div.className = 'lvlup-row';
+  div.style.cssText = 'display:grid;grid-template-columns:50px 1fr 40px 1fr 40px 1fr auto;gap:0.3rem;align-items:center;margin-bottom:0.35rem;';
+  div.innerHTML = `
+    <input type="number" class="lvlup-level" min="2" max="20" value="${lv||''}" placeholder="Lv" style="font-size:0.38rem;background:var(--i-bg);border:1px solid var(--bd);color:var(--fg);padding:0.25rem;width:100%;">
+    ${statSelect('lvlup-stat1')}
+    <input type="number" class="lvlup-amt1" min="0" max="5" value="${a1||1}" style="font-size:0.38rem;background:var(--i-bg);border:1px solid var(--bd);color:var(--fg);padding:0.25rem;width:100%;">
+    ${statSelect('lvlup-stat2')}
+    <input type="number" class="lvlup-amt2" min="0" max="5" value="${a2||1}" style="font-size:0.38rem;background:var(--i-bg);border:1px solid var(--bd);color:var(--fg);padding:0.25rem;width:100%;">
+    <input type="text" class="lvlup-skill" placeholder="skill key" value="${sk||''}" style="font-size:0.38rem;background:var(--i-bg);border:1px solid var(--bd);color:var(--fg);padding:0.25rem;width:100%;">
+    <button onclick="this.parentElement.remove()" style="font-size:0.7rem;background:none;border:none;color:var(--ash);cursor:pointer;">✕</button>`;
+  // Set selected stat values after appending
+  list.appendChild(div);
+  if (s1) div.querySelector('.lvlup-stat1').value = s1;
+  if (s2) div.querySelector('.lvlup-stat2').value = s2;
+}
+
+function addSpecRow(name,desc,lv,statsRaw,sk) {
+  const list = document.getElementById('specializations-list');
+  const div = document.createElement('div');
+  div.className = 'spec-row';
+  div.style.cssText = 'border:1px solid var(--bd);padding:0.5rem;margin-bottom:0.4rem;';
+  div.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 50px;gap:0.3rem;margin-bottom:0.3rem;">
+      <input type="text" class="spec-name" placeholder="Specialization name" value="${name||''}" style="font-size:0.42rem;background:var(--i-bg);border:1px solid var(--bd);color:var(--fg);padding:0.25rem;">
+      <input type="number" class="spec-level" placeholder="Lv" min="2" max="20" value="${lv||''}" style="font-size:0.38rem;background:var(--i-bg);border:1px solid var(--bd);color:var(--fg);padding:0.25rem;">
+    </div>
+    <textarea class="spec-desc" placeholder="Description of this path…" style="width:100%;min-height:40px;font-size:0.4rem;background:var(--i-bg);border:1px solid var(--bd);color:var(--fg);padding:0.25rem;margin-bottom:0.3rem;box-sizing:border-box;">${desc||''}</textarea>
+    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:0.3rem;align-items:center;">
+      <input type="text" class="spec-stats" placeholder="stat bonuses: e.g. cunning:2,gnosis:1" value="${statsRaw||''}" style="font-size:0.36rem;background:var(--i-bg);border:1px solid var(--bd);color:var(--fg);padding:0.25rem;">
+      <input type="text" class="spec-skill" placeholder="skill key (optional)" value="${sk||''}" style="font-size:0.36rem;background:var(--i-bg);border:1px solid var(--bd);color:var(--fg);padding:0.25rem;">
+      <button onclick="this.closest('.spec-row').remove()" style="font-size:0.7rem;background:none;border:none;color:var(--ash);cursor:pointer;">✕</button>
+    </div>`;
+  list.appendChild(div);
+}
+
+// Populate editor when loading existing class
+const _origOpenClassEditor = typeof openClassEditor === 'function' ? openClassEditor : null;
+
+function populateEditorWithClass(data) {
+  // Clear existing rows
+  document.getElementById('levelup-bonuses-list').innerHTML = '';
+  document.getElementById('specializations-list').innerHTML = '';
+  // Populate level-up bonuses
+  if (data.levelUpBonuses) {
+    const bonuses = Array.isArray(data.levelUpBonuses)
+      ? data.levelUpBonuses
+      : Object.values(data.levelUpBonuses);
+    bonuses.forEach(b => {
+      const gains = b.statGains || {};
+      const entries = Object.entries(gains);
+      addLevelUpRow(b.level, entries[0]?.[0]||'', entries[0]?.[1]||1, entries[1]?.[0]||'', entries[1]?.[1]||1, b.skillKey||'');
+    });
+  }
+  // Populate specializations
+  if (data.specializations) {
+    const specs = Array.isArray(data.specializations)
+      ? data.specializations
+      : Object.values(data.specializations);
+    specs.forEach(s => {
+      const statsRaw = s.statBonus ? Object.entries(s.statBonus).map(([k,v])=>k+':'+v).join(',') : '';
+      addSpecRow(s.name, s.desc, s.level, statsRaw, s.skillKey||'');
+    });
+  }
+}
+
 async function saveClass(){
   const key=document.getElementById('cls-key').value||(document.getElementById('cls-name').value.toLowerCase().replace(/\s+/g,'-'));
   const stats={};
@@ -732,10 +871,20 @@ async function saveClass(){
   });
   const skillsRaw=document.getElementById('cls-skills').value;
   const skills=skillsRaw.split(',').map(s=>s.trim()).filter(Boolean);
-  const d={name:document.getElementById('cls-name').value,role:document.getElementById('cls-role').value,desc:document.getElementById('cls-desc').value,stats,skills,lore:document.getElementById('cls-lore').value};
+  const levelUpBonuses = collectLevelUpBonuses();
+  const specializations = collectSpecializations();
+  const d={
+    name:document.getElementById('cls-name').value,
+    role:document.getElementById('cls-role').value,
+    desc:document.getElementById('cls-desc').value,
+    stats, skills,
+    lore:document.getElementById('cls-lore').value,
+    levelUpBonuses,
+    specializations,
+  };
   try{
     await fbPut('world/classes/'+key,d);
-    log('Class sealed: '+d.name,'ok');
+    log('Class sealed: '+d.name+' ('+levelUpBonuses.length+' level bonuses, '+specializations.length+' specializations)','ok');
     toast('✦ '+d.name+' sealed.');
     document.getElementById('class-editor').style.display='none';
     loadClasses();
