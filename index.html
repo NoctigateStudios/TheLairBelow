@@ -157,8 +157,9 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 2rem;
+    padding: 2.5rem 2rem 3rem;
     transition: opacity 1.5s ease, transform 1.5s ease;
+    overflow: hidden;
   }
 
   #splash.hidden {
@@ -168,9 +169,10 @@
   }
 
   .splash-sigil {
-    width: 120px;
-    height: 120px;
-    margin-bottom: 2rem;
+    width: 80px;
+    height: 80px;
+    margin-bottom: 1.2rem;
+    flex-shrink: 0;
     animation: pulse-sigil 4s ease-in-out infinite;
   }
 
@@ -181,35 +183,38 @@
 
   .splash-title {
     font-family: var(--ff-title);
-    font-size: 3.2rem;
+    font-size: 2.8rem;
     color: var(--gold);
     text-align: center;
     line-height: 1;
     text-shadow: 0 0 30px rgba(201,168,76,0.4), 0 0 60px rgba(201,168,76,0.2);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.4rem;
     letter-spacing: 2px;
+    flex-shrink: 0;
   }
 
   .splash-subtitle {
     font-family: var(--ff-heading);
-    1.06rem;
-    letter-spacing: 0.35em;
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
     color: var(--text-secondary);
     text-transform: uppercase;
-    margin-bottom: 3rem;
+    margin-bottom: 1.8rem;
+    flex-shrink: 0;
   }
 
   .splash-text {
     font-family: var(--ff-body);
     font-style: italic;
     color: var(--pale);
-    font-size:1.22rem;
-    line-height: 1.8;
+    font-size: 0.95rem;
+    line-height: 1.75;
     text-align: center;
-    max-width: 320px;
-    margin-bottom: 3rem;
+    max-width: 300px;
+    margin-bottom: 2rem;
+    flex-shrink: 0;
     opacity: 0;
-    animation: fade-in 2s ease 1s forwards;
+    animation: fade-in 2s ease 0.8s forwards;
   }
 
   @keyframes fade-in {
@@ -218,22 +223,24 @@
 
   .btn-primary {
     font-family: var(--ff-heading);
-    1.23rem;
-    letter-spacing: 0.2em;
+    font-size: 0.85rem;
+    letter-spacing: 0.25em;
     text-transform: uppercase;
     color: var(--gold);
     background: transparent;
     border: 1px solid var(--gold-dim);
-    padding: 1.1rem 3rem;
+    padding: 1rem 3rem;
     cursor: pointer;
     position: relative;
     transition: all 0.3s ease;
     opacity: 0;
-    animation: fade-in 1s ease 2.5s forwards;
+    animation: fade-in 1s ease 2s forwards;
     touch-action: manipulation;
     -webkit-tap-highlight-color: rgba(201,168,76,0.2);
     min-width: 200px;
+    min-height: 52px;
     z-index: 10;
+    flex-shrink: 0;
   }
 
   .btn-primary::before {
@@ -245,22 +252,25 @@
     transition: all 0.3s ease;
   }
 
-  .btn-primary:active {
-    background: rgba(201,168,76,0.1);
+  .btn-primary:active, .btn-primary:focus {
+    background: rgba(201,168,76,0.12);
     border-color: var(--gold);
     box-shadow: 0 0 20px rgba(201,168,76,0.3);
+    outline: none;
   }
 
   .splash-warning {
-    position: absolute;
-    bottom: 2rem;
     font-family: var(--ff-heading);
-    0.82rem;
-    letter-spacing: 0.15em;
+    font-size: 0.5rem;
+    letter-spacing: 0.12em;
     color: var(--stone);
     text-align: center;
     text-transform: uppercase;
-    padding: 0 2rem;
+    padding: 0 1rem;
+    margin-top: 1.5rem;
+    line-height: 1.6;
+    max-width: 300px;
+    flex-shrink: 0;
   }
 
   /* ═══════════════════════════════════════
@@ -288,7 +298,7 @@
 
   .topbar-location {
     font-family: var(--ff-heading);
-    0.82rem;
+    font-size: 0.82rem;
     letter-spacing: 0.12em;
     color: var(--text-secondary);
     text-transform: uppercase;
@@ -356,7 +366,7 @@
 
   .res-name {
     font-family: var(--ff-heading);
-    0.63rem;
+    font-size: 0.63rem;
     letter-spacing: 0.1em;
     color: var(--text-secondary);
     text-transform: uppercase;
@@ -364,14 +374,14 @@
 
   .res-value {
     font-family: var(--ff-heading);
-    1.18rem;
+    font-size: 1.18rem;
     font-weight: 600;
     color: var(--res-color, var(--bone));
   }
 
   .res-rate {
     font-family: var(--ff-body);
-    0.82rem;
+    font-size: 0.82rem;
     font-style: italic;
     color: var(--text-secondary);
   }
@@ -465,7 +475,7 @@
   }
   #recruit-scene-location {
     font-family: var(--ff-heading);
-    0.63rem;
+    font-size: 0.63rem;
     letter-spacing: 0.3em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -504,7 +514,7 @@
   }
   #recruit-fig-class {
     font-family: var(--ff-heading);
-    0.52rem;
+    font-size: 0.52rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -531,7 +541,7 @@
   }
   .recruit-stat {
     font-family: var(--ff-heading);
-    0.58rem;
+    font-size: 0.58rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -543,7 +553,7 @@
   /* Approach options */
   #recruit-approach-label {
     font-family: var(--ff-heading);
-    0.63rem;
+    font-size: 0.63rem;
     letter-spacing: 0.25em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -571,7 +581,7 @@
   .approach-btn:active { padding-left: 0.4rem; }
   .approach-glyph {
     font-family: var(--ff-heading);
-    1.15rem;
+    font-size: 1.15rem;
     color: var(--amber-bright);
     opacity: 0.6;
     flex-shrink: 0;
@@ -579,7 +589,7 @@
   }
   .approach-text {
     font-family: var(--ff-heading);
-    0.86rem;
+    font-size: 0.86rem;
     letter-spacing: 0.06em;
     color: var(--text-primary);
     text-transform: uppercase;
@@ -587,7 +597,7 @@
   .approach-sub {
     font-family: var(--ff-body);
     font-style: italic;
-    1.18rem;
+    font-size: 1.18rem;
     color: var(--text-secondary);
     display: block;
     margin-top: 0.1rem;
@@ -621,7 +631,7 @@
   }
   .recruit-outcome-btn {
     font-family: var(--ff-heading);
-    0.82rem;
+    font-size: 0.82rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     padding: 0.75rem;
@@ -643,7 +653,7 @@
     border-top: 1px solid var(--border);
     padding: 1rem;
     font-family: var(--ff-heading);
-    0.63rem;
+    font-size: 0.63rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -688,7 +698,7 @@
   }
   .tab-label {
     font-family: var(--ff-heading);
-    0.59rem;
+    font-size: 0.59rem;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     opacity: 0.9;
@@ -747,7 +757,7 @@
 
   .entry-title {
     font-family: var(--ff-heading);
-    1.15rem;
+    font-size: 1.15rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--gold);
@@ -755,7 +765,7 @@
 
   .entry-time {
     font-family: var(--ff-body);
-    0.99rem;
+    font-size: 0.99rem;
     font-style: italic;
     color: var(--text-secondary);
   }
@@ -782,7 +792,7 @@
 
   .btn-action {
     font-family: var(--ff-heading);
-    0.9rem;
+    font-size: 0.9rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     padding: 0.45rem 0.9rem;
@@ -840,7 +850,7 @@
   .leaflet-control-attribution {
     background: rgba(5,4,7,0.7) !important;
     color: var(--text-secondary) !important;
-    0.74rem !important;
+    font-size: 0.74rem !important;
     border-radius: 0 !important;
   }
 
@@ -902,7 +912,7 @@
   .popup-title {
     font-family: var(--ff-heading);
     font-style: normal;
-    1.06rem;
+    font-size: 1.06rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--gold);
@@ -913,7 +923,7 @@
     display: inline-block;
     margin-top: 0.6rem;
     font-family: var(--ff-heading);
-    0.9rem;
+    font-size: 0.9rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     padding: 0.35rem 0.8rem;
@@ -948,7 +958,7 @@
 
   .map-loading-text {
     font-family: var(--ff-heading);
-    0.9rem;
+    font-size: 0.9rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -968,7 +978,7 @@
     align-items: center;
     gap: 0.4rem;
     font-family: var(--ff-heading);
-    0.82rem;
+    font-size: 0.82rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -1016,14 +1026,14 @@
 
   .mission-title {
     font-family: var(--ff-heading);
-    1.18rem;
+    font-size: 1.18rem;
     letter-spacing: 0.06em;
     color: var(--bone);
   }
 
   .mission-badge {
     font-family: var(--ff-heading);
-    0.69rem;
+    font-size: 0.69rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     padding: 0.2rem 0.5rem;
@@ -1049,7 +1059,7 @@
     display: flex;
     gap: 1rem;
     font-family: var(--ff-heading);
-    0.78rem;
+    font-size: 0.78rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -1125,7 +1135,7 @@
 
   .char-xp-label {
     font-family: var(--ff-heading);
-    0.74rem;
+    font-size: 0.74rem;
     letter-spacing: 0.1em;
     color: var(--text-secondary);
     text-transform: uppercase;
@@ -1159,7 +1169,7 @@
 
   .stat-element {
     font-family: var(--ff-heading);
-    0.69rem;
+    font-size: 0.69rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--stat-color, var(--text-secondary));
@@ -1180,13 +1190,13 @@
   .stat-name {
     font-family: var(--ff-body);
     font-style: italic;
-    1.18rem;
+    font-size: 1.18rem;
     color: var(--pale);
   }
 
   .stat-val {
     font-family: var(--ff-heading);
-    1.15rem;
+    font-size: 1.15rem;
     font-weight: 600;
     color: var(--bone);
   }
@@ -1287,7 +1297,7 @@
   .acolyte-info { flex: 1; }
   .acolyte-name {
     font-family: var(--ff-heading);
-    1.15rem;
+    font-size: 1.15rem;
     letter-spacing: 0.06em;
     color: var(--bone);
     margin-bottom: 0.15rem;
@@ -1295,7 +1305,7 @@
   .acolyte-class {
     font-family: var(--ff-body);
     font-style: italic;
-    1.11rem;
+    font-size: 1.11rem;
     color: var(--gold);
     margin-bottom: 0.3rem;
   }
@@ -1321,7 +1331,7 @@
 
   .state-tag {
     font-family: var(--ff-heading);
-    0.63rem;
+    font-size: 0.63rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     padding: 0.15rem 0.4rem;
@@ -1337,7 +1347,7 @@
   ═══════════════════════════════════════ */
   .section-label {
     font-family: var(--ff-heading);
-    0.9rem;
+    font-size: 0.9rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -1394,7 +1404,7 @@
 
   .building-name {
     font-family: var(--ff-heading);
-    1.01rem;
+    font-size: 1.01rem;
     letter-spacing: 0.06em;
     color: var(--bone);
     margin-bottom: 0.2rem;
@@ -1403,7 +1413,7 @@
   .building-desc {
     font-family: var(--ff-body);
     font-style: italic;
-    1.06rem;
+    font-size: 1.06rem;
     color: var(--mist);
     line-height: 1.5;
   }
@@ -1413,7 +1423,7 @@
     top: 0.5rem;
     right: 0.5rem;
     font-family: var(--ff-heading);
-    0.74rem;
+    font-size: 0.74rem;
     letter-spacing: 0.1em;
     color: var(--gold-dim);
     text-transform: uppercase;
@@ -1440,7 +1450,7 @@
 
   .spread-title {
     font-family: var(--ff-heading);
-    0.99rem;
+    font-size: 0.99rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -1500,7 +1510,7 @@
 
   .tarot-card-name {
     font-family: var(--ff-heading);
-    0.52rem;
+    font-size: 0.52rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--gold-dim);
@@ -1511,7 +1521,7 @@
 
   .tarot-card-num {
     font-family: var(--ff-heading);
-    0.74rem;
+    font-size: 0.74rem;
     color: var(--text-secondary);
   }
 
@@ -1543,7 +1553,7 @@
 
   .effect-name {
     font-family: var(--ff-heading);
-    0.69rem;
+    font-size: 0.69rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -1552,7 +1562,7 @@
 
   .effect-val {
     font-family: var(--ff-heading);
-    1.15rem;
+    font-size: 1.15rem;
     font-weight: 600;
   }
 
@@ -1574,7 +1584,7 @@
 
   .research-name {
     font-family: var(--ff-heading);
-    1.15rem;
+    font-size: 1.15rem;
     letter-spacing: 0.06em;
     color: var(--bone);
     margin-bottom: 0.3rem;
@@ -1605,7 +1615,7 @@
     display: flex;
     justify-content: space-between;
     font-family: var(--ff-heading);
-    0.74rem;
+    font-size: 0.74rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -1854,7 +1864,7 @@
 
   .ph-title {
     font-family: var(--ff-heading);
-    0.9rem;
+    font-size: 0.9rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -1896,7 +1906,7 @@
 
   .ph-bonus {
     font-family: var(--ff-heading);
-    0.78rem;
+    font-size: 0.78rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     padding: 0.25rem 0.5rem;
@@ -1982,7 +1992,7 @@
   #lp-backdrop.visible { display: block; }
   .lp-tooltip-term {
     font-family: var(--ff-heading);
-    1.23rem;
+    font-size: 1.23rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--gold);
@@ -1997,7 +2007,7 @@
   }
   .lp-tooltip-more {
     font-family: var(--ff-heading);
-    0.82rem;
+    font-size: 0.82rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -2025,7 +2035,7 @@
   ═══════════════════════════════════════ */
   .codex-cat {
     font-family: var(--ff-heading);
-    0.78rem;
+    font-size: 0.78rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     padding: 0.3rem 0.7rem;
@@ -2058,14 +2068,14 @@
   .codex-entry-info { flex: 1; }
   .codex-entry-name {
     font-family: var(--ff-heading);
-    1.11rem;
+    font-size: 1.11rem;
     letter-spacing: 0.06em;
     color: var(--bone);
     margin-bottom: 0.15rem;
   }
   .codex-entry-cat {
     font-family: var(--ff-heading);
-    0.69rem;
+    font-size: 0.69rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -2119,7 +2129,7 @@
   }
   .codex-modal-cat {
     font-family: var(--ff-heading);
-    0.78rem;
+    font-size: 0.78rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -2167,7 +2177,7 @@
   }
   .codex-tag {
     font-family: var(--ff-heading);
-    0.69rem;
+    font-size: 0.69rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     padding: 0.2rem 0.5rem;
@@ -2176,7 +2186,7 @@
   }
   .codex-modal-related-title {
     font-family: var(--ff-heading);
-    0.82rem;
+    font-size: 0.82rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -2185,7 +2195,7 @@
   .codex-related-pill {
     display: inline-block;
     font-family: var(--ff-heading);
-    0.86rem;
+    font-size: 0.86rem;
     letter-spacing: 0.08em;
     padding: 0.3rem 0.7rem;
     border: 1px solid var(--gold-dim);
@@ -2238,7 +2248,7 @@
   }
   .save-id-hint {
     font-family: var(--ff-body); font-style: italic;
-    1.18rem; color: var(--text-secondary);
+    font-size: 1.18rem; color: var(--text-secondary);
     margin-bottom: 0.7rem; line-height: 1.6;
   }
   .save-input {
@@ -2269,7 +2279,7 @@
   .save-status.err { color: var(--crimson-bright); }
   .save-close {
     margin-top: 1rem; font-family: var(--ff-heading);
-    0.82rem; letter-spacing: 0.15em; text-transform: uppercase;
+    font-size: 0.82rem; letter-spacing: 0.15em; text-transform: uppercase;
     color: var(--text-secondary); background: none; border: none;
     cursor: pointer; padding: 0.5rem 1rem;
   }
@@ -2547,7 +2557,7 @@
   }
   .scrip-skill-desc {
     font-family: var(--ff-body); font-style: italic;
-    1.23rem; color: var(--text-secondary); line-height: 1.55;
+    font-size: 1.23rem; color: var(--text-secondary); line-height: 1.55;
   }
   .scrip-research-btn {
     font-family: var(--ff-heading); 0.58rem;
@@ -2576,7 +2586,7 @@
   }
   .scrip-mastered-desc {
     font-family: var(--ff-body); font-style: italic;
-    1.18rem; color: var(--text-secondary); line-height: 1.5;
+    font-size: 1.18rem; color: var(--text-secondary); line-height: 1.5;
   }
 
 
@@ -2613,7 +2623,7 @@
     color: var(--gold);
   }
   .topbar-location {
-    0.74rem;
+    font-size: 0.74rem;
     letter-spacing: 0.1em;
   }
   .location-dot {
@@ -2649,16 +2659,16 @@
     opacity: 0.8;
   }
   .res-name {
-    0.52rem;
+    font-size: 0.52rem;
     letter-spacing: 0.12em;
     opacity: 0.7;
   }
   .res-value {
-    1.06rem;
+    font-size: 1.06rem;
     font-weight: 600;
   }
   .res-rate {
-    0.69rem;
+    font-size: 0.69rem;
     opacity: 0.5;
   }
 
@@ -2683,13 +2693,13 @@
     font-family: serif;
   }
   .tab-label {
-    0.54rem;
+    font-size: 0.54rem;
     letter-spacing: 0.16em;
   }
 
   /* — SECTION LABELS — ruled line with word in gap — */
   .section-label {
-    0.78rem;
+    font-size: 0.78rem;
     letter-spacing: 0.22em;
     color: var(--text-secondary);
     margin-bottom: 0.7rem;
@@ -2710,7 +2720,7 @@
   .journal-entry.urgent { border-left-color: var(--crimson-bright); }
   .journal-entry.discovery { border-left-color: var(--indigo-bright); }
   .entry-title {
-    1.06rem;
+    font-size: 1.06rem;
     letter-spacing: 0.07em;
     color: var(--gold);
   }
@@ -2732,7 +2742,7 @@
   .mission-card:active { background: rgba(201,168,76,0.02); }
   .mission-title { 1.11rem; letter-spacing: 0.05em; }
   .mission-badge {
-    0.63rem;
+    font-size: 0.63rem;
     letter-spacing: 0.1em;
     padding: 0.15rem 0.4rem;
     border: 1px solid currentColor;
@@ -2860,7 +2870,7 @@
 
   /* — BUTTONS — austere, typographic — */
   .btn-primary {
-    1.15rem;
+    font-size: 1.15rem;
     letter-spacing: 0.2em;
     padding: 1rem 2.5rem;
     border: 1px solid var(--gold-dim);
@@ -2874,7 +2884,7 @@
   .btn-primary::before { display: none; }
   .btn-primary:active { background: rgba(201,168,76,0.1); border-color: var(--gold); }
   .btn-action {
-    0.86rem;
+    font-size: 0.86rem;
     letter-spacing: 0.1em;
     padding: 0.42rem 0.85rem;
     border: 1px solid var(--border);
@@ -2909,7 +2919,7 @@
   .dm-event-title { font-size:1.09rem; margin-bottom: 0.85rem; letter-spacing: 0.04em; }
   .dm-event-body { font-size:1.08rem; line-height: 1.7; margin-bottom: 1rem; }
   .dm-event-btn {
-    0.86rem; letter-spacing: 0.1em;
+    font-size: 0.86rem; letter-spacing: 0.1em;
     padding: 0.7rem;
     border: 1px solid var(--border-bright);
     background: transparent; color: var(--gold); cursor: pointer;
@@ -2928,7 +2938,7 @@
   }
   .save-section-title { 0.86rem; letter-spacing: 0.14em; }
   .save-btn {
-    0.86rem;
+    font-size: 0.86rem;
     letter-spacing: 0.12em;
     padding: 0.65rem;
     border: 1px solid var(--border);
@@ -2956,7 +2966,7 @@
   }
   .identity-input:focus { border-bottom-color: var(--gold); }
   .identity-btn {
-    1.08rem; letter-spacing: 0.2em;
+    font-size: 1.08rem; letter-spacing: 0.2em;
     padding: 0.85rem 2.3rem;
     border: 1px solid var(--gold-dim);
     background: transparent; color: var(--gold);
@@ -2970,7 +2980,7 @@
   .forge-title { font-size: 1.8rem; letter-spacing: 2px; }
   .forge-subtitle { 0.78rem; letter-spacing: 0.2em; }
   .forge-tab {
-    0.63rem; letter-spacing: 0.09em;
+    font-size: 0.63rem; letter-spacing: 0.09em;
     padding: 0.6rem 0.15rem;
     background: transparent; border: none; cursor: pointer;
     border-bottom: 2px solid transparent;
@@ -2986,7 +2996,7 @@
 
   /* — CODEX — reference compendium — */
   .codex-cat {
-    0.74rem; letter-spacing: 0.1em;
+    font-size: 0.74rem; letter-spacing: 0.1em;
     padding: 0.28rem 0.65rem;
     border: 1px solid var(--border);
     background: transparent; color: var(--text-secondary);
@@ -3061,10 +3071,11 @@
       rgba(120,85,24,0.04) 40px
     );
   }
-  .splash-title { font-size: 3rem; }
-  .splash-subtitle { 0.99rem; letter-spacing: 0.32em; }
-  .splash-text { font-size:1.15rem; line-height: 1.75; }
-  .splash-warning { 0.76rem; color: var(--stone); }
+  .splash-sigil { width: 100px; height: 100px; margin-bottom: 1.5rem; }
+  .splash-title { font-size: 3.2rem; }
+  .splash-subtitle { font-size: 0.7rem; letter-spacing: 0.32em; margin-bottom: 2.5rem; }
+  .splash-text { font-size: 1rem; line-height: 1.8; margin-bottom: 2.5rem; }
+  .splash-warning { font-size: 0.55rem; }
 
   /* — LIGHT THEME SPECIFIC OVERRIDES — */
   :root.light .leaflet-tile {
@@ -3173,7 +3184,7 @@
   }
   .acol-modal-title {
     font-family: var(--ff-heading);
-    0.99rem;
+    font-size: 0.99rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--text-primary);
@@ -3194,20 +3205,20 @@
   .equip-item-row:active { opacity: 0.6; }
   .equip-item-check {
     font-family: var(--ff-heading);
-    1.06rem;
+    font-size: 1.06rem;
     color: var(--text-secondary);
     flex-shrink: 0;
     margin-top: 0.05rem;
   }
   .equip-item-name {
     font-family: var(--ff-heading);
-    0.99rem;
+    font-size: 0.99rem;
     letter-spacing: 0.05em;
     color: var(--text-primary);
   }
   .acol-modal-close {
     font-family: var(--ff-heading);
-    0.74rem;
+    font-size: 0.74rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     padding: 0.65rem 1rem;
@@ -3242,7 +3253,7 @@
   .cc-name-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.3rem; }
   .cc-inspect-btn {
     background: none; border: none; color: var(--text-secondary);
-    0.99rem; cursor: pointer; padding: 0 0.2rem; line-height: 1;
+    font-size: 0.99rem; cursor: pointer; padding: 0 0.2rem; line-height: 1;
     flex-shrink: 0; transition: color 0.12s;
   }
   .cc-inspect-btn:active { color: var(--text-primary); }
@@ -3383,19 +3394,11 @@
   <svg class="splash-sigil" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
     <circle cx="60" cy="60" r="55" fill="none" stroke="rgba(201,168,76,0.2)" stroke-width="0.5"/>
     <circle cx="60" cy="60" r="45" fill="none" stroke="rgba(201,168,76,0.15)" stroke-width="0.5"/>
-    <!-- Pentagram -->
-    <polygon points="60,10 74,50 115,50 83,73 94,113 60,90 26,113 37,73 5,50 46,50" 
+    <polygon points="60,10 74,50 115,50 83,73 94,113 60,90 26,113 37,73 5,50 46,50"
              fill="none" stroke="rgba(201,168,76,0.5)" stroke-width="0.7"/>
-    <!-- Inner circle -->
     <circle cx="60" cy="60" r="18" fill="none" stroke="rgba(201,168,76,0.3)" stroke-width="0.5"/>
-    <!-- Cross -->
     <line x1="60" y1="42" x2="60" y2="78" stroke="rgba(201,168,76,0.4)" stroke-width="0.5"/>
     <line x1="42" y1="60" x2="78" y2="60" stroke="rgba(201,168,76,0.4)" stroke-width="0.5"/>
-    <!-- Corner marks -->
-    <circle cx="60" cy="10" r="2" fill="rgba(201,168,76,0.6)"/>
-    <circle cx="60" cy="110" r="2" fill="rgba(201,168,76,0.6)"/>
-    <circle cx="10" cy="50" r="2" fill="rgba(201,168,76,0.6)"/>
-    <circle cx="110" cy="50" r="2" fill="rgba(201,168,76,0.6)"/>
     <circle cx="60" cy="60" r="3" fill="rgba(201,168,76,0.8)"/>
   </svg>
 
@@ -3409,12 +3412,12 @@
     The stars have noticed. They always do.
   </p>
 
-  <button class="btn-primary" onclick="enterGame()" ontouchend="enterGame()">
-    DESCEND
+  <button class="btn-primary" onclick="enterGame()" ontouchend="this.onclick()">
+    Descend
   </button>
 
   <p class="splash-warning" style="pointer-events:none;">
-    This chronicle records your passage through the world. GPS and planetary hours will shape your fate. Play responsibly. The lair remembers.
+    GPS and planetary hours will shape your fate.<br>The lair remembers.
   </p>
 </div>
 
