@@ -1360,6 +1360,37 @@ const AOI_SUGGEST = {
   water:      { type:'gather',  icon:'○',  label:'Water feature — Lunar gather event' },
 };
 
+// Overpass API mirrors — try each in order
+const OVERPASS_MIRRORS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+];
+
+async function fetchOverpass(queryStr) {
+  // Use POST to avoid URL length issues and encoding problems
+  for (const mirror of OVERPASS_MIRRORS) {
+    try {
+      const res = await fetch(mirror, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'data=' + encodeURIComponent(queryStr),
+      });
+      if (!res.ok) { log(`Mirror ${mirror} returned ${res.status}`, 'warn'); continue; }
+      const text = await res.text();
+      // Guard against HTML error pages
+      if (text.trim().startsWith('<')) {
+        log(`Mirror ${mirror} returned HTML (rate limited or down)`, 'warn');
+        continue;
+      }
+      return JSON.parse(text);
+    } catch(e) {
+      log(`Mirror ${mirror} failed: ${e.message}`, 'warn');
+    }
+  }
+  throw new Error('All Overpass mirrors failed or rate-limited. Try again in a minute.');
+}
+
 async function queryAOI() {
   const lat    = parseFloat(document.getElementById('aoi-lat')?.value);
   const lng    = parseFloat(document.getElementById('aoi-lng')?.value);
@@ -1368,29 +1399,54 @@ async function queryAOI() {
 
   if (isNaN(lat) || isNaN(lng)) { toast('Enter a valid lat/lng first.'); return; }
 
-  const loadEl  = document.getElementById('aoi-loading');
-  const resEl   = document.getElementById('aoi-results');
-  if (loadEl) loadEl.style.display = 'block';
+  const loadEl = document.getElementById('aoi-loading');
+  const resEl  = document.getElementById('aoi-results');
+  if (loadEl) { loadEl.style.display = 'block'; loadEl.textContent = 'Querying OpenStreetMap…'; }
   if (resEl)  resEl.innerHTML = '';
 
-  const query = AOI_QUERIES[type] || AOI_QUERIES.all;
-  const overpassQ = `[out:json][timeout:25];${query}(around:${radius},${lat},${lng});out body 50;`;
-  const url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(overpassQ);
+  // Build a clean, simple query — complex unions sometimes break Overpass
+  const typeFilter = AOI_QUERIES[type] || AOI_QUERIES.all;
+  // Wrap each filter inside the around clause properly
+  // overpassQ built by buildSimpleQuery
+
+  // Simpler fallback: use a known-good QL pattern
+  const simpleQ = buildSimpleQuery(type, lat, lng, radius);
 
   try {
-    const res = await fetch(url);
-    const data = await res.json();
+    const data = await fetchOverpass(simpleQ);
     if (loadEl) loadEl.style.display = 'none';
     if (!data.elements || !data.elements.length) {
-      resEl.innerHTML = '<div class="panel"><p style="font-family:var(--ff-b);font-style:italic;color:var(--mist);">No points of interest found in this area. Try a wider radius or different type.</p></div>';
+      resEl.innerHTML = '<div class="panel"><p style="font-family:var(--ff-b);font-style:italic;color:var(--mist);">No points of interest found. Try a wider radius or different category.</p></div>';
       return;
     }
     renderAOIResults(data.elements, lat, lng);
   } catch(e) {
     if (loadEl) loadEl.style.display = 'none';
-    resEl.innerHTML = `<div class="panel"><p style="color:var(--crimson-bright);font-family:var(--ff-b);">Overpass API error: ${e.message}. Check network or try again later.</p></div>`;
-    log('Overpass error: ' + e.message, 'err');
+    resEl.innerHTML = `<div class="panel" style="border-color:rgba(196,48,48,0.3);">
+      <p style="color:var(--crimson-bright);font-family:var(--ff-b);font-size:0.9rem;margin-bottom:0.5rem;">${e.message}</p>
+      <p style="font-family:var(--ff-b);font-style:italic;color:var(--mist);font-size:0.85rem;">Overpass API may be rate-limited. Wait 60 seconds and try again, or try a different mirror.</p>
+    </div>`;
+    log('Overpass failed: ' + e.message, 'err');
   }
+}
+
+function buildSimpleQuery(type, lat, lng, radius) {
+  const NL = '\n';
+  const filters = {
+    all:        ['node["historic"]','node["amenity"="place_of_worship"]','node["landuse"="cemetery"]','node["railway"="station"]','node["tourism"="museum"]','node["amenity"="theatre"]','node["natural"="peak"]','node["natural"="spring"]'],
+    historic:   ['node["historic"]','way["historic"]'],
+    religion:   ['node["amenity"="place_of_worship"]','way["amenity"="place_of_worship"]'],
+    cemetery:   ['node["landuse"="cemetery"]','way["landuse"="cemetery"]','node["amenity"="grave_yard"]'],
+    transport:  ['node["railway"="station"]','node["public_transport"="station"]'],
+    industrial: ['node["man_made"="chimney"]','node["man_made"="water_tower"]','node["building"="industrial"]'],
+    natural:    ['node["natural"="peak"]','node["natural"="spring"]','node["natural"="cave_entrance"]','node["natural"="cliff"]'],
+    culture:    ['node["tourism"="museum"]','node["amenity"="theatre"]','node["amenity"="arts_centre"]','node["tourism"="gallery"]'],
+    water:      ['node["natural"="hot_spring"]','node["waterway"="waterfall"]','node["leisure"="marina"]'],
+  };
+  const lines = (filters[type] || filters.all)
+    .map(function(f){ return '  ' + f + '(around:' + radius + ',' + lat + ',' + lng + ');'; })
+    .join(NL);
+  return '[out:json][timeout:20];' + NL + '(' + NL + lines + NL + ');' + NL + 'out center 40;';
 }
 
 function renderAOIResults(elements, centerLat, centerLng) {

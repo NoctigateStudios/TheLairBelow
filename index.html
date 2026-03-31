@@ -1460,28 +1460,31 @@
 
   .cards-row {
     display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    justify-content: stretch;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
     position: relative;
     z-index: 1;
+    width: 100%;
   }
 
   .tarot-card {
-    width: 60px;
-    height: 95px;
+    flex: 1;
+    min-width: 0;
+    max-width: 120px;
+    height: 120px;
     border: 1px solid var(--border-bright);
     background: linear-gradient(135deg, var(--deep), var(--abyss));
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.3rem;
+    gap: 0.25rem;
     cursor: pointer;
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
-    flex-shrink: 0;
+    padding: 0.4rem 0.3rem;
   }
 
   .tarot-card.revealed {
@@ -1490,7 +1493,20 @@
     box-shadow: 0 0 15px rgba(61,61,170,0.2);
   }
 
-  .tarot-card.reversed { transform: rotate(180deg); }
+  .tarot-card.reversed {
+    border-color: var(--crimson-bright);
+    box-shadow: 0 0 10px rgba(196,48,48,0.25);
+  }
+  .tarot-card.reversed::after {
+    content: '↓';
+    position: absolute;
+    bottom: 3px;
+    right: 5px;
+    font-family: var(--ff-heading);
+    font-size: 0.7rem;
+    color: var(--crimson-bright);
+    line-height: 1;
+  }
 
   .tarot-card::before {
     content: '';
@@ -1500,7 +1516,7 @@
   }
 
   .tarot-card-symbol {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     line-height: 1;
     font-family: serif;
     opacity: 0.85;
@@ -1510,13 +1526,13 @@
 
   .tarot-card-name {
     font-family: var(--ff-heading);
-    font-size: 0.52rem;
-    letter-spacing: 0.08em;
+    font-size: 0.58rem;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--gold-dim);
     text-align: center;
-    padding: 0 0.2rem;
-    line-height: 1.3;
+    padding: 0 0.15rem;
+    line-height: 1.25;
   }
 
   .tarot-card-num {
@@ -1537,18 +1553,22 @@
   }
 
   .spread-effects {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
     position: relative;
     z-index: 1;
+    margin-top: 0.5rem;
   }
 
   .effect-tag {
-    text-align: center;
-    padding: 0.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.4rem 0.7rem;
     border: 1px solid var(--border);
     background: rgba(255,255,255,0.02);
+    text-align: left;
   }
 
   .effect-name {
@@ -1685,8 +1705,14 @@
 
   /* Battlefield */
   #combat-battlefield {
-    flex: 1; overflow-y: auto; padding: 0.6rem 0.8rem;
-    display: flex; flex-direction: column; gap: 0.3rem; min-height: 0;
+    flex: 0 0 auto;
+    max-height: 38vh;
+    overflow-y: auto;
+    padding: 0.6rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-height: 100px;
   }
   #combat-battlefield::-webkit-scrollbar { width: 2px; }
   #combat-battlefield::-webkit-scrollbar-thumb { background: var(--stone); }
@@ -1759,9 +1785,16 @@
 
   /* Log */
   #combat-log-panel {
-    flex-shrink: 0; max-height: 100px; overflow-y: auto;
-    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-    padding: 0.4rem 0.8rem; background: rgba(5,4,7,0.6);
+    flex-shrink: 0;
+    height: 90px;
+    max-height: 90px;
+    overflow-y: auto;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 0.4rem 0.8rem;
+    background: rgba(5,4,7,0.6);
+    position: relative;
+    z-index: 2;
   }
   #combat-log-panel::-webkit-scrollbar { width: 2px; }
   #combat-log-panel::-webkit-scrollbar-thumb { background: var(--stone); }
@@ -5179,7 +5212,7 @@
         <span class="tarot-card-num">${card.num}</span>
         <span class="tarot-card-symbol">${card.sym}</span>
         <span class="tarot-card-name" style="color:var(--bone);">${card.name}${reversed?' ↓':''}</span>
-        <div style="font-family:var(--ff-heading);font-size:0.55rem;color:${col};margin-top:0.3rem;letter-spacing:0.06em;text-align:center;padding:0 0.3rem;line-height:1.3;">${effect.label.split('—')[0].trim()}</div>
+        <div style="font-family:var(--ff-heading);font-size:0.5rem;color:${col};margin-top:0.2rem;letter-spacing:0.04em;text-align:center;padding:0 0.15rem;line-height:1.2;overflow:hidden;max-height:2.5rem;">${effect.label.split('—')[0].trim()}</div>
       </div>`;
     }).join('');
 
@@ -5190,9 +5223,12 @@
       if (!drawn.length) { fx.innerHTML = ''; return; }
       fx.innerHTML = drawn.map((s, i) => {
         const col = s.reversed ? 'var(--crimson-bright)' : 'var(--viridian-bright)';
+        const label = s.effect?.label || '';
         return `<div class="effect-tag">
-          <div class="effect-name">${SPREAD_POSITIONS[i]}</div>
-          <div class="effect-val" style="color:${col};">${s.card.name}${s.reversed?' ↓':''}</div>
+          <div>
+            <div class="effect-name" style="font-size:0.65rem;">${SPREAD_POSITIONS[i]} · <span style="color:${col};font-family:var(--ff-heading);">${s.card.name}${s.reversed?' ↓':''}</span></div>
+            <div style="font-family:var(--ff-body);font-style:italic;font-size:0.78rem;color:var(--mist);margin-top:0.1rem;">${label}</div>
+          </div>
         </div>`;
       }).join('');
     }
