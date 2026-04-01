@@ -486,39 +486,37 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
 
 
 <div id="page-aoi" class="page">
-<div class="pg-head"><div class="pg-title">Area of Interest</div><div class="pg-desc">Query real-world points of interest near a location using OpenStreetMap. Use these as anchors for events: a cemetery, a train station, a derelict factory. The density and type of nearby places shapes what kind of event makes sense.</div></div>
+<div class="pg-head"><div class="pg-title">Area of Interest</div><div class="pg-desc">Query real-world points of interest via OpenStreetMap. Use them as event anchors — a cemetery becomes a Saturnine gather, a station becomes a recruit encounter, a derelict factory becomes combat. Check the Arcane Log at the bottom for debug output if the query fails.</div></div>
 
 <div class="panel">
-<div class="ph">Location Query</div>
-<div class="g2">
-<div class="fld"><label>Center Latitude</label><input type="number" id="aoi-lat" step="0.0001" placeholder="45.4654"></div>
-<div class="fld"><label>Center Longitude</label><input type="number" id="aoi-lng" step="0.0001" placeholder="9.1859"></div>
+<div class="ph">Location</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0.6rem;margin-bottom:0.7rem;">
+  <div class="fld"><label>Latitude</label><input type="number" id="aoi-lat" step="0.000001" placeholder="45.465400"></div>
+  <div class="fld"><label>Longitude</label><input type="number" id="aoi-lng" step="0.000001" placeholder="9.185900"></div>
+  <div class="fld"><label>Radius (m)</label><input type="number" id="aoi-radius" value="500" min="100" max="5000"></div>
+  <div class="fld"><label>Category</label>
+    <select id="aoi-type">
+      <option value="all">All types</option>
+      <option value="historic">Historic</option>
+      <option value="religion">Religious</option>
+      <option value="cemetery">Cemeteries</option>
+      <option value="transport">Transport</option>
+      <option value="industrial">Industrial</option>
+      <option value="natural">Natural</option>
+      <option value="culture">Culture</option>
+      <option value="water">Water</option>
+    </select>
+  </div>
 </div>
-<div class="g2">
-<div class="fld"><label>Radius (metres)</label><input type="number" id="aoi-radius" value="500" min="100" max="5000"></div>
-<div class="fld"><label>Filter by type</label>
-<select id="aoi-type">
-<option value="all">All types</option>
-<option value="historic">Historic sites</option>
-<option value="religion">Religious buildings</option>
-<option value="cemetery">Cemeteries</option>
-<option value="transport">Transport hubs</option>
-<option value="industrial">Industrial</option>
-<option value="natural">Natural features</option>
-<option value="culture">Culture &amp; arts</option>
-<option value="water">Water features</option>
-</select>
+<div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+  <button class="btn b-rune" onclick="queryAOI()">◎ Query Overpass</button>
+  <button class="btn b-seal" onclick="usePlayerLocation()">Use Player Location</button>
+  <button class="btn b-amber" onclick="testOverpassConnection()">Test Connection</button>
 </div>
-</div>
-<div style="display:flex;gap:0.5rem;">
-<button class="btn b-rune" onclick="queryAOI()">◎ Query Overpass API</button>
-<button class="btn b-seal" onclick="usePlayerLocation()">Use First Player Location</button>
-</div>
+<div id="aoi-loading" style="display:none;margin-top:0.7rem;font-family:var(--ff-b);font-style:italic;color:var(--mist);">Querying OpenStreetMap…</div>
 </div>
 
-<div id="aoi-loading" style="display:none;font-family:var(--ff-b);font-style:italic;color:var(--mist);padding:1rem 0;">Querying OpenStreetMap...</div>
-
-<div id="aoi-results" style="margin-top:0.6rem;"></div>
+<div id="aoi-results" style="margin-top:0.7rem;"></div>
 </div>
 
 <div id="page-broadcast" class="page">
@@ -1334,119 +1332,157 @@ async function loadActiveEvents() {
   } catch(e) { log('Error: '+e.message,'err'); }
 }
 
+// AREA OF INTEREST — using AOI_PRESETS below
 // ══════════════════════════════════════════
-// AREA OF INTEREST — Overpass API
+// OVERPASS API — Area of Interest
 // ══════════════════════════════════════════
-const AOI_QUERIES = {
-  all:        '(node[historic];node[amenity=place_of_worship];node[landuse=cemetery];node[railway=station];node[man_made];node[natural];node[tourism=museum];node[waterway];node[amenity=theatre];)',
-  historic:   'node[historic]',
-  religion:   'node[amenity=place_of_worship]',
-  cemetery:   '(node[landuse=cemetery];way[landuse=cemetery];)',
-  transport:  '(node[railway=station];node[public_transport=station];node[aeroway=terminal];)',
-  industrial: '(node[man_made=chimney];node[man_made=water_tower];node[landuse=industrial];node[building=industrial];)',
-  natural:    '(node[natural=peak];node[natural=spring];node[natural=cave_entrance];node[natural=tree];node[natural=cliff];)',
-  culture:    '(node[tourism=museum];node[amenity=theatre];node[amenity=arts_centre];node[tourism=gallery];)',
-  water:      '(node[waterway=waterfall];node[natural=hot_spring];node[waterway=lock_gate];node[leisure=marina];)',
+
+// Proven query templates — minimal, no union syntax that can break parsers
+const AOI_PRESETS = {
+  all:        'node["historic"](around:RADIUS,LAT,LNG);node["amenity"="place_of_worship"](around:RADIUS,LAT,LNG);node["landuse"="cemetery"](around:RADIUS,LAT,LNG);node["railway"="station"](around:RADIUS,LAT,LNG);node["tourism"="museum"](around:RADIUS,LAT,LNG);node["natural"~"peak|spring|cave_entrance"](around:RADIUS,LAT,LNG);',
+  historic:   'node["historic"](around:RADIUS,LAT,LNG);way["historic"](around:RADIUS,LAT,LNG);',
+  religion:   'node["amenity"="place_of_worship"](around:RADIUS,LAT,LNG);way["amenity"="place_of_worship"](around:RADIUS,LAT,LNG);',
+  cemetery:   'node["landuse"="cemetery"](around:RADIUS,LAT,LNG);way["landuse"="cemetery"](around:RADIUS,LAT,LNG);',
+  transport:  'node["railway"="station"](around:RADIUS,LAT,LNG);node["public_transport"="station"](around:RADIUS,LAT,LNG);',
+  industrial: 'node["man_made"~"chimney|water_tower"](around:RADIUS,LAT,LNG);node["building"="industrial"](around:RADIUS,LAT,LNG);',
+  natural:    'node["natural"~"peak|spring|cave_entrance|cliff"](around:RADIUS,LAT,LNG);',
+  culture:    'node["tourism"~"museum|gallery"](around:RADIUS,LAT,LNG);node["amenity"~"theatre|arts_centre"](around:RADIUS,LAT,LNG);',
+  water:      'node["natural"="hot_spring"](around:RADIUS,LAT,LNG);node["waterway"="waterfall"](around:RADIUS,LAT,LNG);node["leisure"="marina"](around:RADIUS,LAT,LNG);',
 };
 
-const AOI_SUGGEST = {
-  historic:   { type:'story',   icon:'†',  label:'Ancient structure — story or discovery event' },
-  religion:   { type:'story',   icon:'◈',  label:'Sacred site — rite or encounter event' },
-  cemetery:   { type:'gather',  icon:'☽',  label:'Cemetery — Saturnine gather event' },
-  transport:  { type:'recruit', icon:'◬',  label:'Transit hub — recruit encounter event' },
-  industrial: { type:'combat',  icon:'⚠',  label:'Industrial site — combat event' },
-  natural:    { type:'gather',  icon:'△',  label:'Natural feature — gather or story event' },
-  culture:    { type:'story',   icon:'◇',  label:'Cultural site — discovery event' },
-  water:      { type:'gather',  icon:'○',  label:'Water feature — Lunar gather event' },
-};
+function buildOverpassQuery(type, lat, lng, radius) {
+  const template = AOI_PRESETS[type] || AOI_PRESETS.all;
+  const body = template
+    .replace(/RADIUS/g, radius)
+    .replace(/LAT/g, lat.toFixed(6))
+    .replace(/LNG/g, lng.toFixed(6));
+  return '[out:json][timeout:25];(' + body + ');out center 50;';
+}
 
-// Overpass API mirrors — try each in order
-const OVERPASS_MIRRORS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
-  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
-];
-
-async function fetchOverpass(queryStr) {
-  // Use POST to avoid URL length issues and encoding problems
-  for (const mirror of OVERPASS_MIRRORS) {
-    try {
-      const res = await fetch(mirror, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'data=' + encodeURIComponent(queryStr),
-      });
-      if (!res.ok) { log(`Mirror ${mirror} returned ${res.status}`, 'warn'); continue; }
-      const text = await res.text();
-      // Guard against HTML error pages
-      if (text.trim().startsWith('<')) {
-        log(`Mirror ${mirror} returned HTML (rate limited or down)`, 'warn');
-        continue;
-      }
-      return JSON.parse(text);
-    } catch(e) {
-      log(`Mirror ${mirror} failed: ${e.message}`, 'warn');
+async function tryOverpassMirror(mirror, query) {
+  const url = mirror + '?data=' + encodeURIComponent(query);
+  log('GET ' + mirror.split('/')[2] + ' …', 'info');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { 'Accept': 'application/json' },
+    });
+    clearTimeout(timer);
+    const text = await res.text();
+    const preview = text.substring(0, 120).replace(/\n/g,' ');
+    log(mirror.split('/')[2] + ' → ' + res.status + '  first: ' + preview, res.ok ? 'info' : 'warn');
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' from ' + mirror.split('/')[2]);
+    const trimmed = text.trimStart();
+    if (!trimmed.startsWith('{')) {
+      throw new Error('Non-JSON response from ' + mirror.split('/')[2] + ': ' + trimmed.substring(0,60));
     }
+    const data = JSON.parse(text);
+    return data;
+  } catch(e) {
+    clearTimeout(timer);
+    if (e.name === 'AbortError') throw new Error('Timeout (15s) on ' + mirror.split('/')[2]);
+    throw e;
   }
-  throw new Error('All Overpass mirrors failed or rate-limited. Try again in a minute.');
 }
 
 async function queryAOI() {
-  const lat    = parseFloat(document.getElementById('aoi-lat')?.value);
-  const lng    = parseFloat(document.getElementById('aoi-lng')?.value);
-  const radius = parseInt(document.getElementById('aoi-radius')?.value) || 500;
+  const latRaw = document.getElementById('aoi-lat')?.value.trim();
+  const lngRaw = document.getElementById('aoi-lng')?.value.trim();
+  const lat    = parseFloat(latRaw);
+  const lng    = parseFloat(lngRaw);
+  const radius = Math.min(5000, Math.max(100, parseInt(document.getElementById('aoi-radius')?.value) || 500));
   const type   = document.getElementById('aoi-type')?.value || 'all';
-
-  if (isNaN(lat) || isNaN(lng)) { toast('Enter a valid lat/lng first.'); return; }
 
   const loadEl = document.getElementById('aoi-loading');
   const resEl  = document.getElementById('aoi-results');
+
+  if (!latRaw || !lngRaw || isNaN(lat) || isNaN(lng)) {
+    resEl.innerHTML = '<div class="panel"><p style="color:var(--crimson-bright);">Enter valid coordinates before querying.</p></div>';
+    return;
+  }
+  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+    resEl.innerHTML = '<div class="panel"><p style="color:var(--crimson-bright);">Coordinates out of range. Lat must be -90 to 90, Lng -180 to 180.</p></div>';
+    return;
+  }
+
   if (loadEl) { loadEl.style.display = 'block'; loadEl.textContent = 'Querying OpenStreetMap…'; }
   if (resEl)  resEl.innerHTML = '';
 
-  // Build a clean, simple query — complex unions sometimes break Overpass
-  const typeFilter = AOI_QUERIES[type] || AOI_QUERIES.all;
-  // Wrap each filter inside the around clause properly
-  // overpassQ built by buildSimpleQuery
+  const query = buildOverpassQuery(type, lat, lng, radius);
+  log('Overpass query: ' + query.substring(0, 120) + '…', 'info');
 
-  // Simpler fallback: use a known-good QL pattern
-  const simpleQ = buildSimpleQuery(type, lat, lng, radius);
+  const mirrors = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.private.coffee/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+  ];
 
-  try {
-    const data = await fetchOverpass(simpleQ);
-    if (loadEl) loadEl.style.display = 'none';
-    if (!data.elements || !data.elements.length) {
-      resEl.innerHTML = '<div class="panel"><p style="font-family:var(--ff-b);font-style:italic;color:var(--mist);">No points of interest found. Try a wider radius or different category.</p></div>';
+  let lastErr = 'Unknown error';
+  for (const mirror of mirrors) {
+    try {
+      log('Trying ' + mirror.split('/')[2] + '…', 'info');
+      const data = await tryOverpassMirror(mirror, query);
+      if (loadEl) loadEl.style.display = 'none';
+      if (!data.elements || !data.elements.length) {
+        resEl.innerHTML = '<div class="panel"><p style="font-family:var(--ff-b);font-style:italic;color:var(--mist);">No points of interest found within ' + radius + 'm. Try increasing the radius or changing the filter.</p></div>';
+        return;
+      }
+      log('Found ' + data.elements.length + ' elements.', 'ok');
+      renderAOIResults(data.elements, lat, lng);
       return;
+    } catch(e) {
+      lastErr = e.message;
+      log('Mirror failed: ' + e.message, 'warn');
     }
-    renderAOIResults(data.elements, lat, lng);
-  } catch(e) {
-    if (loadEl) loadEl.style.display = 'none';
-    resEl.innerHTML = `<div class="panel" style="border-color:rgba(196,48,48,0.3);">
-      <p style="color:var(--crimson-bright);font-family:var(--ff-b);font-size:0.9rem;margin-bottom:0.5rem;">${e.message}</p>
-      <p style="font-family:var(--ff-b);font-style:italic;color:var(--mist);font-size:0.85rem;">Overpass API may be rate-limited. Wait 60 seconds and try again, or try a different mirror.</p>
-    </div>`;
-    log('Overpass failed: ' + e.message, 'err');
   }
+
+  if (loadEl) loadEl.style.display = 'none';
+  const turboQuery = buildOverpassQuery(type, lat, lng, radius);
+  const turboUrl = 'https://overpass-turbo.eu/?Q=' + encodeURIComponent(turboQuery) + '&R';
+  resEl.innerHTML = '<div class="panel" style="border:1px solid rgba(196,48,48,0.3);padding:1rem;">'
+    + '<p style="color:var(--crimson-bright);font-family:var(--ff-h);font-size:0.9rem;margin-bottom:0.5rem;">All Overpass mirrors failed or rate-limited</p>'
+    + '<p style="font-family:var(--ff-b);font-style:italic;color:var(--mist);font-size:0.82rem;margin-bottom:0.6rem;"><strong>Last error:</strong> ' + lastErr + '</p>'
+    + '<p style="font-family:var(--ff-b);color:var(--ash);font-size:0.8rem;margin-bottom:0.8rem;">Check the Arcane Log at the bottom — it shows exactly which server responded and what it returned. Overpass API rate-limits free users; wait ~60 seconds between queries.</p>'
+    + '<a href="' + turboUrl + '" target="_blank" class="btn b-seal" style="display:inline-block;text-decoration:none;margin-top:0.3rem;">Open in Overpass Turbo (browser) →</a>'
+    + '</div>';
 }
 
-function buildSimpleQuery(type, lat, lng, radius) {
-  const NL = '\n';
-  const filters = {
-    all:        ['node["historic"]','node["amenity"="place_of_worship"]','node["landuse"="cemetery"]','node["railway"="station"]','node["tourism"="museum"]','node["amenity"="theatre"]','node["natural"="peak"]','node["natural"="spring"]'],
-    historic:   ['node["historic"]','way["historic"]'],
-    religion:   ['node["amenity"="place_of_worship"]','way["amenity"="place_of_worship"]'],
-    cemetery:   ['node["landuse"="cemetery"]','way["landuse"="cemetery"]','node["amenity"="grave_yard"]'],
-    transport:  ['node["railway"="station"]','node["public_transport"="station"]'],
-    industrial: ['node["man_made"="chimney"]','node["man_made"="water_tower"]','node["building"="industrial"]'],
-    natural:    ['node["natural"="peak"]','node["natural"="spring"]','node["natural"="cave_entrance"]','node["natural"="cliff"]'],
-    culture:    ['node["tourism"="museum"]','node["amenity"="theatre"]','node["amenity"="arts_centre"]','node["tourism"="gallery"]'],
-    water:      ['node["natural"="hot_spring"]','node["waterway"="waterfall"]','node["leisure"="marina"]'],
-  };
-  const lines = (filters[type] || filters.all)
-    .map(function(f){ return '  ' + f + '(around:' + radius + ',' + lat + ',' + lng + ');'; })
-    .join(NL);
-  return '[out:json][timeout:20];' + NL + '(' + NL + lines + NL + ');' + NL + 'out center 40;';
+
+async function testOverpassConnection() {
+  const resEl = document.getElementById('aoi-results');
+  resEl.innerHTML = '<div class="panel"><p style="font-family:var(--ff-b);font-style:italic;color:var(--mist);">Testing connection to Overpass mirrors…</p></div>';
+  // Dead-simple query — should always return 1 result
+  const testQuery = '[out:json][timeout:10];node["place"="city"]["name"="Rome"];out 1;';
+  const mirrors = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.private.coffee/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+  ];
+  let results = [];
+  for (const mirror of mirrors) {
+    const start = Date.now();
+    try {
+      const url = mirror + '?data=' + encodeURIComponent(testQuery);
+      const res = await fetch(url);
+      const text = await res.text();
+      const ms = Date.now() - start;
+      const ok = text.trim()[0] === '{';
+      results.push({ mirror: mirror.split('/')[2], ok, ms, status: res.status });
+      log((ok ? 'OK' : 'FAIL') + ' ' + mirror.split('/')[2] + ' ' + res.status + ' ' + ms + 'ms', ok ? 'ok' : 'warn');
+    } catch(e) {
+      results.push({ mirror: mirror.split('/')[2], ok: false, ms: Date.now()-start, status: e.message });
+      log('FAIL ' + mirror.split('/')[2] + ': ' + e.message, 'err');
+    }
+  }
+  resEl.innerHTML = '<div class="panel"><div class="ph">Connection Test Results</div>' +
+    results.map(r => '<div style="display:flex;align-items:center;gap:0.7rem;padding:0.4rem 0;border-bottom:1px solid var(--border);">' +
+      '<span style="font-family:var(--ff-h);font-size:0.65rem;color:' + (r.ok?'var(--viridian-bright)':'var(--crimson-bright)') + ';width:1rem;">' + (r.ok?'✓':'✕') + '</span>' +
+      '<span style="font-family:var(--ff-h);font-size:0.7rem;color:var(--bone);flex:1;">' + r.mirror + '</span>' +
+      '<span style="font-family:var(--ff-h);font-size:0.65rem;color:var(--ash);">' + r.ms + 'ms · ' + r.status + '</span>' +
+    '</div>').join('') +
+    '</div>';
 }
 
 function renderAOIResults(elements, centerLat, centerLng) {
