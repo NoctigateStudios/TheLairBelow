@@ -5512,102 +5512,204 @@
     },
   };
 
-  function applyTarotEffect(card, reversed) {
-    const def = TAROT_EFFECTS[card.name];
-    if (!def) return { label: 'Fate shifts.' };
-    const eff = reversed ? def.rev : def.up;
-    const durationH = eff.dur !== undefined ? eff.dur : (reversed ? 2 : 2);
-    const until = Date.now() + durationH * 3600000;
+  // ─── TAROT EFFECT ENGINE ────────────────────────────────────────────────────
+  // Stat buffs/debuffs are stored with the ORIGINAL base values of each target
+  // so reversal on expiry is exact even across reloads.
+  // The tarotEffects array holds entries of shape:
+  //   { type, stat, value, until, label,           ← common
+  //     resIdx, mult,                               ← rate / grant_essence
+  //     statSnapshots: [{id, originalValue},...] }  ← stat_buff / stat_debuff
 
-    // Remove existing effects of same type+resIdx
-    tarotEffects = tarotEffects.filter(e => !(e.type === eff.type && e.resIdx === eff.resIdx));
+  const AFFLICTIONS = ['Paranoid','Abusive','Masochistic','Fearful','Hopeless','Irrational'];
+
+  // Merge custom cards loaded from Firebase on top of built-in TAROT_EFFECTS
+  let _customTarotCards = {};
+  async function loadCustomTarotCards() {
+    try {
+      const res = await fetch(`${FB_URL}/world/tarot.json?cb=` + Date.now());
+      if (res.ok) {
+        const d = await res.json();
+        if (d && !d.error) _customTarotCards = d;
+      }
+    } catch(e) {}
+  }
+
+  function getAllTarotDefs() {
+    // Custom cards from Firebase override built-ins by name
+    return Object.assign({}, TAROT_EFFECTS, _customTarotCards);
+  }
+
+  // ── schedule a stat reversal that survives reloads ──────────────────────────
+  function _scheduleStatReversal(effectEntry) {
+    const remaining = effectEntry.until - Date.now();
+    if (remaining <= 0) { _applyStatReversal(effectEntry); return; }
+    setTimeout(() => { _applyStatReversal(effectEntry); }, remaining);
+  }
+
+  function _applyStatReversal(effectEntry) {
+    const { stat, statSnapshots } = effectEntry;
+    if (!stat) return;
+    // Restore each target to exactly its captured baseline
+    if (statSnapshots && statSnapshots.length) {
+      // Restore acolytes by id
+      (statSnapshots).forEach(snap => {
+        if (snap.id === '__player__') {
+          if (_characterData?.stats) {
+            _characterData.stats[stat] = snap.originalValue;
+          }
+        } else {
+          const a = (_acolytesData||[]).find(x => x.id === snap.id);
+          if (a && a.stats) a.stats[stat] = snap.originalValue;
+        }
+      });
+    } else {
+      // Fallback: subtract delta (legacy saves without snapshots)
+      const delta = effectEntry.value || 0;
+      (_acolytesData||[]).forEach(a => {
+        if (a.stats) a.stats[stat] = Math.max(1, (a.stats[stat]||10) - delta);
+      });
+      if (_characterData?.stats) {
+        _characterData.stats[stat] = Math.max(1, (_characterData.stats[stat]||10) - delta);
+      }
+    }
+    // Remove from active effects list and re-render
+    tarotEffects = tarotEffects.filter(e => e !== effectEntry && !(e.stat === stat && e.until === effectEntry.until));
+    if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
+    refreshCharacterBar();
+    toast(`✦ Tarot effect expired: ${stat} restored to base.`);
+    // Persist the cleaned-up state
+    _saveTarotState();
+    persistState().catch(()=>{});
+  }
+
+  function _saveTarotState() {
+    if (_researchData) {
+      _researchData.tarotEffects = tarotEffects.map(e => ({...e}));
+      if (_currentSpread) {
+        _researchData.tarotSpread = _currentSpread.map(s =>
+          s ? { cardName: s.card.name, reversed: s.reversed } : null
+        );
+      }
+    }
+  }
+
+  function applyTarotEffect(card, reversed) {
+    const allDefs = getAllTarotDefs();
+    const def = allDefs[card.name];
+    if (!def) return { label: 'Fate shifts — no effect defined.' };
+
+    const eff = reversed ? def.rev : def.up;
+    if (!eff) return { label: 'No effect for this orientation.' };
+
+    const durationH = (eff.dur !== undefined) ? eff.dur : 2;
+    const until = Date.now() + durationH * 3600_000;
+
+    // Remove any existing same-type effect to avoid stacking
+    tarotEffects = tarotEffects.filter(e =>
+      !(e.type === eff.type && e.stat === eff.stat && e.resIdx === eff.resIdx)
+    );
 
     switch (eff.type) {
+
+      // ── Instant stress damage / heal ───────────────────────────────────────
       case 'stress':
         (_acolytesData||[]).forEach(a => {
-          a.stress = Math.min(100, Math.max(0, (a.stress||0) + eff.value));
+          a.stress = Math.min(100, Math.max(0, (a.stress||0) + (eff.value||0)));
         });
         if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
         break;
 
+      // ── Clear stress ────────────────────────────────────────────────────────
       case 'cleanse':
         (_acolytesData||[]).forEach(a => { a.stress = 0; });
         if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
         toast('✦ All wounds of the mind are lifted.');
         break;
 
+      // ── Remove affliction states ────────────────────────────────────────────
       case 'cleanse_afflictions':
         (_acolytesData||[]).forEach(a => {
-          if (a.states) a.states = a.states.filter(s => !['Paranoid','Abusive','Masochistic','Fearful','Hopeless','Irrational'].includes(s));
+          if (a.states) a.states = a.states.filter(s => !AFFLICTIONS.includes(s));
         });
         if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
+        toast('✦ The scales settle. Afflictions lift.');
         break;
 
+      // ── Clear stress AND afflictions ────────────────────────────────────────
       case 'cleanse_all':
         (_acolytesData||[]).forEach(a => {
           a.stress = 0;
-          if (a.states) a.states = a.states.filter(s => !['Paranoid','Abusive','Masochistic','Fearful','Hopeless','Irrational'].includes(s));
+          if (a.states) a.states = a.states.filter(s => !AFFLICTIONS.includes(s));
         });
         if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
+        toast('✦ Transformation complete. All wounds are undone.');
         break;
 
+      // ── Instant essence grant / drain ───────────────────────────────────────
       case 'grant_essence':
         if (eff.value !== undefined && eff.resIdx !== undefined) {
           values[eff.resIdx] = Math.max(0, (values[eff.resIdx]||0) + eff.value);
-          document.querySelectorAll('.resource-pill .res-value').forEach((el,i) => { el.textContent = Math.floor(values[i]); });
+          document.querySelectorAll('.resource-pill .res-value')
+            .forEach((el, i) => { el.textContent = Math.floor(values[i]); });
         }
         break;
 
+      // ── Timed stat buff / debuff with snapshot-based reversal ───────────────
       case 'stat_buff':
-      case 'stat_debuff':
-        if (eff.stat && eff.value) {
-          (_acolytesData||[]).forEach(a => {
-            if (!a.stats) a.stats = {};
-            a.stats[eff.stat] = Math.max(1, (a.stats[eff.stat]||10) + eff.value);
-          });
-          if (_characterData?.stats) {
-            _characterData.stats[eff.stat] = Math.max(1, (_characterData.stats[eff.stat]||10) + eff.value);
-          }
-          if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
-          // Schedule reversal
-          if (durationH > 0) {
-            setTimeout(() => {
-              (_acolytesData||[]).forEach(a => {
-                if (a.stats) a.stats[eff.stat] = Math.max(1, (a.stats[eff.stat]||10) - eff.value);
-              });
-              if (_characterData?.stats) {
-                _characterData.stats[eff.stat] = Math.max(1, (_characterData.stats[eff.stat]||10) - eff.value);
-              }
-              toast(`Tarot effect expired: ${eff.stat} returns to base.`);
-              persistState();
-            }, durationH * 3600000);
-          }
+      case 'stat_debuff': {
+        if (!eff.stat) break;
+        const delta = eff.value || 0;
+
+        // Snapshot original values BEFORE applying
+        const snapshots = [];
+        (_acolytesData||[]).forEach(a => {
+          if (!a.stats) a.stats = {};
+          const base = a.stats[eff.stat] ?? 10;
+          snapshots.push({ id: a.id, originalValue: base });
+          a.stats[eff.stat] = Math.max(1, base + delta);
+        });
+        if (_characterData?.stats) {
+          const base = _characterData.stats[eff.stat] ?? 10;
+          snapshots.push({ id: '__player__', originalValue: base });
+          _characterData.stats[eff.stat] = Math.max(1, base + delta);
         }
-        tarotEffects.push({ ...eff, until });
-        break;
 
-      case 'level_bonus':
-        (_acolytesData||[]).forEach(a => { a.xp = (a.xp||0) + 50; });
-        if (_characterData) { _characterData.xp = (_characterData.xp||0) + 50; checkLevelUp(); }
-        break;
+        if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
+        refreshCharacterBar();
 
+        const entry = { ...eff, until, statSnapshots: snapshots };
+        tarotEffects.push(entry);
+
+        // Schedule reversal — will fire at expiry OR be re-scheduled on reload
+        if (durationH > 0) _scheduleStatReversal(entry);
+        break;
+      }
+
+      // ── XP grant to all ─────────────────────────────────────────────────────
+      case 'level_bonus': {
+        const xpAmt = eff.value || 50;
+        (_acolytesData||[]).forEach(a => { a.xp = (a.xp||0) + xpAmt; });
+        if (_characterData) { _characterData.xp = (_characterData.xp||0) + xpAmt; checkLevelUp(); }
+        toast(`✦ +${xpAmt} XP granted to all.`);
+        break;
+      }
+
+      // ── Unlock a rite temporarily ───────────────────────────────────────────
       case 'unlock_rite':
-        toast(`✦ ${eff.riteKey} rite is available without prerequisites for ${durationH}h.`);
-        tarotEffects.push({ ...eff, until });
+        toast(`✦ ${eff.riteKey || 'Rite'} unlocked for ${durationH}h — no Altar required.`);
+        if (durationH > 0) tarotEffects.push({ ...eff, until });
         break;
 
+      // ── Rate multipliers (allRates / rate / research) ───────────────────────
+      // These are handled by effectiveRate() / researchRateBonus() reading
+      // the tarotEffects array, so we just push them in.
       default:
         if (durationH > 0) tarotEffects.push({ ...eff, until });
         break;
     }
 
-    // Save tarot effects so they persist
-    if (_researchData) {
-      _researchData.tarotEffects = tarotEffects.map(e=>({...e}));
-      // Save spread positions for restore on reload
-      _researchData.tarotSpread = _currentSpread.map(s => s ? { cardName: s.card.name, reversed: s.reversed } : null);
-    }
-    persistState();
+    _saveTarotState();
+    persistState().catch(()=>{});
     return eff;
   }
 
@@ -8820,20 +8922,38 @@
 
 
 
-  // Restore tarot effects from saved research data
+  // Restore tarot effects from saved research data (reload-safe)
   function restoreTarotEffects() {
+    const now = Date.now();
+
     if (_researchData?.tarotEffects) {
-      const now = Date.now();
-      tarotEffects = (_researchData.tarotEffects||[]).filter(e => e.until > now);
+      // Filter out expired effects
+      const live = (_researchData.tarotEffects||[]).filter(e => e.until > now);
+
+      // For stat buffs that are still active: restore the stat mutations
+      // (the save already has modified stats baked in, but we need to
+      //  re-schedule the reversal so it fires at the correct remaining time)
+      live.forEach(e => {
+        if ((e.type === 'stat_buff' || e.type === 'stat_debuff') && e.stat) {
+          // Re-schedule reversal for the remaining duration
+          _scheduleStatReversal(e);
+        }
+      });
+
+      tarotEffects = live;
     }
+
+    // Also load any custom tarot card definitions from Firebase
+    loadCustomTarotCards();
+
     // Restore spread positions from saved state if present
     if (_researchData?.tarotSpread) {
       _currentSpread = _researchData.tarotSpread.map(s => {
         if (!s) return null;
-        // Re-find card object from majorArcana array
         const card = majorArcana.find(c => c.name === s.cardName);
         if (!card) return null;
-        const effect = TAROT_EFFECTS[card.name];
+        const allDefs = getAllTarotDefs();
+        const effect = allDefs[card.name];
         const eff = s.reversed ? effect?.rev : effect?.up;
         return { card, reversed: s.reversed, effect: eff || { label: 'Effect restored.' } };
       });
