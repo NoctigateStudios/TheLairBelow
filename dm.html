@@ -1333,6 +1333,16 @@ async function loadActiveEvents() {
 }
 
 // AREA OF INTEREST — using AOI_PRESETS below
+const AOI_SUGGEST = {
+  historic:   { type:'story',   icon:'†',  label:'Ancient structure — story or discovery event' },
+  religion:   { type:'story',   icon:'◈',  label:'Sacred site — rite or encounter event' },
+  cemetery:   { type:'gather',  icon:'☽',  label:'Cemetery — Saturnine gather event' },
+  transport:  { type:'recruit', icon:'◬',  label:'Transit hub — recruit encounter event' },
+  industrial: { type:'combat',  icon:'⚠',  label:'Industrial site — combat event' },
+  natural:    { type:'gather',  icon:'△',  label:'Natural feature — gather or story event' },
+  culture:    { type:'story',   icon:'◇',  label:'Cultural site — discovery event' },
+  water:      { type:'gather',  icon:'○',  label:'Water feature — Lunar gather event' },
+};
 // ══════════════════════════════════════════
 // OVERPASS API — Area of Interest
 // ══════════════════════════════════════════

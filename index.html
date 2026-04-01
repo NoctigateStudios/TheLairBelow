@@ -326,71 +326,67 @@
   #resources {
     background: var(--panel-bg);
     border-bottom: 1px solid var(--border);
-    padding: 0.6rem 0.5rem;
-    overflow-x: auto;
-    scrollbar-width: none;
+    padding: 0;
+    overflow: hidden;
   }
 
-  #resources::-webkit-scrollbar { display: none; }
-
   .resources-inner {
-    display: flex;
-    gap: 0.4rem;
-    min-width: max-content;
-    padding: 0 0.3rem;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
   }
 
   .resource-pill {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.15rem;
-    padding: 0.35rem 0.5rem;
-    border: 1px solid var(--border);
+    gap: 0.08rem;
+    padding: 0.28rem 0.1rem;
+    border: none;
+    border-right: 1px solid var(--border);
     border-top: 2px solid var(--res-color, var(--gold));
     background: rgba(255,255,255,0.01);
-    min-width: 48px;
+    min-width: 0;
     position: relative;
     overflow: hidden;
-    transition: border-color 0.3s, background 0.3s;
+    transition: background 0.2s;
   }
 
-  .resource-pill::before {
-    display: none;
-  }
+  .resource-pill:last-child { border-right: none; }
+  .resource-pill::before { display: none; }
 
   .res-symbol {
     font-size: 0.78rem;
     line-height: 1;
+    opacity: 0.9;
   }
 
   .res-name {
     font-family: var(--ff-heading);
-    font-size: 0.49rem;
-    letter-spacing: 0.1em;
+    font-size: 0.36rem;
+    letter-spacing: 0.06em;
     color: var(--text-secondary);
     text-transform: uppercase;
+    display: none;
   }
 
   .res-value {
     font-family: var(--ff-heading);
-    font-size: 0.92rem;
+    font-size: 0.78rem;
     font-weight: 600;
     color: var(--res-color, var(--bone));
+    letter-spacing: -0.02em;
   }
 
   .res-rate {
-    font-family: var(--ff-body);
-    font-size: 0.64rem;
-    font-style: italic;
+    font-family: var(--ff-heading);
+    font-size: 0.36rem;
     color: var(--text-secondary);
+    opacity: 0.8;
   }
 
-  /* Planet highlight when in dominion */
   .resource-pill.dominant {
-    border-color: var(--res-color, var(--gold));
-    box-shadow: 0 0 10px rgba(var(--res-rgb, 201,168,76), 0.15);
-    background: rgba(var(--res-rgb, 201,168,76), 0.05);
+    background: rgba(var(--res-rgb, 201,168,76), 0.06);
   }
 
   /* ═══════════════════════════════════════
@@ -967,10 +963,17 @@
   .mission-marker { display: none; } /* hide old absolute markers */
 
   .map-legend {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.4rem;
-    margin-bottom: 1rem;
+    position: absolute;
+    bottom: 2.4rem;
+    left: 0.5rem;
+    z-index: 500;
+    background: rgba(5,4,7,0.88);
+    border: 1px solid rgba(201,168,76,0.25);
+    padding: 0.5rem 0.7rem;
+    backdrop-filter: blur(6px);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
   }
 
   .legend-item {
@@ -1143,14 +1146,14 @@
 
   .stats-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-    margin-bottom: 1.2rem;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.4rem;
+    margin-bottom: 0.8rem;
   }
 
   .stat-block {
     border: 1px solid var(--border);
-    padding: 0.6rem;
+    padding: 0.45rem 0.5rem;
     background: rgba(255,255,255,0.01);
     position: relative;
     overflow: hidden;
@@ -1244,10 +1247,29 @@
     display: flex; align-items: flex-start; gap: 0.7rem; padding-bottom: 0.5rem;
   }
   .acol-roster-toggle {
-    font-family: var(--ff-heading); 0.58rem; letter-spacing: 0.12em;
-    text-transform: uppercase; color: var(--text-secondary); cursor: pointer;
-    padding: 0.2rem 0; flex-shrink: 0; border: none; background: none;
-    transition: color 0.15s; user-select: none;
+    font-family: var(--ff-heading);
+    font-size: 0.52rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.3rem 0.5rem;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    background: none;
+    transition: all 0.15s;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .acol-roster-toggle:active,
+  .acol-roster-toggle.active {
+    color: var(--gold);
+    border-color: var(--gold-dim);
+    background: rgba(201,168,76,0.08);
+  }
+  #player-roster-toggle {
+    font-size: 0.5rem;
+    padding: 0.25rem 0.45rem;
   }
   .acol-roster-toggle.active { color: var(--amber-bright); }
   .acol-detail {
@@ -2692,42 +2714,31 @@
   #resources {
     background: transparent;
     border-bottom: 1px solid var(--border);
-    padding: 0 0;
+    padding: 0;
   }
   .resources-inner {
-    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
     gap: 0;
+    padding: 0;
   }
   .resource-pill {
     border-radius: 0;
-    border-left: none;
     border-right: 1px solid var(--border);
+    border-left: none;
     border-bottom: none;
     border-top: 2px solid var(--res-color, var(--gold));
-    min-width: 44px;
-    padding: 0.4rem 0.4rem 0.3rem;
+    padding: 0.38rem 0.3rem 0.3rem;
+    min-width: 0;
   }
   .resource-pill:last-child { border-right: none; }
   .resource-pill.dominant {
     background: rgba(var(--res-rgb, 201,168,76), 0.04);
   }
-  .res-symbol {
-    font-size: 0.9rem;
-    opacity: 0.8;
-  }
-  .res-name {
-    font-size: 0.41rem;
-    letter-spacing: 0.12em;
-    opacity: 0.7;
-  }
-  .res-value {
-    font-size: 0.83rem;
-    font-weight: 600;
-  }
-  .res-rate {
-    font-size: 0.54rem;
-    opacity: 0.5;
-  }
+  .res-symbol { font-size: 0.88rem; opacity: 0.85; }
+  .res-name   { display: none; }
+  .res-value  { font-size: 0.82rem; font-weight: 600; }
+  .res-rate   { font-size: 0.48rem; opacity: 0.55; }
 
   /* — TABS — minimal, like a notebook index — */
   #tabs {
@@ -3443,13 +3454,71 @@
   }
 
   
+
+  /* ═══ COMPANY PANEL ═══ */
+  .company-hero {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.7rem 0.8rem;
+    background: rgba(255,255,255,0.015);
+    border: 1px solid var(--border);
+    margin-bottom: 0.7rem;
+  }
+
+  /* ROSTER STRIP */
+  .roster-strip {
+    border: 1px solid var(--gold-dim);
+    background: rgba(201,168,76,0.04);
+    padding: 0.5rem 0.7rem;
+    margin-bottom: 0.6rem;
+  }
+  .roster-strip-label {
+    font-family: var(--ff-heading);
+    font-size: 0.52rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 0.4rem;
+  }
+  .roster-strip-cards {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    min-height: 2rem;
+    align-items: center;
+  }
+  .roster-empty-msg {
+    font-family: var(--ff-body);
+    font-style: italic;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+  }
+  /* Each roster chip */
+  .roster-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: rgba(201,168,76,0.1);
+    border: 1px solid var(--gold-dim);
+    padding: 0.25rem 0.5rem;
+    font-family: var(--ff-heading);
+    font-size: 0.6rem;
+    color: var(--bone);
+    letter-spacing: 0.04em;
+    cursor: pointer;
+  }
+  .roster-chip .chip-remove {
+    color: var(--ash);
+    font-size: 0.6rem;
+    line-height: 1;
+  }
+  .roster-chip:active { background: rgba(201,168,76,0.18); }
   /* ═══ TARGETED MOBILE READABILITY FIXES ═══ */
   /* Increase only specific elements that were genuinely unreadable */
 
   .tab-label { font-size: 0.48rem !important; }
-  .res-name   { font-size: 0.48rem !important; }
-  .res-value  { font-size: 0.9rem  !important; }
-  .res-rate   { font-size: 0.48rem !important; }
+  /* res sizes handled by grid bar CSS */
   .section-label { font-size: 0.58rem !important; }
 
   /* Building cards - were unreadably large, constrain them */
@@ -3687,12 +3756,13 @@
         </div>
       </div>
 
-      <div class="map-legend">
+      <button id="legend-toggle" onclick="toggleMapLegend()" style="position:absolute;bottom:0.5rem;left:0.5rem;z-index:500;background:rgba(5,4,7,0.75);border:1px solid rgba(201,168,76,0.3);color:var(--text-secondary);font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.3rem 0.55rem;cursor:pointer;backdrop-filter:blur(4px);">Legend</button>
+      <div class="map-legend" id="map-legend-panel" style="display:none;">
         <div class="legend-item"><div class="legend-dot" style="background:var(--gold);box-shadow:0 0 5px var(--gold)"></div>You</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#7b4fcf;border-radius:2px;box-shadow:0 0 5px #7b4fcf"></div>Nearby Seeker</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--crimson-bright)"></div>Combat Encounter</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--indigo-bright)"></div>Story Event</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--viridian-bright)"></div>Convergence Point</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#7b4fcf;border-radius:2px;"></div>Seeker</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--crimson-bright)"></div>Combat</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--indigo-bright)"></div>Story</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--viridian-bright)"></div>Gather</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--amber-bright)"></div>Recruit</div>
       </div>
 
@@ -3710,12 +3780,11 @@
     <!-- COMPANY PANEL -->
     <div id="panel-company" class="tab-panel">
 
-      <div class="section-label" id="company-section-label">—</div>
-
-      <div class="char-header">
+      <!-- Character + derived stats in one compact block -->
+      <div class="company-hero">
         <div class="char-avatar">✦</div>
-        <div class="char-info">
-          <div class="char-name">—</div>
+        <div class="char-info" style="flex:1;">
+          <div class="char-name" id="company-section-label">—</div>
           <div class="char-class">— · Level —</div>
           <div class="char-xp-bar"><div class="char-xp-fill" style="width:0%"></div></div>
           <div class="char-xp-label">— / — XP</div>
@@ -3725,19 +3794,19 @@
 
       <!-- Derived combat stats -->
       <div id="derived-stats-bar" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.35rem;margin-bottom:1.1rem;">
-        <div style="background:rgba(196,48,48,0.08);border:1px solid rgba(196,48,48,0.2);padding:0.55rem 0.5rem;text-align:center;">
+        <div style="background:rgba(196,48,48,0.08);border:1px solid rgba(196,48,48,0.2);padding:0.35rem 0.3rem;text-align:center;">
           <div style="font-family:var(--ff-heading);font-size: 0.47rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.15rem;">HP</div>
           <div id="ds-hp-val" style="font-family:var(--ff-heading);font-size: 0.78rem;color:var(--crimson-bright);">—</div>
         </div>
-        <div style="background:rgba(61,61,170,0.08);border:1px solid rgba(61,61,170,0.2);padding:0.55rem 0.5rem;text-align:center;">
+        <div style="background:rgba(61,61,170,0.08);border:1px solid rgba(61,61,170,0.2);padding:0.35rem 0.3rem;text-align:center;">
           <div style="font-family:var(--ff-heading);font-size: 0.47rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.15rem;">Mana</div>
           <div id="ds-mana-val" style="font-family:var(--ff-heading);font-size: 0.78rem;color:var(--indigo-bright);">—</div>
         </div>
-        <div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.18);padding:0.55rem 0.5rem;text-align:center;">
+        <div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.18);padding:0.35rem 0.3rem;text-align:center;">
           <div style="font-family:var(--ff-heading);font-size: 0.47rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.15rem;">Crit</div>
           <div id="ds-crit-val" style="font-family:var(--ff-heading);font-size: 0.78rem;color:var(--gold);">—%</div>
         </div>
-        <div style="background:rgba(45,122,95,0.08);border:1px solid rgba(45,122,95,0.2);padding:0.55rem 0.5rem;text-align:center;">
+        <div style="background:rgba(45,122,95,0.08);border:1px solid rgba(45,122,95,0.2);padding:0.35rem 0.3rem;text-align:center;">
           <div style="font-family:var(--ff-heading);font-size: 0.47rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.15rem;">Dodge</div>
           <div id="ds-dodge-val" style="font-family:var(--ff-heading);font-size: 0.78rem;color:var(--viridian-bright);">—%</div>
         </div>
@@ -3798,19 +3867,22 @@
         <div style="font-family:var(--ff-body);font-style:italic;font-size: 0.7rem;color:var(--text-secondary);padding:0.4rem 0;">No skills unlocked yet.</div>
       </div>
 
-      <div class="section-label" id="roster-section-label">Mission Roster</div>
-      <div id="roster-display">
-        <div id="roster-empty" style="font-family:var(--ff-body);font-style:italic;font-size: 0.7rem;color:var(--text-secondary);padding:0.4rem 0;">No one assigned. Mark an acolyte as Roster to include them.</div>
-        <div id="roster-cards" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.2rem;"></div>
+      <!-- MISSION ROSTER — prominent strip -->
+      <div class="roster-strip">
+        <div class="roster-strip-label">Mission Roster</div>
+        <div id="roster-cards" class="roster-strip-cards">
+          <div id="roster-empty" class="roster-empty-msg">Tap ◇ on an acolyte to assign them</div>
+        </div>
       </div>
 
-      <div class="section-label" data-section="acolytes">Acolytes</div>
-      <div id="acolytes-loading" style="font-family:var(--ff-body);font-style:italic;font-size: 0.7rem;color:var(--text-secondary);padding:0.6rem 0;">Consulting the rolls...</div>
-      <div class="acolyte-card" data-recruit="true" style="border-style:dashed;opacity:0.5;cursor:pointer" onclick="switchTab('field')">
-        <div class="acolyte-avatar" style="border-style:dashed;font-family:var(--ff-heading);font-size: 0.78rem;">+</div>
+      <!-- ACOLYTE LIST -->
+      <div class="section-label" data-section="acolytes" style="margin-top:0.6rem;">Company</div>
+      <div id="acolytes-loading" style="font-family:var(--ff-body);font-style:italic;font-size:0.75rem;color:var(--text-secondary);padding:0.5rem 0;">Consulting the rolls…</div>
+      <div class="acolyte-card" data-recruit="true" style="border-style:dashed;opacity:0.45;cursor:pointer" onclick="switchTab('field')">
+        <div class="acolyte-avatar" style="border-style:dashed;">+</div>
         <div class="acolyte-info">
-          <div class="acolyte-name" style="color:var(--text-secondary)">Recruit a New Acolyte</div>
-          <div class="acolyte-class">Visit the Field — find contacts in the city</div>
+          <div class="acolyte-name" style="color:var(--text-secondary)">Recruit</div>
+          <div class="acolyte-class">Visit the Field</div>
         </div>
       </div>
 
@@ -5867,6 +5939,16 @@
   }
 
   // Update switchTab to include codex tab
+
+  function toggleMapLegend() {
+    const panel = document.getElementById('map-legend-panel');
+    const btn   = document.getElementById('legend-toggle');
+    if (!panel) return;
+    const visible = panel.style.display !== 'none';
+    panel.style.display = visible ? 'none' : 'flex';
+    panel.style.flexDirection = 'column';
+    if (btn) btn.style.borderColor = visible ? 'rgba(201,168,76,0.3)' : 'var(--gold)';
+  }
   function switchTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -5991,8 +6073,7 @@
       const xpPct  = Math.min(100, Math.round(((c.xp||0) / xpNext) * 100));
       const el = document.querySelector('#panel-company .char-name');
       if (el) el.textContent = c.name || playerName || 'Unknown';
-      const secLbl = document.getElementById('company-section-label');
-      if (secLbl) secLbl.textContent = c.name || playerName || 'Your Character';
+      // company-section-label is now the char-name — already set above
       const elCls = document.querySelector('#panel-company .char-class');
       if (elCls) elCls.textContent = (c.class||'—') + ' · Level ' + (c.level||1);
       const xpFill = document.querySelector('#panel-company .char-xp-fill');
@@ -8021,36 +8102,71 @@
   function renderRoster() {
     const empty = document.getElementById('roster-empty');
     const cards = document.getElementById('roster-cards');
-    const label = document.getElementById('roster-section-label');
     if (!cards) return;
 
-    // Build roster: player char (if toggled) + acolytes on roster
     const members = [];
     if (_characterData?.onRoster) {
-      members.push({ type:'player', name:_characterData.name||playerName||'Seeker',
-        level:_characterData.level||1, glyph:'✦', class:_characterData.class||'—' });
+      members.push({
+        type:'player', id:'__player',
+        name: _characterData.name || playerName || 'Seeker',
+        level: _characterData.level || 1,
+        cls: _characterData.class || '—',
+        glyph: '✦',
+        stress: 0,
+      });
     }
-    (_acolytesData||[]).filter(a=>a.onRoster).forEach((a,i) => {
-      const GLYPHS = ['△','▽','◈','◇','○','◬'];
-      const idx = (_acolytesData||[]).indexOf(a);
-      members.push({ type:'acolyte', name:a.name, level:a.level||1,
-        glyph:GLYPHS[idx%GLYPHS.length], class:a.class||'—' });
+    const GLYPHS = ['△','▽','◈','◇','○','◬'];
+    (_acolytesData||[]).filter(a => a.onRoster).forEach((a, i) => {
+      members.push({
+        type:'acolyte', id: a.id,
+        name: a.name, level: a.level || 1,
+        cls: a.class || '—',
+        glyph: GLYPHS[(_acolytesData||[]).indexOf(a) % GLYPHS.length],
+        stress: a.stress || 0,
+      });
     });
 
     if (!members.length) {
       if (empty) empty.style.display = '';
-      cards.innerHTML = '';
-      if (label) label.textContent = 'Mission Roster';
+      // Remove any existing chips
+      cards.querySelectorAll('.roster-chip').forEach(c => c.remove());
       return;
     }
     if (empty) empty.style.display = 'none';
-    if (label) label.textContent = `Mission Roster (${members.length})`;
-    cards.innerHTML = members.map(m => `
-      <div style="display:flex;flex-direction:column;align-items:center;gap:0.22rem;padding:0.4rem 0.5rem;border:1px solid var(--border);min-width:52px;">
-        <span style="font-family:var(--ff-heading);font-size: 0.9rem;color:${m.type==='player'?'var(--text-accent)':'var(--amber-bright)'};">${m.glyph}</span>
-        <span style="font-family:var(--ff-heading);font-size: 0.44rem;letter-spacing:0.08em;color:var(--text-primary);text-align:center;max-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.name.split(' ')[0]}</span>
-        <span style="font-family:var(--ff-heading);font-size: 0.36rem;letter-spacing:0.06em;color:var(--text-secondary);">Lv.${m.level}</span>
-      </div>`).join('');
+    cards.querySelectorAll('.roster-chip').forEach(c => c.remove());
+
+    members.forEach(m => {
+      const chip = document.createElement('div');
+      chip.className = 'roster-chip';
+      chip.dataset.rosterId = m.id;
+      const stressCol = m.stress >= 75 ? 'var(--crimson-bright)' : m.stress >= 40 ? 'var(--amber-bright)' : 'var(--viridian-bright)';
+      chip.innerHTML =
+        '<span style="color:' + (m.type==='player'?'var(--text-accent)':'var(--gold)') + ';margin-right:0.2rem;">' + m.glyph + '</span>' +
+        '<span>' + m.name.split(' ')[0] + ' <span style="color:var(--text-secondary);font-size:0.85em;">Lv.' + m.level + '</span></span>' +
+        (m.stress > 0 ? '<span style="margin-left:0.4rem;color:' + stressCol + ';font-size:0.85em;">' + m.stress + '%</span>' : '') +
+        '<span class="chip-remove">  ✕</span>';
+      chip.querySelector('.chip-remove').onclick = (function(id){ return function(e){ e.stopPropagation(); removeFromRoster(id,e); }; })(m.id);
+      cards.appendChild(chip);
+    });
+  }
+
+  function removeFromRoster(id, e) {
+    e.stopPropagation();
+    if (id === '__player') {
+      if (_characterData) _characterData.onRoster = false;
+      const btn = document.getElementById('player-roster-toggle');
+      if (btn) { btn.textContent = '◇ Roster'; btn.classList.remove('active'); }
+    } else {
+      const a = (_acolytesData||[]).find(x => x.id === id);
+      if (a) {
+        a.onRoster = false;
+        // Update the acolyte card button
+        const btn = document.querySelector('.acolyte-card[data-acolyte-id="' + id + '"] .acol-roster-toggle');
+        if (btn) { btn.textContent = '◇ Roster'; btn.classList.remove('active'); }
+      }
+    }
+    renderRoster();
+    persistState();
   }
 
   // ══════════════════════════════════════════
