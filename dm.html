@@ -158,6 +158,7 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
   <button class="nb" onclick="nav('buildings')" data-page="buildings"><span class="ni">⬡</span> Buildings &amp; Skills</button>
   <div class="nav-sec">Rites</div>
   <button class="nb" onclick="nav('broadcast')" data-page="broadcast"><span class="ni">✦</span> Proclamation</button>
+  <button class="nb" onclick="nav('tarot')" data-page="tarot"><span class="ni">🜃</span> Tarot Arcana</button>
   <div class="sb-seekers"><div class="sb-seekers-lbl">Seekers</div><div id="sidebar-players"><span style="font-family:var(--ff-b);font-style:italic;font-size:0.79rem;color:var(--ash);">Consulting the ether…</span></div></div>
 </nav>
 <main id="main">
@@ -786,6 +787,117 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
   <div id="skill-preview-box" style="display:none;margin-top:0.7rem;"></div>
 </div>
 </div>
+<!-- ══ TAROT ARCANA ══ -->
+<div id="page-tarot" class="page">
+<div class="pg-head">
+  <div class="pg-title">Tarot Arcana</div>
+  <div class="pg-desc">Define the 22 Major Arcana and any custom cards. Each card has an upright and reversed effect that fires when a seeker draws it. Custom cards are stored in Firebase and override built-ins of the same name. The client reads these automatically on every login.</div>
+</div>
+
+<!-- Live active effects across all seekers -->
+<div class="panel" style="margin-bottom:1.1rem;">
+  <div class="ph">Active Effects — All Seekers</div>
+  <p style="font-family:var(--ff-b);font-style:italic;font-size:0.92rem;color:var(--mist);margin-bottom:0.7rem;line-height:1.6;">Shows every timed tarot effect currently running across all player saves. Use Force Expire to immediately end one.</p>
+  <div style="display:flex;gap:0.5rem;margin-bottom:0.8rem;">
+    <button class="btn b-rune" onclick="refreshTarotActive()">↻ Refresh Active Effects</button>
+    <button class="btn b-breach" onclick="forceExpireAll()">✗ Expire All Active Effects</button>
+  </div>
+  <div id="tarot-active-dm" style="font-family:var(--ff-b);font-style:italic;font-size:0.92rem;color:var(--mist);">Click refresh to load…</div>
+</div>
+
+<!-- Force-draw a card on a specific seeker -->
+<div class="panel" style="margin-bottom:1.1rem;">
+  <div class="ph">Force Draw</div>
+  <p style="font-family:var(--ff-b);font-style:italic;font-size:0.92rem;color:var(--mist);margin-bottom:0.7rem;line-height:1.6;">Inject a specific card effect directly into a seeker's save without them drawing it. The effect is applied immediately and persists exactly as if they drew it.</p>
+  <div class="g2" style="margin-bottom:0.7rem;">
+    <div class="fld"><label>Seeker</label><select id="td-player-sel"><option value="">— choose —</option></select></div>
+    <div class="fld"><label>Card</label><select id="td-card-sel"><option value="">— choose card —</option></select></div>
+  </div>
+  <div class="fld" style="margin-bottom:0.7rem;">
+    <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;">
+      <input type="checkbox" id="td-reversed" style="width:13px;height:13px;accent-color:var(--dm-bright);">
+      <span style="font-family:var(--ff-h);font-size:0.61rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--pale);">Reversed</span>
+    </label>
+  </div>
+  <button class="btn b-rune" onclick="forceDraw()">🜃 Force Draw Card</button>
+  <div id="td-result" style="margin-top:0.6rem;font-family:var(--ff-b);font-style:italic;font-size:0.92rem;color:var(--viridian-bright);display:none;"></div>
+</div>
+
+<!-- Card list and editor -->
+<div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+  <button class="btn b-rune" onclick="loadTarotPage()">↻ Refresh Cards</button>
+  <button class="btn b-seal" onclick="openNewCard()">+ New Custom Card</button>
+  <button class="btn b-ward" onclick="seedBuiltinCards()">⬇ Seed Built-ins to Firebase</button>
+</div>
+<p style="font-family:var(--ff-b);font-style:italic;font-size:0.92rem;color:var(--mist);margin-bottom:0.9rem;line-height:1.5;">
+  Custom cards (stored in Firebase) are shown with a <span style="color:var(--dm-bright);">◈</span> mark. Built-in cards (coded in the client) show as <span style="color:var(--gold-dim);">✦</span> — seed them to Firebase to make them editable.
+</p>
+<div id="tarot-cards-list" style="display:grid;grid-template-columns:1fr 1fr;gap:0.7rem;margin-bottom:1.5rem;"></div>
+
+<!-- Card Editor -->
+<div class="panel" id="tarot-card-editor" style="display:none;">
+  <div class="ph" id="tce-title">New Custom Card</div>
+  <input type="hidden" id="tce-original-name">
+
+  <div class="g2">
+    <div class="fld"><label>Card Name</label><input type="text" id="tce-name" placeholder="The Fool"></div>
+    <div class="fld"><label>Numeral (Roman)</label><input type="text" id="tce-num" placeholder="0"></div>
+  </div>
+  <div class="fld"><label>Symbol / Emoji</label><input type="text" id="tce-sym" placeholder="🜁"></div>
+
+  <div class="ph" style="margin-top:1rem;">Upright Effect</div>
+  <div class="g2">
+    <div class="fld"><label>Effect Type</label>
+      <select id="tce-up-type" onchange="tarotTypeChanged('up')">
+        <option value="allRates">All Resource Rates ×</option>
+        <option value="rate">Single Resource Rate ×</option>
+        <option value="research">Research Speed ×</option>
+        <option value="stress">Stress ± (instant)</option>
+        <option value="cleanse">Cleanse Stress (all acolytes)</option>
+        <option value="cleanse_afflictions">Remove Afflictions</option>
+        <option value="cleanse_all">Cleanse All (stress + afflictions)</option>
+        <option value="grant_essence">Grant / Drain Essence (instant)</option>
+        <option value="stat_buff">Stat Buff (timed)</option>
+        <option value="stat_debuff">Stat Debuff (timed)</option>
+        <option value="level_bonus">XP Grant (all, instant)</option>
+        <option value="unlock_rite">Unlock Rite (timed)</option>
+      </select>
+    </div>
+    <div class="fld"><label>Duration (hours, 0 = instant)</label><input type="number" id="tce-up-dur" value="3" min="0" step="0.5"></div>
+  </div>
+  <div id="tce-up-params" class="g2"></div>
+  <div class="fld"><label>Upright Label (shown to player)</label><input type="text" id="tce-up-label" placeholder="+25% all income — the leap of faith pays off"></div>
+
+  <div class="ph" style="margin-top:1rem;">Reversed Effect</div>
+  <div class="g2">
+    <div class="fld"><label>Effect Type</label>
+      <select id="tce-rev-type" onchange="tarotTypeChanged('rev')">
+        <option value="allRates">All Resource Rates ×</option>
+        <option value="rate">Single Resource Rate ×</option>
+        <option value="research">Research Speed ×</option>
+        <option value="stress">Stress ± (instant)</option>
+        <option value="cleanse">Cleanse Stress (all acolytes)</option>
+        <option value="cleanse_afflictions">Remove Afflictions</option>
+        <option value="cleanse_all">Cleanse All (stress + afflictions)</option>
+        <option value="grant_essence">Grant / Drain Essence (instant)</option>
+        <option value="stat_buff">Stat Buff (timed)</option>
+        <option value="stat_debuff">Stat Debuff (timed)</option>
+        <option value="level_bonus">XP Grant (all, instant)</option>
+        <option value="unlock_rite">Unlock Rite (timed)</option>
+      </select>
+    </div>
+    <div class="fld"><label>Duration (hours, 0 = instant)</label><input type="number" id="tce-rev-dur" value="2" min="0" step="0.5"></div>
+  </div>
+  <div id="tce-rev-params" class="g2"></div>
+  <div class="fld"><label>Reversed Label (shown to player)</label><input type="text" id="tce-rev-label" placeholder="−2 Cunning — recklessness costs"></div>
+
+  <div style="margin-top:1rem;display:flex;gap:0.5rem;">
+    <button class="btn b-ward" onclick="saveTarotCard()">✓ Seal Card to Firebase</button>
+    <button class="btn b-breach" id="tce-delete-btn" onclick="deleteTarotCard()" style="display:none;">✗ Delete Card</button>
+    <button class="btn b-seal" onclick="document.getElementById('tarot-card-editor').style.display='none'">Cancel</button>
+  </div>
+</div>
+</div>
 </main>
 </div>
 <div id="dm-console"><div class="con-bar"><span class="con-lbl">Arcane Log</span><button class="con-clr" onclick="document.getElementById('dm-log').innerHTML=''">clear</button></div><div id="dm-log"></div></div>
@@ -817,6 +929,7 @@ function nav(n){
   if(n==='forge') loadRecipes();
   if(n==='buildings') loadBldSkl();
   if(n==='characters') loadClasses();
+  if(n==='tarot') loadTarotPage();
 }
 
 async function fbGet(p){const r=await fetch(`${FB}/${p}.json?cb=`+Date.now());if(!r.ok)throw new Error('HTTP '+r.status);const d=await r.json();if(d&&d.error)throw new Error(d.error);return d;}
@@ -2415,6 +2528,553 @@ function renderEvtEnemyList(enemies) {
   ).join('');
 }
 
-</script>
+// ══════════════════════════════════════════════════════════════════════════════
+// TAROT ARCANA — DM CONSOLE
+// ══════════════════════════════════════════════════════════════════════════════
+
+// The same built-in definitions that live in index.html, mirrored here
+// so the DM can seed them to Firebase and edit them.
+const BUILTIN_TAROT = {
+  'The Fool':       { num:'0',     sym:'🜁', up:{type:'allRates',mult:1.25,label:'+25% all income for 3h — the leap of faith pays off',dur:3},         rev:{type:'stat_debuff',stat:'cunning',value:-2,label:'−2 Cunning on all acolytes for 24h — recklessness costs',dur:24}},
+  'The Magician':   { num:'I',     sym:'☿', up:{type:'research',mult:2.0,label:'Research speed doubled for 3h — the will makes it so',dur:3},            rev:{type:'grant_essence',resIdx:6,value:-150,label:'150 Mercurial essence lost — the work consumes itself',dur:0}},
+  'High Priestess': { num:'II',    sym:'☽', up:{type:'unlock_rite',riteKey:'silver-crescent',label:'Rite of the Silver Crescent unlocked for 24h',dur:24},rev:{type:'rate',resIdx:1,mult:0.0,label:'Lunar income suspended for 2h — the veil closes',dur:2}},
+  'The Empress':    { num:'III',   sym:'♀', up:{type:'cleanse',label:'All acolyte Stress cleared — the earth receives the wound',dur:0},                  rev:{type:'stress',value:15,label:'+15 Stress to all acolytes — abundance turns to hunger',dur:0}},
+  'The Emperor':    { num:'IV',    sym:'♂', up:{type:'stat_buff',stat:'fortitude',value:3,label:'+3 Fortitude to all acolytes for 24h — structure holds',dur:24}, rev:{type:'allRates',mult:0.7,label:'All income −30% for 4h — the throne demands tribute',dur:4}},
+  'Hierophant':     { num:'V',     sym:'⊕', up:{type:'research',mult:1.5,label:'+50% research speed for 6h',dur:6},                                       rev:{type:'research',mult:0.5,label:'Research halved for 3h — orthodoxy resists',dur:3}},
+  'The Lovers':     { num:'VI',    sym:'♃', up:{type:'grant_essence',resIdx:5,value:400,label:'+400 Venusian essence — union yields',dur:0},              rev:{type:'stat_debuff',stat:'empathy',value:-3,label:'−3 Empathy on all acolytes for 12h — division wounds',dur:12}},
+  'The Chariot':    { num:'VII',   sym:'♄', up:{type:'stat_buff',stat:'speed',value:4,label:'+4 Speed on all acolytes for 12h — the wheels turn',dur:12}, rev:{type:'allRates',mult:0.85,label:'−15% all income for 2h — momentum reversed',dur:2}},
+  'Justice':        { num:'VIII',  sym:'⚖', up:{type:'cleanse_afflictions',label:'One affliction removed from each acolyte — debts settled',dur:0},      rev:{type:'stress',value:10,label:'+10 Stress to all acolytes — the scales tip against you',dur:0}},
+  'Wheel of Fortune':{ num:'X',   sym:'⊗', up:{type:'allRates',mult:2.0,label:'×2 all income for 1h — the wheel crests',dur:1},                         rev:{type:'allRates',mult:0.4,label:'−60% all income for 2h — the wheel descends',dur:2}},
+  'Strength':       { num:'XI',    sym:'🦁', up:{type:'stat_buff',stat:'fortitude',value:5,label:'+5 Fortitude and −20 Stress on all acolytes for 12h',dur:12}, rev:{type:'stat_debuff',stat:'wrath',value:-3,label:'−3 Wrath to all acolytes for 12h',dur:12}},
+  'The Hanged Man': { num:'XII',   sym:'∇', up:{type:'research',mult:3.0,label:'+200% research speed for 2h — suspension yields understanding',dur:2},    rev:{type:'allRates',mult:0.0,label:'All income suspended for 1h — the pause is forced',dur:1}},
+  'Death':          { num:'XIII',  sym:'☠', up:{type:'cleanse_all',label:'All Stress cleared, all Afflictions removed — transformation complete',dur:0},  rev:{type:'stress',value:30,label:'+30 Stress to all acolytes — death without rebirth',dur:0}},
+  'Temperance':     { num:'XIV',   sym:'∞', up:{type:'allRates',mult:1.2,label:'+20% all income for 6h — the middle way sustains',dur:6},                 rev:{type:'grant_essence',resIdx:3,value:-200,label:'−200 Martial essence — tempering destroys the blade',dur:0}},
+  'The Devil':      { num:'XV',    sym:'🜂', up:{type:'grant_essence',resIdx:4,value:500,label:'+500 Saturnine essence — bound labour yields stone',dur:0}, rev:{type:'stat_debuff',stat:'memory',value:-3,label:'−3 Memory on all acolytes for 24h — the chains corrode thought',dur:24}},
+  'The Star':       { num:'XVII',  sym:'✶', up:{type:'allRates',mult:1.15,label:'+15% all income for 8h — steady hope holds',dur:8},                      rev:{type:'rate',resIdx:0,mult:0.5,label:'Solar income halved for 4h — the star dims',dur:4}},
+  'The Moon':       { num:'XVIII', sym:'☽', up:{type:'rate',resIdx:1,mult:3.0,label:'×3 Lunar income for 3h — the tide is extreme',dur:3},               rev:{type:'stat_debuff',stat:'intuition',value:-4,label:'−4 Intuition on all acolytes for 12h — illusion clouds all',dur:12}},
+  'The Sun':        { num:'XIX',   sym:'☉', up:{type:'stat_buff',stat:'wrath',value:4,label:'+4 Wrath and +100 Solar income — the sun blazes',dur:0},     rev:{type:'stress',value:20,label:'+20 Stress, Solar income halved for 1h — exposure burns',dur:0}},
+  'Judgement':      { num:'XX',    sym:'✦', up:{type:'level_bonus',value:50,label:'All acolytes gain +50 XP — the call awakens them',dur:0},              rev:{type:'stat_debuff',stat:'gnosis',value:-2,label:'−2 Gnosis on character for 24h — the call goes unanswered',dur:24}},
+  'The World':      { num:'XXI',   sym:'⊕', up:{type:'allRates',mult:1.5,label:'+50% all income for 4h — completion grants sight',dur:4},                 rev:{type:'allRates',mult:1.1,label:'+10% all income for 2h (reversed world still moves forward)',dur:2}},
+  'The Hermit':     { num:'IX',    sym:'🕯', up:{type:'research',mult:1.4,label:'+40% research speed for 6h — solitude clarifies',dur:6},                  rev:{type:'stat_debuff',stat:'empathy',value:-2,label:'−2 Empathy for 12h — isolation becomes withdrawal',dur:12}},
+};
+
+const TAROT_TYPE_LABELS = {
+  allRates:'All Resource Rates ×', rate:'Single Resource Rate ×', research:'Research Speed ×',
+  stress:'Stress ± (instant)', cleanse:'Cleanse Stress', cleanse_afflictions:'Remove Afflictions',
+  cleanse_all:'Cleanse All', grant_essence:'Grant/Drain Essence', stat_buff:'Stat Buff (timed)',
+  stat_debuff:'Stat Debuff (timed)', level_bonus:'XP Grant', unlock_rite:'Unlock Rite'
+};
+const STAT_LIST = ['fortitude','wrath','intuition','empathy','endurance','memory','cunning','gnosis','speed'];
+const RES_LIST  = ['☉ Solar','☽ Lunar','♃ Jovian','♂ Martial','♄ Saturnine','♀ Venusian','☿ Mercurial'];
+
+let _customTarotCards = {};
+
+async function loadTarotPage() {
+  // Populate player selector
+  const pSel = document.getElementById('td-player-sel');
+  if (pSel) {
+    const cur = pSel.value;
+    pSel.innerHTML = '<option value="">— choose —</option>';
+    Object.keys(allPlayers).forEach(id => {
+      const n = allPlayers[id].presence?.name || allPlayers[id].save?.character?.name || id.slice(0,8);
+      pSel.innerHTML += `<option value="${id}">${n}</option>`;
+    });
+    if (cur) pSel.value = cur;
+  }
+
+  // Populate card selector for force-draw
+  populateCardSelector();
+
+  // Load custom cards from Firebase
+  try {
+    const d = await fbGet('world/tarot');
+    _customTarotCards = d || {};
+    log('Tarot cards loaded: ' + Object.keys(_customTarotCards).length + ' custom','ok');
+  } catch(e) {
+    _customTarotCards = {};
+    log('No custom tarot cards found (using built-ins only)','info');
+  }
+
+  renderTarotCardList();
+}
+
+function populateCardSelector() {
+  const sel = document.getElementById('td-card-sel');
+  if (!sel) return;
+  const allCards = Object.assign({}, BUILTIN_TAROT, _customTarotCards);
+  sel.innerHTML = '<option value="">— choose card —</option>';
+  Object.keys(allCards).sort().forEach(name => {
+    sel.innerHTML += `<option value="${name}">${name}</option>`;
+  });
+}
+
+function renderTarotCardList() {
+  const container = document.getElementById('tarot-cards-list');
+  if (!container) return;
+  const allCards = Object.assign({}, BUILTIN_TAROT, _customTarotCards);
+  const customKeys = new Set(Object.keys(_customTarotCards));
+
+  if (!Object.keys(allCards).length) {
+    container.innerHTML = '<p style="color:var(--mist);font-style:italic;">No cards defined.</p>';
+    return;
+  }
+
+  container.innerHTML = Object.entries(allCards).map(([name, card]) => {
+    const isCustom = customKeys.has(name);
+    const badge = isCustom
+      ? `<span style="color:var(--dm-bright);font-size:0.77rem;" title="Custom (Firebase)">◈</span>`
+      : `<span style="color:var(--gold-dim);font-size:0.77rem;" title="Built-in">✦</span>`;
+    const upLabel  = card.up?.label  || '—';
+    const revLabel = card.rev?.label || '—';
+    const upType   = TAROT_TYPE_LABELS[card.up?.type]  || card.up?.type  || '—';
+    const revType  = TAROT_TYPE_LABELS[card.rev?.type] || card.rev?.type || '—';
+
+    return `<div class="entity-card" style="border-color:${isCustom?'rgba(168,85,247,0.3)':'rgba(201,168,76,0.13)'};">
+      <div style="display:flex;align-items:flex-start;gap:0.5rem;">
+        <div style="font-size:1.3rem;opacity:0.7;flex-shrink:0;line-height:1.2;">${card.sym||'✦'}</div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.2rem;">
+            ${badge}
+            <span class="entity-name" style="font-size:0.83rem;">${name}</span>
+            <span style="font-family:var(--ff-h);font-size:0.49rem;color:var(--mist);margin-left:auto;">${card.num||''}</span>
+          </div>
+          <div style="font-family:var(--ff-h);font-size:0.41rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--viridian-bright);margin-bottom:0.1rem;">▲ ${upType}${card.up?.dur?` · ${card.up.dur}h`:''}</div>
+          <div style="font-family:var(--ff-b);font-style:italic;font-size:0.82rem;color:var(--mist);margin-bottom:0.35rem;">${upLabel}</div>
+          <div style="font-family:var(--ff-h);font-size:0.41rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--crimson-bright);margin-bottom:0.1rem;">▼ ${revType}${card.rev?.dur?` · ${card.rev.dur}h`:''}</div>
+          <div style="font-family:var(--ff-b);font-style:italic;font-size:0.82rem;color:var(--mist);">${revLabel}</div>
+        </div>
+        <button class="btn b-seal" style="padding:0.22rem 0.5rem;font-size:0.41rem;flex-shrink:0;" onclick="editTarotCard('${name.replace(/'/g,"\\'")}')">Edit</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Force Draw ────────────────────────────────────────────────────────────────
+async function forceDraw() {
+  const playerId = document.getElementById('td-player-sel').value;
+  const cardName  = document.getElementById('td-card-sel').value;
+  const reversed  = document.getElementById('td-reversed').checked;
+  const resultEl  = document.getElementById('td-result');
+
+  if (!playerId) { toast('Choose a seeker first.'); return; }
+  if (!cardName)  { toast('Choose a card first.'); return; }
+
+  const allCards = Object.assign({}, BUILTIN_TAROT, _customTarotCards);
+  const cardDef  = allCards[cardName];
+  if (!cardDef) { toast('Card definition not found.'); return; }
+
+  try {
+    // Load the player's current save
+    const save = await fbGet('saves/' + playerId);
+    if (!save) { toast('No save found for this seeker.'); return; }
+
+    const eff  = reversed ? cardDef.rev : cardDef.up;
+    if (!eff) { toast('No effect defined for this orientation.'); return; }
+
+    const durH = eff.dur !== undefined ? eff.dur : 2;
+    const until = Date.now() + durH * 3600_000;
+
+    // Build the effect entry exactly as the client would
+    const entry = { ...eff, until, cardName, reversed };
+
+    // For stat buffs: snapshot what the save currently has
+    if (eff.type === 'stat_buff' || eff.type === 'stat_debuff') {
+      const delta = eff.value || 0;
+      const snapshots = [];
+
+      if (save.character?.stats) {
+        const base = save.character.stats[eff.stat] ?? 10;
+        snapshots.push({ id: '__player__', originalValue: base });
+        save.character.stats[eff.stat] = Math.max(1, base + delta);
+      }
+      (save.acolytes || []).forEach(a => {
+        if (!a.stats) a.stats = {};
+        const base = a.stats[eff.stat] ?? 10;
+        snapshots.push({ id: a.id, originalValue: base });
+        a.stats[eff.stat] = Math.max(1, base + delta);
+      });
+      entry.statSnapshots = snapshots;
+    }
+
+    // For instant stress
+    if (eff.type === 'stress') {
+      (save.acolytes || []).forEach(a => {
+        a.stress = Math.min(100, Math.max(0, (a.stress||0) + (eff.value||0)));
+      });
+    }
+    // Instant cleanse
+    if (eff.type === 'cleanse' || eff.type === 'cleanse_all') {
+      (save.acolytes || []).forEach(a => { a.stress = 0; });
+    }
+    if (eff.type === 'cleanse_afflictions' || eff.type === 'cleanse_all') {
+      const AFFL = ['Paranoid','Abusive','Masochistic','Fearful','Hopeless','Irrational'];
+      (save.acolytes || []).forEach(a => {
+        if (a.states) a.states = a.states.filter(s => !AFFL.includes(s));
+      });
+    }
+    // Instant essence
+    if (eff.type === 'grant_essence' && eff.resIdx !== undefined && eff.value !== undefined) {
+      if (!save.resources) save.resources = { values: Array(7).fill(0) };
+      save.resources.values[eff.resIdx] = Math.max(0, (save.resources.values[eff.resIdx]||0) + eff.value);
+    }
+    // XP
+    if (eff.type === 'level_bonus') {
+      const xpAmt = eff.value || 50;
+      if (save.character) save.character.xp = (save.character.xp||0) + xpAmt;
+      (save.acolytes||[]).forEach(a => { a.xp = (a.xp||0) + xpAmt; });
+    }
+
+    // Inject the effect entry into the player's tarotEffects array
+    if (!save.research) save.research = {};
+    const existing = (save.research.tarotEffects||[]).filter(e =>
+      !(e.type === eff.type && e.stat === eff.stat && e.resIdx === eff.resIdx)
+    );
+    if (durH > 0) existing.push(entry);
+    save.research.tarotEffects = existing;
+
+    // Also inject into the spread so the card appears
+    if (!save.research.tarotSpread) save.research.tarotSpread = [null, null, null];
+    const freeSlot = save.research.tarotSpread.findIndex(s => !s);
+    if (freeSlot >= 0) {
+      save.research.tarotSpread[freeSlot] = { cardName, reversed };
+    }
+
+    save.savedAt = new Date().toISOString();
+    await fbPut('saves/' + playerId, save);
+
+    const playerName = allPlayers[playerId]?.presence?.name || playerId.slice(0,8);
+    const msg = `✓ "${cardName}"${reversed?' (reversed)':''} injected into ${playerName}'s save. Effect: ${eff.label}`;
+    log(msg, 'ok');
+    toast('✓ Card injected.');
+    resultEl.textContent = msg;
+    resultEl.style.display = 'block';
+    setTimeout(() => { resultEl.style.display = 'none'; }, 6000);
+
+  } catch(e) {
+    log('Force draw error: ' + e.message, 'err');
+    toast('✗ Error: ' + e.message);
+  }
+}
+
+// ── Active effects across all seekers ─────────────────────────────────────────
+async function refreshTarotActive() {
+  const container = document.getElementById('tarot-active-dm');
+  if (!container) return;
+  container.innerHTML = '<span style="color:var(--mist);font-style:italic;">Loading…</span>';
+
+  const now = Date.now();
+  let rows = [];
+
+  try {
+    const saves = await fbGet('saves');
+    if (!saves) { container.innerHTML = '<span style="color:var(--mist);font-style:italic;">No saves found.</span>'; return; }
+
+    Object.entries(saves).forEach(([playerId, save]) => {
+      const name = allPlayers[playerId]?.presence?.name || save?.character?.name || playerId.slice(0,8);
+      const effects = (save?.research?.tarotEffects || []).filter(e => e.until > now);
+      effects.forEach(e => {
+        const minsLeft = Math.round((e.until - now) / 60_000);
+        const hLeft = Math.floor(minsLeft / 60);
+        const mLeft = minsLeft % 60;
+        rows.push({ playerId, name, e, hLeft, mLeft });
+      });
+    });
+
+    if (!rows.length) {
+      container.innerHTML = '<span style="color:var(--mist);font-style:italic;">No active timed effects across any seeker.</span>';
+      return;
+    }
+
+    container.innerHTML = rows.map(({playerId, name, e, hLeft, mLeft}) => {
+      const typeLabel = TAROT_TYPE_LABELS[e.type] || e.type;
+      const detail = e.stat ? ` · ${e.stat} ${e.value > 0 ? '+':''}${e.value}` :
+                     e.mult ? ` · ×${e.mult}` : '';
+      return `<div style="display:flex;align-items:center;gap:0.7rem;padding:0.55rem 0.75rem;border:1px solid rgba(201,168,76,0.1);margin-bottom:0.3rem;background:rgba(10,8,15,0.5);">
+        <div style="flex:1;">
+          <div style="font-family:var(--ff-h);font-size:0.67rem;color:var(--bone);">${name}</div>
+          <div style="font-family:var(--ff-b);font-style:italic;font-size:0.82rem;color:var(--mist);">${typeLabel}${detail}</div>
+          <div style="font-family:var(--ff-b);font-style:italic;font-size:0.78rem;color:var(--gold-dim);margin-top:0.1rem;">${e.label||''}</div>
+        </div>
+        <div style="font-family:var(--ff-h);font-size:0.52rem;color:var(--amber-bright);text-align:right;min-width:60px;">${hLeft}h ${mLeft}m left</div>
+        <button class="btn b-breach" style="padding:0.2rem 0.45rem;font-size:0.41rem;" onclick="forceExpireEffect('${playerId}','${e.type}','${e.stat||''}',${e.until})">✗ Expire</button>
+      </div>`;
+    }).join('');
+  } catch(err) {
+    container.innerHTML = `<span style="color:var(--crimson-bright);">Error: ${err.message}</span>`;
+    log('refreshTarotActive error: ' + err.message, 'err');
+  }
+}
+
+async function forceExpireEffect(playerId, type, stat, until) {
+  try {
+    const save = await fbGet('saves/' + playerId);
+    if (!save?.research?.tarotEffects) return;
+
+    // Find and remove this specific effect
+    const target = save.research.tarotEffects.find(e => e.type === type && (e.stat||'') === stat && e.until === until);
+    if (!target) { toast('Effect not found — may have already expired.'); return; }
+
+    // If it's a stat buff/debuff, revert the stats NOW using snapshots
+    if ((type === 'stat_buff' || type === 'stat_debuff') && target.stat) {
+      if (target.statSnapshots?.length) {
+        target.statSnapshots.forEach(snap => {
+          if (snap.id === '__player__') {
+            if (save.character?.stats) save.character.stats[target.stat] = snap.originalValue;
+          } else {
+            const a = (save.acolytes||[]).find(x => x.id === snap.id);
+            if (a?.stats) a.stats[target.stat] = snap.originalValue;
+          }
+        });
+      } else {
+        // Fallback: subtract delta
+        const delta = target.value || 0;
+        if (save.character?.stats) {
+          save.character.stats[target.stat] = Math.max(1, (save.character.stats[target.stat]||10) - delta);
+        }
+        (save.acolytes||[]).forEach(a => {
+          if (a.stats) a.stats[target.stat] = Math.max(1, (a.stats[target.stat]||10) - delta);
+        });
+      }
+    }
+
+    save.research.tarotEffects = save.research.tarotEffects.filter(e =>
+      !(e.type === type && (e.stat||'') === stat && e.until === until)
+    );
+    save.savedAt = new Date().toISOString();
+
+    await fbPut('saves/' + playerId, save);
+    const name = allPlayers[playerId]?.presence?.name || playerId.slice(0,8);
+    log(`Force-expired ${type}${stat?' ('+stat+')':''} on ${name}`, 'ok');
+    toast('✓ Effect expired and stats restored.');
+    refreshTarotActive();
+  } catch(e) {
+    log('forceExpireEffect error: ' + e.message, 'err');
+    toast('✗ Error: ' + e.message);
+  }
+}
+
+async function forceExpireAll() {
+  if (!confirm('Expire ALL active tarot effects on ALL seekers? Stats will be reverted to their snapshots.')) return;
+  try {
+    const saves = await fbGet('saves');
+    if (!saves) return;
+    const now = Date.now();
+    const promises = [];
+
+    Object.entries(saves).forEach(([playerId, save]) => {
+      const active = (save?.research?.tarotEffects||[]).filter(e => e.until > now);
+      if (!active.length) return;
+
+      active.forEach(e => {
+        if ((e.type === 'stat_buff' || e.type === 'stat_debuff') && e.stat) {
+          if (e.statSnapshots?.length) {
+            e.statSnapshots.forEach(snap => {
+              if (snap.id === '__player__' && save.character?.stats) {
+                save.character.stats[e.stat] = snap.originalValue;
+              } else {
+                const a = (save.acolytes||[]).find(x => x.id === snap.id);
+                if (a?.stats) a.stats[e.stat] = snap.originalValue;
+              }
+            });
+          }
+        }
+      });
+
+      save.research.tarotEffects = (save.research.tarotEffects||[]).filter(e => e.until <= now);
+      save.savedAt = new Date().toISOString();
+      promises.push(fbPut('saves/' + playerId, save));
+    });
+
+    await Promise.all(promises);
+    log('All active tarot effects expired across ' + promises.length + ' seeker(s).', 'ok');
+    toast('✓ All effects expired and stats restored.');
+    refreshTarotActive();
+  } catch(e) {
+    log('forceExpireAll error: ' + e.message, 'err');
+    toast('✗ Error: ' + e.message);
+  }
+}
+
+// ── Card Editor ───────────────────────────────────────────────────────────────
+function tarotTypeChanged(side) {
+  const type = document.getElementById(`tce-${side}-type`).value;
+  const container = document.getElementById(`tce-${side}-params`);
+  container.innerHTML = '';
+
+  const inp = (id, label, attrs='') =>
+    `<div class="fld"><label>${label}</label><input type="text" id="${id}" ${attrs}></div>`;
+  const numInp = (id, label, val='0', min='', step='') =>
+    `<div class="fld"><label>${label}</label><input type="number" id="${id}" value="${val}" ${min?'min="'+min+'"':''} ${step?'step="'+step+'"':''}></div>`;
+  const selInp = (id, label, opts) =>
+    `<div class="fld"><label>${label}</label><select id="${id}">${opts}</select></div>`;
+
+  const statOpts = STAT_LIST.map(s => `<option value="${s}">${s}</option>`).join('');
+  const resOpts  = RES_LIST.map((r,i) => `<option value="${i}">${r}</option>`).join('');
+
+  if (type === 'allRates' || type === 'research') {
+    container.innerHTML = numInp(`tce-${side}-mult`, 'Multiplier (e.g. 1.5 = +50%)', '1.5', '0', '0.05');
+  } else if (type === 'rate') {
+    container.innerHTML = selInp(`tce-${side}-resIdx`, 'Resource', resOpts) +
+                          numInp(`tce-${side}-mult`, 'Multiplier', '1.5', '0', '0.05');
+  } else if (type === 'stress') {
+    container.innerHTML = numInp(`tce-${side}-value`, 'Stress ± (negative = reduce)', '15');
+  } else if (type === 'grant_essence') {
+    container.innerHTML = selInp(`tce-${side}-resIdx`, 'Resource', resOpts) +
+                          numInp(`tce-${side}-value`, 'Amount (negative = drain)', '200');
+  } else if (type === 'stat_buff' || type === 'stat_debuff') {
+    container.innerHTML = selInp(`tce-${side}-stat`, 'Stat', statOpts) +
+                          numInp(`tce-${side}-value`, 'Delta (use negative for debuff)', type==='stat_debuff'?'-2':'3');
+  } else if (type === 'level_bonus') {
+    container.innerHTML = numInp(`tce-${side}-value`, 'XP Amount', '50', '1');
+  } else if (type === 'unlock_rite') {
+    container.innerHTML = inp(`tce-${side}-riteKey`, 'Rite Key (e.g. silver-crescent)');
+  }
+  // cleanse / cleanse_afflictions / cleanse_all have no extra params
+}
+
+function _collectSideEffect(side) {
+  const type = document.getElementById(`tce-${side}-type`).value;
+  const dur  = parseFloat(document.getElementById(`tce-${side}-dur`).value) || 0;
+  const label = document.getElementById(`tce-${side}-label`).value.trim();
+  const e = { type, label, dur };
+
+  const g = id => { const el = document.getElementById(id); return el ? el.value : null; };
+  const gn = id => { const el = document.getElementById(id); return el ? parseFloat(el.value)||0 : 0; };
+
+  if (type === 'allRates' || type === 'research') e.mult = gn(`tce-${side}-mult`);
+  if (type === 'rate')           { e.resIdx = parseInt(g(`tce-${side}-resIdx`))||0; e.mult = gn(`tce-${side}-mult`); }
+  if (type === 'stress')         e.value = gn(`tce-${side}-value`);
+  if (type === 'grant_essence')  { e.resIdx = parseInt(g(`tce-${side}-resIdx`))||0; e.value = gn(`tce-${side}-value`); }
+  if (type === 'stat_buff' || type === 'stat_debuff') {
+    e.stat  = g(`tce-${side}-stat`) || 'fortitude';
+    e.value = gn(`tce-${side}-value`);
+  }
+  if (type === 'level_bonus')    e.value = gn(`tce-${side}-value`);
+  if (type === 'unlock_rite')    e.riteKey = g(`tce-${side}-riteKey`) || '';
+
+  return e;
+}
+
+function _fillSideEffect(side, eff) {
+  if (!eff) return;
+  const typeEl = document.getElementById(`tce-${side}-type`);
+  if (typeEl) { typeEl.value = eff.type || 'allRates'; tarotTypeChanged(side); }
+  document.getElementById(`tce-${side}-dur`).value = eff.dur ?? 2;
+  document.getElementById(`tce-${side}-label`).value = eff.label || '';
+
+  const s = id => { const el = document.getElementById(id); if(el) el.value = ''; };
+  const sv = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
+
+  if (eff.mult  !== undefined) sv(`tce-${side}-mult`, eff.mult);
+  if (eff.resIdx !== undefined) sv(`tce-${side}-resIdx`, eff.resIdx);
+  if (eff.value !== undefined) sv(`tce-${side}-value`, eff.value);
+  if (eff.stat)                sv(`tce-${side}-stat`, eff.stat);
+  if (eff.riteKey)             sv(`tce-${side}-riteKey`, eff.riteKey);
+}
+
+function openNewCard() {
+  document.getElementById('tce-title').textContent = 'New Custom Card';
+  document.getElementById('tce-original-name').value = '';
+  document.getElementById('tce-name').value  = '';
+  document.getElementById('tce-num').value   = '';
+  document.getElementById('tce-sym').value   = '';
+  document.getElementById('tce-up-type').value  = 'allRates'; tarotTypeChanged('up');
+  document.getElementById('tce-rev-type').value = 'stress';   tarotTypeChanged('rev');
+  document.getElementById('tce-up-dur').value   = '3';
+  document.getElementById('tce-rev-dur').value  = '2';
+  document.getElementById('tce-up-label').value  = '';
+  document.getElementById('tce-rev-label').value = '';
+  document.getElementById('tce-delete-btn').style.display = 'none';
+  const ed = document.getElementById('tarot-card-editor');
+  ed.style.display = 'block';
+  ed.scrollIntoView({ behavior:'smooth' });
+}
+
+function editTarotCard(name) {
+  const allCards = Object.assign({}, BUILTIN_TAROT, _customTarotCards);
+  const card = allCards[name];
+  if (!card) { toast('Card not found.'); return; }
+
+  document.getElementById('tce-title').textContent = 'Edit: ' + name;
+  document.getElementById('tce-original-name').value = name;
+  document.getElementById('tce-name').value = name;
+  document.getElementById('tce-num').value  = card.num || '';
+  document.getElementById('tce-sym').value  = card.sym || '';
+  _fillSideEffect('up',  card.up);
+  _fillSideEffect('rev', card.rev);
+
+  const isCustom = !!_customTarotCards[name];
+  document.getElementById('tce-delete-btn').style.display = isCustom ? '' : 'none';
+
+  const ed = document.getElementById('tarot-card-editor');
+  ed.style.display = 'block';
+  ed.scrollIntoView({ behavior:'smooth' });
+}
+
+async function saveTarotCard() {
+  const name = document.getElementById('tce-name').value.trim();
+  if (!name) { toast('Card name required.'); return; }
+
+  const card = {
+    num: document.getElementById('tce-num').value.trim(),
+    sym: document.getElementById('tce-sym').value.trim(),
+    up:  _collectSideEffect('up'),
+    rev: _collectSideEffect('rev'),
+  };
+
+  // If renaming, delete the old key first
+  const originalName = document.getElementById('tce-original-name').value;
+  if (originalName && originalName !== name && _customTarotCards[originalName]) {
+    try { await fbDel('world/tarot/' + encodeURIComponent(originalName)); } catch(e){}
+  }
+
+  try {
+    await fbPut('world/tarot/' + encodeURIComponent(name), card);
+    _customTarotCards[name] = card;
+    if (originalName && originalName !== name) delete _customTarotCards[originalName];
+    log('Tarot card sealed: ' + name, 'ok');
+    toast('✓ Card sealed to Firebase.');
+    renderTarotCardList();
+    populateCardSelector();
+    document.getElementById('tarot-card-editor').style.display = 'none';
+  } catch(e) {
+    log('saveTarotCard error: ' + e.message, 'err');
+    toast('✗ Error: ' + e.message);
+  }
+}
+
+async function deleteTarotCard() {
+  const name = document.getElementById('tce-original-name').value;
+  if (!name) return;
+  if (!confirm(`Delete custom card "${name}"? The built-in version (if any) will be used instead.`)) return;
+  try {
+    await fbDel('world/tarot/' + encodeURIComponent(name));
+    delete _customTarotCards[name];
+    log('Deleted custom card: ' + name, 'warn');
+    toast('Card removed. Built-in will apply if it exists.');
+    renderTarotCardList();
+    populateCardSelector();
+    document.getElementById('tarot-card-editor').style.display = 'none';
+  } catch(e) {
+    log('deleteTarotCard error: ' + e.message, 'err');
+    toast('✗ Error: ' + e.message);
+  }
+}
+
+async function seedBuiltinCards() {
+  if (!confirm('Write all 21 built-in cards to Firebase world/tarot? This will overwrite any custom card with the same name.')) return;
+  try {
+    await fbPut('world/tarot', BUILTIN_TAROT);
+    _customTarotCards = { ...BUILTIN_TAROT };
+    log('Seeded ' + Object.keys(BUILTIN_TAROT).length + ' built-in tarot cards to Firebase.', 'ok');
+    toast('✓ All built-in cards seeded.');
+    renderTarotCardList();
+    populateCardSelector();
+  } catch(e) {
+    log('seedBuiltinCards error: ' + e.message, 'err');
+    toast('✗ Error: ' + e.message);
+  }
+}
+
 </body>
 </html>
