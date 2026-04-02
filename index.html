@@ -1689,1894 +1689,447 @@
     color: var(--text-secondary);
   }
 
-  /* ═══════════════════════════════════════
-     COMBAT MODAL — deep system
-  ═══════════════════════════════════════ */
-  /* Combat tab panel — fills #main exactly like other panels */
+  
+  /* ═══════════════════════════════════════════════════════
+     COMBAT SYSTEM — REDESIGN
+  ════════════════════════════════════════════════════════ */
+
   #panel-combat {
-    display: none;
-    flex-direction: column;
-    padding: 0;
-    overflow: hidden;
-    background: var(--void);
-    height: 100%;
+    display: none; flex-direction: column; padding: 0;
+    overflow: hidden; position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 300; background: var(--bg, #050407);
+    max-width: 430px; margin: 0 auto;
   }
   #panel-combat.active { display: flex; }
 
-  /* Legacy selector — keep for any JS still using it */
-  #combat-modal { display: contents; }
+  /* Context bar — astro data */
+  #combat-context-bar {
+    display: flex; align-items: center; gap: 0.4rem;
+    padding: 0.4rem 0.8rem; flex-shrink: 0;
+    background: rgba(139,26,26,0.06);
+    border-bottom: 1px solid rgba(139,26,26,0.15);
+    overflow-x: auto; scrollbar-width: none;
+  }
+  #combat-context-bar::-webkit-scrollbar { display: none; }
+  .cb-pill {
+    font-family: var(--ff-heading); font-size: 0.52rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-secondary); white-space: nowrap;
+    padding: 0.15rem 0.5rem;
+    border: 1px solid rgba(139,26,26,0.2);
+    flex-shrink: 0;
+  }
+  .cb-encounter-name {
+    font-family: var(--ff-heading); font-size: 0.52rem;
+    letter-spacing: 0.06em; color: var(--crimson-bright);
+    white-space: nowrap; margin-left: auto; flex-shrink: 0;
+  }
 
+  /* Header */
   #combat-header {
     flex-shrink: 0;
-    background: linear-gradient(180deg, rgba(139,26,26,0.18) 0%, transparent 100%);
-    border-bottom: 1px solid rgba(139,26,26,0.25);
-    padding: 0.7rem 1rem 0.6rem;
-    min-height: 60px;
+    background: linear-gradient(180deg, rgba(139,26,26,0.22) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(139,26,26,0.2);
+    padding: 0.55rem 0.9rem 0.45rem;
   }
   #combat-title {
-    font-family: var(--ff-title); font-size: 1.25rem;
+    font-family: var(--ff-title); font-size: 1.15rem;
     color: var(--crimson-bright); letter-spacing: 2px;
-    text-shadow: 0 0 20px rgba(196,48,48,0.4);
-    margin-bottom: 0.25rem; text-align: center;
+    text-shadow: 0 0 24px rgba(196,48,48,0.35);
+    text-align: center; line-height: 1;
   }
   #combat-phase-bar {
-    font-family: var(--ff-heading); 0.69rem;
-    letter-spacing: 0.2em; text-transform: uppercase;
+    font-family: var(--ff-heading); font-size: 0.52rem;
+    letter-spacing: 0.22em; text-transform: uppercase;
     color: var(--text-secondary); text-align: center;
-    margin-bottom: 0.5rem;
+    margin: 0.2rem 0 0.35rem;
   }
-  /* Initiative track */
   #combat-init-track {
-    display: flex; gap: 0.25rem; overflow-x: auto;
-    padding: 0.3rem 0; scrollbar-width: none;
+    display: flex; gap: 0.2rem; overflow-x: auto;
+    justify-content: center; padding: 0.15rem 0;
+    scrollbar-width: none;
   }
   #combat-init-track::-webkit-scrollbar { display: none; }
   .init-token {
-    flex-shrink: 0; width: 36px; height: 36px;
-    border: 1px solid var(--border); border-radius: 2px;
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; font-size: 0.9rem;
-    background: var(--deep); transition: all 0.2s;
-    position: relative;
+    flex-shrink: 0; width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--ff-heading); font-size: 0.6rem;
+    border: 1px solid var(--border); position: relative;
+    transition: all 0.15s;
   }
-  .init-token.active {
-    border-color: var(--gold); background: rgba(201,168,76,0.12);
-    box-shadow: 0 0 8px rgba(201,168,76,0.3);
+  .init-token.ally  { border-color: rgba(45,122,95,0.4); color: var(--viridian-bright); }
+  .init-token.enemy { border-color: rgba(139,26,26,0.4); color: var(--crimson-bright); }
+  .init-token.active-token {
+    border-color: var(--gold) !important;
+    background: rgba(201,168,76,0.12);
+    box-shadow: 0 0 8px rgba(201,168,76,0.25);
   }
-  .init-token.enemy-token { border-color: rgba(139,26,26,0.4); }
-  .init-token.ally-token  { border-color: rgba(45,122,95,0.4); }
-  .init-token.dead-token  { opacity: 0.25; filter: grayscale(1); }
-  .init-num {
-    font-family: var(--ff-heading); 0.46rem;
-    color: var(--ash); position: absolute; top: 1px; right: 3px;
-  }
+  .init-token.dead-token { opacity: 0.25; }
 
   /* Battlefield */
   #combat-battlefield {
-    flex: 1 1 0;
-    min-height: 80px;
-    max-height: 42vh;
-    overflow-y: auto;
-    padding: 0.5rem 0.7rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
+    flex: 1 1 0; min-height: 0;
+    overflow-y: auto; padding: 0.5rem 0.7rem;
   }
   #combat-battlefield::-webkit-scrollbar { width: 2px; }
   #combat-battlefield::-webkit-scrollbar-thumb { background: var(--stone); }
 
-  .combat-section-label {
-    font-family: var(--ff-heading); 0.63rem;
+  .cbt-section-head {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.3rem;
+  }
+  .cbt-section-label {
+    font-family: var(--ff-heading); font-size: 0.5rem;
     letter-spacing: 0.22em; text-transform: uppercase;
-    color: var(--text-secondary); margin: 0.3rem 0 0.2rem;
+    color: var(--text-secondary);
   }
+  .cbt-section-count {
+    font-family: var(--ff-heading); font-size: 0.48rem;
+    color: var(--text-secondary); letter-spacing: 0.08em;
+  }
+
+  /* Combatant cards */
   .combatant-card {
-    border: 1px solid var(--border); padding: 0.5rem 0.65rem;
-    background: rgba(255,255,255,0.01); display: flex;
-    align-items: flex-start; gap: 0.6rem; position: relative;
-    transition: border-color 0.2s;
-    cursor: default;
+    border: 1px solid var(--border);
+    margin-bottom: 0.4rem;
+    background: rgba(10,8,15,0.7);
+    transition: border-color 0.12s, background 0.12s;
+    cursor: pointer;
   }
-  .combatant-card.enemy-card { border-color: rgba(139,26,26,0.25); }
-  .combatant-card.ally-card  { border-color: rgba(45,122,95,0.25); }
+  .combatant-card:last-child { margin-bottom: 0; }
+  .combatant-card.enemy-card { border-color: rgba(139,26,26,0.3); }
+  .combatant-card.ally-card  { border-color: rgba(45,122,95,0.2); }
   .combatant-card.active-card {
     border-color: var(--gold) !important;
-    background: rgba(201,168,76,0.04);
+    background: rgba(201,168,76,0.05);
+    box-shadow: inset 2px 0 0 var(--gold);
   }
-  .combatant-card.dead-card  { opacity: 0.35; }
-  .combatant-card.targeted   { border-color: var(--crimson-bright) !important; animation: pulse-target 0.6s ease infinite; }
-  @keyframes pulse-target { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 8px rgba(196,48,48,0.5)} }
-  .cc-rank {
-    font-family: var(--ff-heading); 0.52rem;
-    color: var(--ash); position: absolute; top: 4px; left: 5px;
+  .combatant-card.dead-card  { opacity: 0.3; pointer-events: none; }
+  @keyframes pulse-target {
+    0%,100% { border-color: var(--crimson-bright); }
+    50%      { border-color: transparent; }
   }
-  .cc-icon { font-size: 1.02rem; flex-shrink: 0; margin-top: 0.1rem; }
-  .cc-body { flex: 1; min-width: 0; }
-  .cc-name {
-    font-family: var(--ff-heading); 1.01rem;
-    letter-spacing: 0.04em; color: var(--bone); margin-bottom: 0.2rem;
+  .combatant-card.targeted {
+    animation: pulse-target 0.6s ease infinite;
+    background: rgba(196,48,48,0.08);
   }
-  .cc-bars { display: flex; flex-direction: column; gap: 0.18rem; margin-bottom: 0.2rem; }
-  .cc-bar-row { display: flex; align-items: center; gap: 0.3rem; }
-  .cc-bar-lbl { font-family: var(--ff-heading); 0.49rem; letter-spacing: 0.06em; color: var(--ash); width: 1.4rem; flex-shrink: 0; }
-  .cc-bar { flex: 1; height: 4px; background: var(--stone); position: relative; }
-  .cc-bar-fill { height: 100%; transition: width 0.4s ease; }
-  .hp-fill-ally   { background: var(--viridian-bright); }
-  .hp-fill-enemy  { background: var(--crimson-bright); }
-  .mana-fill      { background: var(--indigo-bright); }
-  .stress-fill-c  { background: linear-gradient(90deg, var(--amber-bright), var(--crimson-bright)); }
-  .cc-bar-val { font-family: var(--ff-heading); 0.52rem; color: var(--pale); width: 2.8rem; text-align: right; flex-shrink: 0; }
-  .cc-statline {
-    font-family: var(--ff-heading); 0.58rem;
-    letter-spacing: 0.06em; color: var(--text-secondary);
-    display: flex; flex-wrap: wrap; gap: 0.3rem 0.6rem;
-  }
-  .cc-statline span { white-space: nowrap; }
-  .cc-statline .stat-hi { color: var(--gold); }
-  .cc-statline .stat-danger { color: var(--crimson-bright); }
-  .cc-effects {
-    display: flex; flex-wrap: wrap; gap: 0.2rem; margin-top: 0.2rem;
-  }
-  .effect-pip {
-    font-family: var(--ff-heading); 0.49rem;
-    letter-spacing: 0.06em; padding: 0.1rem 0.3rem;
-    border: 1px solid; border-radius: 1px;
-  }
-  .effect-pip.blight { border-color: #6b4c8b; color: #a07fcc; }
-  .effect-pip.burn   { border-color: #d4890a; color: #f0b050; }
-  .effect-pip.bleed  { border-color: #c43030; color: #e06060; }
-  .effect-pip.stun   { border-color: #8b8ba0; color: #aaaacc; }
-  .effect-pip.blind  { border-color: #4a3d5c; color: #9b8aaa; }
-  .effect-pip.shielded { border-color: #2d7a5f; color: #50aa80; }
-  .effect-pip.inspired { border-color: #c9a84c; color: #f0cc6a; }
-  .effect-pip.weakened { border-color: #8b7355; color: #c4a080; }
 
-  /* Log */
-  #combat-log-panel {
+  .cc-card-inner { display: flex; align-items: flex-start; padding: 0.55rem 0.7rem; gap: 0.6rem; }
+  .cc-icon-col {
+    flex-shrink: 0; width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--ff-heading); font-size: 1rem;
+    border: 1px solid var(--border); color: var(--text-secondary);
+  }
+  .enemy-card  .cc-icon-col { color: var(--crimson-bright); border-color: rgba(139,26,26,0.3); }
+  .ally-card   .cc-icon-col { color: var(--viridian-bright); border-color: rgba(45,122,95,0.3); }
+  .active-card .cc-icon-col { color: var(--gold); border-color: rgba(201,168,76,0.4); }
+  .cc-body { flex: 1; min-width: 0; }
+
+  .cc-name-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 0.3rem;
+  }
+  .cc-name {
+    font-family: var(--ff-heading); font-size: 0.78rem;
+    letter-spacing: 0.04em; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .dead-card .cc-name { color: var(--text-secondary); }
+  .cc-fallen-tag {
+    font-family: var(--ff-heading); font-size: 0.45rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--crimson-bright); margin-left: 0.4rem;
+  }
+  .cc-inspect-btn {
+    flex-shrink: 0; background: none; border: none;
+    color: var(--text-secondary); cursor: pointer;
+    font-size: 0.75rem; padding: 0 0.2rem;
+    transition: color 0.1s;
+  }
+  .cc-inspect-btn:hover { color: var(--text-primary); }
+
+  /* HP/MP/Stress bars */
+  .cc-bars { display: flex; flex-direction: column; gap: 0.2rem; margin-bottom: 0.25rem; }
+  .cc-bar-row {
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .cc-bar-lbl {
+    font-family: var(--ff-heading); font-size: 0.42rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-secondary); width: 24px; flex-shrink: 0;
+  }
+  .cc-bar {
+    flex: 1; height: 4px; background: var(--stone);
+    overflow: hidden;
+  }
+  .cc-bar-fill { height: 100%; transition: width 0.3s ease; }
+  .hp-fill-enemy { background: var(--crimson-bright); }
+  .hp-fill-ally  { background: var(--viridian-bright); }
+  .mana-fill     { background: var(--indigo-bright); }
+  .stress-fill-c { background: var(--amber-bright); }
+  .cc-bar-val {
+    font-family: var(--ff-heading); font-size: 0.52rem;
+    color: var(--text-secondary); white-space: nowrap;
+    min-width: 36px; text-align: right;
+  }
+
+  /* Stat line */
+  .cc-statline {
+    display: flex; flex-wrap: wrap; gap: 0.3rem 0.6rem;
+    font-family: var(--ff-heading); font-size: 0.45rem;
+    letter-spacing: 0.06em; color: var(--text-secondary);
+  }
+  .stat-hi  { color: var(--gold); }
+  .stat-danger { color: var(--crimson-bright); }
+
+  /* Status effect pips */
+  .cc-effects { display: flex; flex-wrap: wrap; gap: 0.2rem; margin-top: 0.2rem; }
+  .effect-pip {
+    font-family: var(--ff-heading); font-size: 0.4rem;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 0.1rem 0.3rem; border: 1px solid;
+  }
+  .effect-pip.poison { color: var(--viridian-bright); border-color: rgba(45,122,95,0.4); }
+  .effect-pip.burn   { color: var(--crimson-bright);  border-color: rgba(139,26,26,0.4); }
+  .effect-pip.blight { color: var(--mist);            border-color: rgba(107,92,128,0.4); }
+  .effect-pip.buff   { color: var(--gold);            border-color: rgba(201,168,76,0.4); }
+
+  /* Active turn indicator */
+  .cc-active-indicator {
+    height: 2px; background: var(--gold);
+    margin-bottom: 0; animation: active-glow 1.2s ease infinite;
+  }
+  @keyframes active-glow {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.4; }
+  }
+
+  /* Combat log */
+  #combat-log-wrap {
     flex-shrink: 0;
-    height: 80px;
-    overflow-y: auto;
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
-    padding: 0.35rem 0.7rem;
-    background: rgba(5,4,7,0.85);
+  }
+  #combat-log-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.35rem 0.8rem; cursor: pointer;
+    background: rgba(5,4,7,0.6);
+  }
+  #combat-log-label {
+    font-family: var(--ff-heading); font-size: 0.48rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-secondary);
+  }
+  #combat-log-chevron {
+    font-size: 0.5rem; color: var(--text-secondary);
+    transition: transform 0.2s;
+  }
+  #combat-log-wrap.collapsed #combat-log-chevron { transform: rotate(180deg); }
+  #combat-log-wrap.collapsed #combat-log-panel { display: none; }
+  #combat-log-panel {
+    height: 90px; overflow-y: auto;
+    padding: 0.4rem 0.8rem;
+    background: rgba(5,4,7,0.4);
   }
   #combat-log-panel::-webkit-scrollbar { width: 2px; }
   #combat-log-panel::-webkit-scrollbar-thumb { background: var(--stone); }
-  .log-line { font-family: var(--ff-body); font-style: italic; font-size: 0.78rem; color: var(--mist); line-height: 1.6; }
-  .log-line.hit     { color: var(--crimson-bright); }
-  .log-line.crit    { color: var(--gold); font-weight: 600; }
-  .log-line.miss    { color: var(--indigo-bright); }
-  .log-line.heal    { color: var(--viridian-bright); }
-  .log-line.effect  { color: #a07fcc; }
-  .log-line.system  { color: var(--ash); font-style: normal; 1.11rem; letter-spacing: 0.06em; }
+  .log-line {
+    font-family: var(--ff-body); font-style: italic;
+    font-size: 0.82rem; line-height: 1.55; color: var(--text-secondary);
+    padding: 0.05rem 0;
+  }
+  .log-line.crit   { color: var(--gold); font-style: normal; font-family: var(--ff-heading); font-size: 0.7rem; letter-spacing: 0.04em; }
+  .log-line.hit    { color: var(--crimson-bright); }
+  .log-line.heal   { color: var(--viridian-bright); }
+  .log-line.miss   { color: var(--mist); }
+  .log-line.system { color: var(--text-secondary); font-size: 0.7rem; font-style: normal; letter-spacing: 0.04em; font-family: var(--ff-heading); }
+  .log-line.effect { color: var(--amber-bright); }
+  .log-round-sep {
+    font-family: var(--ff-heading); font-size: 0.45rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--border); text-align: center;
+    margin: 0.3rem 0; border-top: 1px solid var(--border); padding-top: 0.2rem;
+  }
 
-  /* Skill buttons */
+  /* Action area */
   #combat-actions {
-    flex-shrink: 0; padding: 0.5rem 0.6rem;
-    background: rgba(5,4,7,0.8);
+    flex-shrink: 0; padding: 0.5rem 0.65rem 0.6rem;
+    background: rgba(5,4,7,0.92);
+    border-top: 1px solid var(--border);
   }
   #combat-actor-label {
-    font-family: var(--ff-heading); 0.63rem;
+    font-family: var(--ff-heading); font-size: 0.52rem;
     letter-spacing: 0.18em; text-transform: uppercase;
-    color: var(--gold-dim); margin-bottom: 0.4rem;
+    color: var(--text-secondary); margin-bottom: 0.4rem;
     text-align: center;
   }
   #combat-skill-grid {
-    display: grid; grid-template-columns: repeat(2,1fr); gap: 0.4rem;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem;
     margin-bottom: 0.4rem;
+    max-height: 200px; overflow-y: auto;
   }
+  #combat-skill-grid::-webkit-scrollbar { width: 2px; }
+  #combat-skill-grid::-webkit-scrollbar-thumb { background: var(--stone); }
+
+  /* Skill buttons */
+  .skill-btn-wrap { display: flex; }
   .skill-btn {
-    font-family: var(--ff-heading); 0.78rem;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    padding: 0.55rem 0.4rem; border: 1px solid var(--border);
-    background: transparent; color: var(--bone);
-    cursor: pointer; transition: all 0.15s;
-    display: flex; flex-direction: column; align-items: center; gap: 0.15rem;
-    text-align: center;
+    flex: 1; background: rgba(10,8,15,0.8);
+    border: 1px solid var(--border); padding: 0.45rem 0.5rem;
+    cursor: pointer; text-align: left; transition: border-color 0.1s;
+    display: flex; flex-direction: column; gap: 0.1rem;
   }
-  .skill-btn:active, .skill-btn:hover { border-color: var(--gold); background: rgba(201,168,76,0.06); color: var(--gold); }
-  .skill-btn.attack-btn:hover { border-color: var(--crimson-bright); background: rgba(196,48,48,0.06); color: var(--crimson-bright); }
-  .skill-btn.heal-btn:hover   { border-color: var(--viridian-bright); background: rgba(45,122,95,0.06); color: var(--viridian-bright); }
-  .skill-btn.disabled-btn { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
-  .skill-btn-name { 0.82rem; }
-  .skill-btn-sub  { 0.58rem; color: var(--ash); letter-spacing: 0.06em; }
-  .skill-btn-cost { 0.52rem; color: var(--indigo-bright); }
+  .skill-btn:active { border-color: var(--text-accent); }
+  .skill-btn.attack-btn { border-color: rgba(139,26,26,0.35); }
+  .skill-btn.attack-btn:active { border-color: var(--crimson-bright); }
+  .skill-btn.heal-btn   { border-color: rgba(45,122,95,0.35); }
+  .skill-btn.heal-btn:active { border-color: var(--viridian-bright); }
+  .skill-btn.disabled-btn { opacity: 0.35; pointer-events: none; }
+  .skill-btn-name {
+    font-family: var(--ff-heading); font-size: 0.65rem;
+    letter-spacing: 0.04em; color: var(--text-primary);
+    display: block;
+  }
+  .skill-btn-sub {
+    font-family: var(--ff-heading); font-size: 0.5rem;
+    letter-spacing: 0.04em; color: var(--text-secondary);
+    display: block; text-transform: uppercase;
+  }
+  .skill-btn-cost {
+    font-family: var(--ff-heading); font-size: 0.45rem;
+    letter-spacing: 0.06em; color: var(--indigo-bright);
+    display: block;
+  }
+  .skill-info-btn {
+    flex-shrink: 0; width: 24px;
+    background: rgba(10,8,15,0.8); border: 1px solid var(--border);
+    border-left: none; color: var(--text-secondary);
+    cursor: pointer; font-size: 0.7rem; padding: 0;
+    transition: color 0.1s;
+  }
+  .skill-info-btn:active { color: var(--text-primary); }
+
+  /* Footer buttons */
   #combat-footer-btns {
     display: flex; gap: 0.4rem;
   }
   .combat-pass-btn {
-    flex: 1; font-family: var(--ff-heading); 0.69rem;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    padding: 0.6rem; border: 1px solid rgba(201,168,76,0.2);
-    background: transparent; color: var(--text-secondary); cursor: pointer;
+    flex: 1; padding: 0.5rem;
+    font-family: var(--ff-heading); font-size: 0.52rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    background: none; border: 1px solid var(--border);
+    color: var(--text-secondary); cursor: pointer;
+    transition: border-color 0.1s, color 0.1s;
   }
+  .combat-pass-btn:active { border-color: var(--text-accent); color: var(--text-primary); }
   .combat-retreat-btn {
-    flex: 1; font-family: var(--ff-heading); 0.69rem;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    padding: 0.6rem; border: 1px solid rgba(139,26,26,0.3);
-    background: transparent; color: rgba(196,48,48,0.6); cursor: pointer;
+    flex: 0 0 auto; padding: 0.5rem 0.9rem;
+    font-family: var(--ff-heading); font-size: 0.52rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    background: none; border: 1px solid rgba(139,26,26,0.35);
+    color: var(--crimson-bright); cursor: pointer;
+    transition: border-color 0.1s;
   }
+  .combat-retreat-btn:active { border-color: var(--crimson-bright); }
 
-  /* Target selection overlay */
+  /* Target prompt */
   #combat-target-prompt {
-    display: none; position: absolute; bottom: 0; left: 0; right: 0;
-    background: rgba(5,4,7,0.95); border-top: 1px solid var(--gold-dim);
-    padding: 0.6rem 0.8rem; z-index: 10;
-    font-family: var(--ff-heading); 0.69rem;
-    letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold);
-    text-align: center;
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(139,26,26,0.15); border-top: 1px solid rgba(139,26,26,0.3);
+    font-family: var(--ff-heading); font-size: 0.52rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--crimson-bright); text-align: center;
+    padding: 0.55rem; display: none; z-index: 10;
   }
   #combat-target-prompt.active { display: block; }
 
-    text-align: center;
-    width: calc(100% - 2rem);
-  }
-
-  /* ═══════════════════════════════════════
-     PLANETARY HOURS INDICATOR
-  ═══════════════════════════════════════ */
-  .planet-hour-widget {
-    border: 1px solid var(--border);
-    padding: 0.9rem;
-    margin-bottom: 1rem;
-    background: rgba(255,255,255,0.01);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .planet-hour-widget::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at 0% 100%, rgba(201,168,76,0.04) 0%, transparent 60%);
-  }
-
-  .ph-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.8rem;
-    position: relative;
-  }
-
-  .ph-title {
-    font-family: var(--ff-heading);
-    font-size: 0.7rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-  }
-
-  .ph-planet {
-    font-family: var(--ff-body);
-    font-style: italic;
-    font-size: 0.86rem;
-    color: var(--gold);
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-
-  .ph-clock {
-    display: flex;
-    gap: 0.3rem;
-    align-items: center;
-  }
-
-  .ph-segment {
-    width: 18px;
-    height: 6px;
-    background: var(--stone);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .ph-segment.filled { background: var(--gold-dim); }
-  .ph-segment.current { background: var(--gold); }
-
-  .ph-bonuses {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    position: relative;
-  }
-
-  .ph-bonus {
-    font-family: var(--ff-heading);
-    font-size: 0.61rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 0.25rem 0.5rem;
-    border: 1px solid var(--border);
-    color: var(--gold);
-  }
-
-  /* ═══════════════════════════════════════
-     NOTIFICATION TOAST
-  ═══════════════════════════════════════ */
-  #toasts {
-    position: fixed;
-    top: 1rem;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 2000;
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    width: 340px;
-    max-width: calc(100vw - 2rem);
-    pointer-events: none;
-  }
-
-  .toast {
-    background: var(--deep);
-    border: 1px solid var(--border-bright);
-    padding: 0.7rem 1rem;
-    font-family: var(--ff-body);
-    font-style: italic;
-    font-size: 0.82rem;
-    color: var(--bone);
-    animation: toast-in 0.3s ease, toast-out 0.4s ease 3s forwards;
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-  }
-
-  @keyframes toast-in {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes toast-out {
-    to { opacity: 0; transform: translateY(-10px); }
-  }
-
-  .toast-icon { font-size: 0.78rem; flex-shrink: 0; }
-
-  /* Ornamental divider */
-  .ornament {
-    text-align: center;
-    color: var(--gold-dim);
-    font-size: 0.9rem;
-    letter-spacing: 0.5rem;
-    margin: 0.8rem 0;
-    opacity: 0.5;
-  }
-
-  /* ═══════════════════════════════════════
-     LONG-PRESS TOOLTIP
-  ═══════════════════════════════════════ */
-  .lp-tooltip {
-    position: fixed;
-    bottom: -200px;
-    left: 1rem;
-    right: 1rem;
-    z-index: 800;
-    background: var(--deep);
-    border: 1px solid var(--border-bright);
-    padding: 1rem 1.1rem 0.9rem;
-    transition: bottom 0.3s cubic-bezier(0.16,1,0.3,1);
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
-    max-width: 430px;
-    margin: 0 auto;
-  }
-  .lp-tooltip.visible { bottom: 1rem; }
-  #lp-backdrop {
-    position: fixed; inset: 0; z-index: 799;
-    background: rgba(5,4,7,0.5);
-    display: none;
-  }
-  #lp-backdrop.visible { display: block; }
-  .lp-tooltip-term {
-    font-family: var(--ff-heading);
-    font-size: 0.96rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 0.5rem;
-  }
-  .lp-tooltip-body {
-    font-family: var(--ff-body);
-    font-style: italic;
-    font-size: 0.88rem;
-    line-height: 1.75;
-    color: var(--pale);
-  }
-  .lp-tooltip-more {
-    font-family: var(--ff-heading);
-    font-size: 0.64rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    background: none;
-    border: none;
-    cursor: pointer;
-    margin-top: 0.7rem;
-    padding: 0;
-    display: block;
-  }
-  .lp-tooltip-more:active { color: var(--gold); }
-
-  /* Codex-linkable terms */
-  [data-codex] {
-    border-bottom: 1px dotted var(--gold-dim);
-    cursor: pointer;
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-touch-callout: none;
-  }
-  [data-codex]:active { color: var(--gold); border-bottom-color: var(--gold); }
-
-  /* ═══════════════════════════════════════
-     CODEX PANEL
-  ═══════════════════════════════════════ */
-  .codex-cat {
-    font-family: var(--ff-heading);
-    font-size: 0.61rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 0.3rem 0.7rem;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text-secondary);
-    cursor: pointer;
-  }
-  .codex-cat.active { border-color: var(--gold-dim); color: var(--gold); background: rgba(201,168,76,0.05); }
-
-  .codex-entry {
-    border: 1px solid var(--border);
-    padding: 0.8rem 0.9rem;
-    margin-bottom: 0.5rem;
-    cursor: pointer;
-    background: rgba(255,255,255,0.01);
-    transition: border-color 0.15s;
-    display: flex;
-    gap: 0.8rem;
-    align-items: flex-start;
-  }
-  .codex-entry:active { border-color: var(--gold); }
-  .codex-entry-symbol {
-    font-size: 1.02rem;
-    flex-shrink: 0;
-    width: 28px;
-    text-align: center;
-    margin-top: 0.1rem;
-  }
-  .codex-entry-info { flex: 1; }
-  .codex-entry-name {
-    font-family: var(--ff-heading);
-    font-size: 0.87rem;
-    letter-spacing: 0.06em;
-    color: var(--bone);
-    margin-bottom: 0.15rem;
-  }
-  .codex-entry-cat {
-    font-family: var(--ff-heading);
-    font-size: 0.54rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    margin-bottom: 0.3rem;
-  }
-  .codex-entry-preview {
-    font-family: var(--ff-body);
-    font-style: italic;
-    font-size: 0.78rem;
-    color: var(--mist);
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  /* ═══════════════════════════════════════
-     CODEX MODAL
-  ═══════════════════════════════════════ */
-  #codex-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 600;
-    background: rgba(5,4,7,0.6);
-    display: none;
-    align-items: flex-end;
-    justify-content: center;
-  }
-  #codex-modal.open { display: flex; }
-  .codex-modal-inner {
-    background: var(--abyss);
-    border: 1px solid var(--border-bright);
-    border-bottom: none;
-    width: 100%;
-    max-width: 430px;
-    max-height: 80vh;
-    overflow-y: auto;
-    padding: 1.2rem 1.2rem 2rem;
-    animation: slide-up 0.3s cubic-bezier(0.16,1,0.3,1);
-  }
-  @keyframes slide-up {
-    from { transform: translateY(40px); opacity: 0; }
-    to   { transform: translateY(0);    opacity: 1; }
-  }
-  .codex-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.8rem;
-  }
-  .codex-modal-cat {
-    font-family: var(--ff-heading);
-    font-size: 0.61rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    border: 1px solid var(--border);
-    padding: 0.2rem 0.5rem;
-  }
-  .codex-modal-close {
-    font-size: 0.78rem;
-    color: var(--text-secondary);
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.2rem 0.5rem;
-  }
-  .codex-modal-symbol {
-    font-size: 1.95rem;
-    text-align: center;
-    margin-bottom: 0.5rem;
-    opacity: 0.8;
-  }
-  .codex-modal-term {
-    font-family: var(--ff-heading);
-    font-size: 0.86rem;
-    letter-spacing: 0.08em;
-    color: var(--gold);
-    text-align: center;
-    margin-bottom: 0.2rem;
-  }
-  .codex-modal-body {
-    font-family: var(--ff-body);
-    font-style: italic;
-    font-size: 0.9rem;
-    line-height: 1.8;
-    color: var(--pale);
-    margin: 1rem 0;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 1rem 0;
-  }
-  .codex-modal-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-bottom: 0.8rem;
-  }
-  .codex-tag {
-    font-family: var(--ff-heading);
-    font-size: 0.54rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 0.2rem 0.5rem;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-  }
-  .codex-modal-related-title {
-    font-family: var(--ff-heading);
-    font-size: 0.64rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-  }
-  .codex-related-pill {
-    display: inline-block;
-    font-family: var(--ff-heading);
-    font-size: 0.67rem;
-    letter-spacing: 0.08em;
-    padding: 0.3rem 0.7rem;
-    border: 1px solid var(--gold-dim);
-    color: var(--gold);
-    margin: 0.2rem 0.2rem 0 0;
-    cursor: pointer;
-  }
-
-  /* Scrollbar for codex modal */
-  .codex-modal-inner::-webkit-scrollbar { width: 3px; }
-  .codex-modal-inner::-webkit-scrollbar-thumb { background: var(--stone); }
-
-  /* ═══════════════════════════════════════
-     SAVE / LOAD SYSTEM
-  ═══════════════════════════════════════ */
-  #save-modal {
-    position: fixed; inset: 0; z-index: 700;
-    background: rgba(5,4,7,0.97);
-    display: none; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 2rem;
-  }
-  #save-modal.open { display: flex; }
-  .save-modal-title {
-    font-family: var(--ff-title);
-    font-size: 1.41rem; color: var(--gold);
-    letter-spacing: 2px; margin-bottom: 0.3rem; text-align: center;
-  }
-  .save-modal-sub {
-    font-family: var(--ff-heading); 0.82rem;
-    letter-spacing: 0.2em; text-transform: uppercase;
-    color: var(--text-secondary); margin-bottom: 2rem; text-align: center;
-  }
-  .save-section {
-    width: 100%; max-width: 340px;
-    border: 1px solid var(--border); padding: 1rem;
-    margin-bottom: 0.8rem; background: rgba(255,255,255,0.01);
-  }
-  .save-section-title {
-    font-family: var(--ff-heading); 0.9rem;
-    letter-spacing: 0.15em; text-transform: uppercase;
-    color: var(--text-secondary); margin-bottom: 0.7rem;
-  }
-  .save-id-display {
-    font-family: var(--ff-heading); 1.01rem;
-    letter-spacing: 0.06em; color: var(--gold);
-    background: var(--void); border: 1px solid var(--border);
-    padding: 0.6rem 0.8rem; word-break: break-all;
-    margin-bottom: 0.5rem; line-height: 1.6; cursor: pointer;
-  }
-  .save-id-hint {
-    font-family: var(--ff-body); font-style: italic;
-    font-size: 0.92rem; color: var(--text-secondary);
-    margin-bottom: 0.7rem; line-height: 1.6;
-  }
-  .save-input {
-    width: 100%; background: var(--void);
-    border: 1px solid var(--border); color: var(--bone);
-    font-family: var(--ff-heading); 0.99rem;
-    letter-spacing: 0.05em; padding: 0.6rem 0.8rem;
-    outline: none; margin-bottom: 0.6rem;
-  }
-  .save-btn-row { display: flex; gap: 0.5rem; }
-  .save-btn {
-    flex: 1; font-family: var(--ff-heading); 0.9rem;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    padding: 0.7rem; border: 1px solid var(--border);
-    background: transparent; color: var(--text-primary);
-    cursor: pointer; transition: all 0.2s;
-  }
-  .save-btn.primary { border-color: var(--gold-dim); color: var(--gold); }
-  .save-btn.primary:active { background: rgba(201,168,76,0.1); }
-  .save-btn:active { background: rgba(255,255,255,0.04); }
-  .save-btn:disabled { opacity: 0.4; cursor: default; }
-  .save-status {
-    font-family: var(--ff-body); font-style: italic;
-    font-size: 0.78rem; text-align: center;
-    margin-top: 0.6rem; min-height: 1.4rem; color: var(--pale);
-  }
-  .save-status.ok  { color: var(--viridian-bright); }
-  .save-status.err { color: var(--crimson-bright); }
-  .save-close {
-    margin-top: 1rem; font-family: var(--ff-heading);
-    font-size: 0.64rem; letter-spacing: 0.15em; text-transform: uppercase;
-    color: var(--text-secondary); background: none; border: none;
-    cursor: pointer; padding: 0.5rem 1rem;
-  }
-  .topbar-save-btn {
-    font-size: 0.9rem; background: none; border: none;
-    cursor: pointer; color: var(--gold-dim); padding: 0.2rem 0.4rem;
-    transition: color 0.2s; line-height: 1;
-  }
-  .topbar-save-btn:active { color: var(--gold); }
-  .topbar-save-btn.saving { color: var(--amber-bright); }
-  .topbar-save-btn.saved  { color: var(--viridian-bright); }
-  .topbar-theme-btn {
-    font-size: 0.78rem; background: none; border: none;
-    cursor: pointer; color: var(--text-secondary); padding: 0.2rem 0.4rem;
-    transition: color 0.2s; line-height: 1;
-  }
-  .topbar-theme-btn:active { color: var(--gold); }
-
-  /* IDENTITY MODAL */
-  #identity-modal { position:fixed;inset:0;z-index:1100;background:rgba(5,4,7,0.98);display:none;flex-direction:column;align-items:center;justify-content:center;padding:2rem; }
-  #identity-modal.open { display:flex; }
-  .identity-title { font-family:var(--ff-title);font-size: 1.56rem;color:var(--gold);letter-spacing:2px;margin-bottom:0.5rem;text-align:center; }
-  .identity-sub { font-family:var(--ff-heading);font-size: 0.64rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:2rem;text-align:center; }
-  .identity-field { width:100%;max-width:320px;margin-bottom:1rem; }
-  .identity-label { font-family:var(--ff-heading);font-size: 0.64rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.4rem;display:block; }
-  .identity-input { width:100%;background:var(--deep);border:1px solid var(--border);color:var(--bone);font-family:var(--ff-heading);font-size: 0.8rem;padding:0.8rem;outline:none; }
-  .identity-input:focus { border-color:var(--gold-dim); }
-  .identity-btn { font-family:var(--ff-heading);font-size: 0.9rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--gold-dim);padding:0.9rem 2.5rem;cursor:pointer;margin-top:1rem;transition:all 0.2s; }
-  .identity-btn:active { background:rgba(201,168,76,0.1); }
-
-  /* FORGE MODAL */
-  #forge-modal { position:fixed;inset:0;z-index:500;background:rgba(5,4,7,0.97);display:none;flex-direction:column;overflow-y:auto; }
-  #forge-modal.open { display:flex; }
-  .forge-top { background:linear-gradient(180deg,rgba(139,90,0,0.18) 0%,transparent 100%);border-bottom:1px solid rgba(212,137,10,0.3);padding:1rem;text-align:center; }
-  .forge-title { font-family:var(--ff-title);font-size: 1.56rem;color:var(--amber-bright);letter-spacing:2px;text-shadow:0 0 20px rgba(212,137,10,0.4);margin-bottom:0.2rem; }
-  .forge-subtitle { font-family:var(--ff-heading);font-size: 0.64rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-secondary); }
-  .forge-tabs { display:flex;border-bottom:1px solid var(--border);background:rgba(5,4,7,0.8);position:sticky;top:0;z-index:10; }
-  .forge-tab { flex:1;padding:0.6rem 0.2rem;font-family:var(--ff-heading);font-size: 0.49rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-secondary);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s; }
-  .forge-tab.active { color:var(--amber-bright);border-bottom-color:var(--amber-bright); }
-  .forge-section { padding:1rem; }
-  .recipe-card { border:1px solid var(--border);padding:0.9rem;margin-bottom:0.7rem;background:rgba(255,255,255,0.01);position:relative;overflow:hidden; }
-  .recipe-card::before { content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--recipe-color,var(--amber-bright)); }
-  .recipe-header { display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;margin-bottom:0.5rem; }
-  .recipe-icon { font-size: 0.78rem;flex-shrink:0;font-family:serif;color:var(--gold-dim); }
-  .recipe-info { flex:1; }
-  .recipe-name { font-family:var(--ff-heading);font-size: 0.9rem;letter-spacing:0.06em;color:var(--bone);margin-bottom:0.15rem; }
-  .recipe-type { font-family:var(--ff-heading);font-size: 0.54rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-secondary); }
-  .recipe-desc { font-family:var(--ff-body);font-style:italic;font-size: 0.78rem;color:var(--mist);line-height:1.6;margin-bottom:0.7rem; }
-  .recipe-costs { display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.7rem; }
-  .recipe-cost-pill { font-family:var(--ff-heading);font-size: 0.58rem;letter-spacing:0.06em;padding:0.2rem 0.5rem;border:1px solid var(--border);color:var(--text-secondary); }
-  .recipe-cost-pill.affordable { color:var(--viridian-bright);border-color:rgba(45,122,95,0.4); }
-  .recipe-cost-pill.unaffordable { color:var(--crimson-bright);border-color:rgba(196,48,48,0.3); }
-  .recipe-craft-btn { font-family:var(--ff-heading);font-size: 0.7rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.5rem 1.2rem;border:1px solid var(--amber-bright);background:transparent;color:var(--amber-bright);cursor:pointer;transition:all 0.2s; }
-  .recipe-craft-btn:active { background:rgba(212,137,10,0.15); }
-  .recipe-craft-btn:disabled { opacity:0.35;cursor:default;border-color:var(--border);color:var(--text-secondary); }
-  .inventory-grid { display:grid;grid-template-columns:1fr 1fr;gap:0.6rem; }
-  .inv-item { border:1px solid var(--border);padding:0.8rem 0.7rem;background:rgba(255,255,255,0.01);position:relative; }
-  .inv-item-icon { font-size: 1.02rem;margin-bottom:0.3rem;display:block; }
-  .inv-item-name { font-family:var(--ff-heading);font-size: 0.77rem;letter-spacing:0.06em;color:var(--bone);margin-bottom:0.15rem; }
-  .inv-item-type { font-family:var(--ff-heading);font-size: 0.51rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.3rem; }
-  .inv-item-effect { font-family:var(--ff-body);font-style:italic;1.06rem;color:var(--viridian-bright);line-height:1.4; }
-  .inv-item-qty { position:absolute;top:0.4rem;right:0.5rem;font-family:var(--ff-heading);font-size: 0.7rem;color:var(--amber-bright); }
-  .inv-empty { grid-column:1/-1;text-align:center;padding:2rem 0;font-family:var(--ff-body);font-style:italic;font-size: 0.85rem;color:var(--text-secondary); }
-  .forge-close { margin:0 1rem 1rem;font-family:var(--ff-heading);font-size: 0.7rem;letter-spacing:0.15em;text-transform:uppercase;padding:0.8rem;border:1px solid rgba(139,90,0,0.3);background:transparent;color:var(--text-secondary);cursor:pointer;text-align:center;width:calc(100% - 2rem); }
-
-  /* PLAYER PROFILE MODAL */
-  #player-modal { position:fixed;inset:0;z-index:600;background:rgba(5,4,7,0.7);display:none;align-items:flex-end;justify-content:center; }
-  #player-modal.open { display:flex; }
-  .player-modal-inner { background:var(--abyss);border:1px solid var(--border-bright);border-bottom:none;width:100%;max-width:430px;max-height:85vh;overflow-y:auto;padding:1.2rem 1.2rem 2rem;animation:slide-up 0.3s cubic-bezier(0.16,1,0.3,1); }
-  .player-modal-inner::-webkit-scrollbar { width:3px; }
-  .player-modal-inner::-webkit-scrollbar-thumb { background:var(--stone); }
-  .pm-header { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem; }
-  .pm-identity { flex:1; }
-  .pm-name { font-family:var(--ff-heading);font-size: 0.78rem;letter-spacing:0.08em;color:var(--bone); }
-  .pm-coven { font-family:var(--ff-body);font-style:italic;font-size: 0.8rem;color:var(--gold);margin-top:0.15rem; }
-  .pm-close { font-size: 0.78rem;color:var(--text-secondary);background:none;border:none;cursor:pointer;padding:0.2rem 0.5rem; }
-  .pm-section { margin-bottom:1rem; }
-  .pm-section-title { font-family:var(--ff-heading);font-size: 0.64rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-secondary);border-bottom:1px solid var(--border);padding-bottom:0.3rem;margin-bottom:0.6rem; }
-  .pm-acolyte { display:flex;gap:0.6rem;align-items:center;border:1px solid var(--border);padding:0.6rem;margin-bottom:0.4rem;background:rgba(255,255,255,0.01); }
-  .pm-acolyte-available { border-color:rgba(45,122,95,0.4);background:rgba(45,122,95,0.04); }
-  .pm-acolyte-avatar { font-size: 0.94rem;width:32px;text-align:center;flex-shrink:0; }
-  .pm-acolyte-info { flex:1; }
-  .pm-acolyte-name { font-family:var(--ff-heading);font-size: 0.79rem;letter-spacing:0.06em;color:var(--bone); }
-  .pm-acolyte-class { font-family:var(--ff-body);font-style:italic;1.06rem;color:var(--gold); }
-  .pm-acolyte-badge { font-family:var(--ff-heading);font-size: 0.49rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.2rem 0.4rem;border:1px solid var(--viridian-bright);color:var(--viridian-bright); }
-  .pm-res-row { display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.6rem; }
-  .pm-res-pill { font-family:var(--ff-heading);font-size: 0.61rem;letter-spacing:0.06em;padding:0.2rem 0.5rem;border:1px solid var(--border);color:var(--text-secondary); }
-  .pm-action-row { display:flex;gap:0.5rem;margin-top:0.8rem; }
-  .pm-btn { flex:1;font-family:var(--ff-heading);font-size: 0.67rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.6rem;border:1px solid var(--border);background:transparent;color:var(--text-primary);cursor:pointer;transition:all 0.2s; }
-  .pm-btn.primary { border-color:var(--gold-dim);color:var(--gold); }
-  .pm-btn.primary:active { background:rgba(201,168,76,0.1); }
-  .pm-btn:active { background:rgba(255,255,255,0.04); }
-
-  /* EXCHANGE MODAL */
-
-  /* Incoming exchange popup */
-  #incoming-exchange-modal { position:fixed;inset:0;z-index:900;background:rgba(5,4,7,0.85);display:none;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(4px); }
-  #incoming-exchange-modal.open { display:flex; }
-  .incoming-modal-inner { background:var(--abyss);border:1px solid var(--gold-dim);width:100%;max-width:380px;padding:1.6rem 1.4rem;animation:slide-up 0.35s cubic-bezier(0.16,1,0.3,1);position:relative; }
-  .incoming-modal-sigil { font-size: 1.25rem;text-align:center;margin-bottom:0.5rem;animation:pulse-sigil 3s ease-in-out infinite; }
-  .incoming-modal-title { font-family:var(--ff-heading);font-size: 0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);text-align:center;margin-bottom:0.2rem; }
-  .incoming-modal-from { font-family:var(--ff-title);font-size: 1.09rem;color:var(--bone);text-align:center;margin-bottom:0.1rem; }
-  .incoming-modal-coven { font-family:var(--ff-body);font-style:italic;1.23rem;color:var(--text-secondary);text-align:center;margin-bottom:1.2rem; }
-  .incoming-modal-divider { border:none;border-top:1px solid var(--border);margin:0.8rem 0; }
-  .incoming-modal-row { display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.5rem; }
-  .incoming-modal-label { font-family:var(--ff-heading);font-size: 0.61rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary); }
-  .incoming-modal-value { font-family:var(--ff-body);font-style:italic;font-size: 0.9rem;color:var(--bone); }
-  .incoming-modal-actions { display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-top:1.2rem; }
-  .incoming-modal-btn { font-family:var(--ff-heading);font-size: 0.77rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.9rem;border:none;cursor:pointer;transition:all 0.2s; }
-  .incoming-modal-btn.accept { background:rgba(45,122,95,0.15);border:1px solid var(--viridian-bright);color:var(--viridian-bright); }
-  .incoming-modal-btn.accept:active { background:rgba(45,122,95,0.35); }
-  .incoming-modal-btn.decline { background:rgba(196,48,48,0.1);border:1px solid var(--crimson-bright);color:var(--crimson-bright); }
-  .incoming-modal-btn.decline:active { background:rgba(196,48,48,0.25); }
-  .incoming-modal-timer { font-family:var(--ff-heading);font-size: 0.54rem;letter-spacing:0.08em;color:var(--text-secondary);text-align:center;margin-top:0.8rem; }
-  /* DM Story Event popup */
-  #dm-event-modal { position:fixed;inset:0;z-index:950;background:rgba(5,4,7,0.88);display:none;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(4px); }
-  #dm-event-modal.open { display:flex; }
-  .dm-event-inner { background:var(--abyss);border:1px solid var(--border-bright);width:100%;max-width:390px;padding:1.8rem 1.5rem 1.4rem;animation:slide-up 0.35s cubic-bezier(0.16,1,0.3,1);position:relative; }
-  .dm-event-sigil { font-size: 1.09rem;text-align:center;margin-bottom:0.4rem; }
-  .dm-event-type { font-family:var(--ff-heading);font-size: 0.54rem;letter-spacing:0.25em;text-transform:uppercase;text-align:center;margin-bottom:0.6rem; }
-  .dm-event-type.urgent    { color:var(--crimson-bright); }
-  .dm-event-type.story     { color:var(--indigo-bright); }
-  .dm-event-type.discovery { color:var(--viridian-bright); }
-  .dm-event-type.neutral   { color:var(--text-secondary); }
-  .dm-event-title { font-family:var(--ff-heading);font-size: 0.9rem;color:var(--gold);text-align:center;margin-bottom:1rem;letter-spacing:0.04em; }
-  .dm-event-body  { font-family:var(--ff-body);font-style:italic;font-size: 0.88rem;color:var(--pale);line-height:1.75;margin-bottom:1.2rem;text-align:center; }
-  .dm-event-actions { display:flex;gap:0.6rem; }
-  .dm-event-btn { flex:1;font-family:var(--ff-heading);font-size: 0.7rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.75rem;border:1px solid var(--border-bright);background:transparent;color:var(--gold);cursor:pointer;transition:all 0.2s; }
-  .dm-event-btn:active { background:rgba(201,168,76,0.1); }
-  .dm-event-btn.primary { border-color:var(--gold-dim);color:var(--gold); }
-
-  /* DM Broadcast banner */
-  #dm-broadcast-banner { position:fixed;top:0;left:0;right:0;z-index:960;background:rgba(61,61,170,0.95);border-bottom:1px solid var(--indigo-bright);padding:0.9rem 1.4rem;display:none;align-items:center;gap:1rem;backdrop-filter:blur(4px); }
-  #dm-broadcast-banner.show { display:flex;animation:slide-down 0.4s cubic-bezier(0.16,1,0.3,1); }
-  @keyframes slide-down { from { transform:translateY(-100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
-  .broadcast-icon { font-size: 0.86rem;flex-shrink:0; }
-  .broadcast-text { font-family:var(--ff-body);font-style:italic;font-size: 0.9rem;color:var(--ghost);flex:1;line-height:1.5; }
-  .broadcast-dismiss { font-family:var(--ff-heading);font-size: 0.61rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--indigo-bright);background:transparent;border:1px solid var(--indigo-bright);padding:0.4rem 0.8rem;cursor:pointer;flex-shrink:0; }
-  .broadcast-dismiss:active { background:rgba(61,61,170,0.3); }
-  #exchange-modal { position:fixed;inset:0;z-index:700;background:rgba(5,4,7,0.97);display:none;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem; }
-  #exchange-modal.open { display:flex; }
-  .exchange-title { font-family:var(--ff-title);font-size: 1.25rem;color:var(--gold);letter-spacing:2px;margin-bottom:0.3rem;text-align:center; }
-  .exchange-sub { font-family:var(--ff-heading);font-size: 0.61rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:1.5rem;text-align:center; }
-  .exchange-cols { display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;width:100%;max-width:380px;margin-bottom:1rem; }
-  .exchange-col { border:1px solid var(--border);padding:0.8rem; }
-  .exchange-col-title { font-family:var(--ff-heading);font-size: 0.64rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.6rem; }
-  .exchange-res-row { display:flex;align-items:center;gap:0.4rem;margin-bottom:0.4rem; }
-  .exchange-res-label { font-family:var(--ff-heading);font-size: 0.7rem;color:var(--bone);flex:1; }
-  .exchange-input { width:60px;background:var(--void);border:1px solid var(--border);color:var(--bone);font-family:var(--ff-heading);font-size: 0.77rem;padding:0.3rem 0.4rem;text-align:right;outline:none; }
-  .exchange-submit { font-family:var(--ff-heading);font-size: 0.77rem;letter-spacing:0.15em;text-transform:uppercase;padding:0.8rem 2rem;border:1px solid var(--gold-dim);background:transparent;color:var(--gold);cursor:pointer;margin-bottom:0.5rem; }
-  .exchange-cancel { font-family:var(--ff-heading);font-size: 0.61rem;letter-spacing:0.12em;text-transform:uppercase;background:none;border:none;color:var(--text-secondary);cursor:pointer;padding:0.4rem; }
-
-  /* INCOMING EXCHANGE NOTIFICATION */
-  .exchange-toast { background:var(--shadow);border:1px solid var(--gold-dim);padding:0.9rem 1rem;margin-bottom:0.5rem;font-family:var(--ff-body);font-style:italic;font-size: 0.82rem;color:var(--bone);display:flex;flex-direction:column;gap:0.5rem;animation:toast-in 0.3s ease; }
-  .exchange-toast-title { font-family:var(--ff-heading);font-size: 0.77rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold); }
-  .exchange-toast-btns { display:flex;gap:0.5rem; }
-  .exchange-toast-btn { font-family:var(--ff-heading);font-size: 0.61rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.35rem 0.8rem;border:1px solid var(--border);background:transparent;color:var(--text-primary);cursor:pointer; }
-  .exchange-toast-btn.accept { border-color:var(--viridian-bright);color:var(--viridian-bright); }
-  .exchange-toast-btn.decline { border-color:var(--crimson-bright);color:var(--crimson-bright); }
-
-  /* NEARBY PLAYER MARKER */
-  .llair-player-other {
-    width:32px;height:32px;background:rgba(100,60,200,0.95);
-    border:2px solid #c4a0ff;border-radius:4px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:15px;color:#fff;cursor:pointer;
-    box-shadow:0 0 0 5px rgba(123,79,207,0.3),0 0 22px rgba(123,79,207,0.9);
-    animation:pulse-ring 2s ease-in-out infinite;
-  }
-
-  /* ══════════════════════════════════════
-     SCRIPTORIUM MODAL
-  ══════════════════════════════════════ */
-  #scriptorium-modal {
-    position: fixed; inset: 0; z-index: 450;
-    background: var(--bg, var(--void));
-    display: none; flex-direction: column;
-    max-width: 430px; margin: 0 auto;
-    overflow: hidden;
-  }
-  #scriptorium-modal.open { display: flex; }
-
-  .scriptorium-top {
-    flex-shrink: 0;
-    border-bottom: 1px solid var(--border);
-    padding: 0.8rem 1rem 0.7rem;
-  }
-  .scrip-back {
-    font-family: var(--ff-heading); 0.63rem;
-    letter-spacing: 0.15em; text-transform: uppercase;
-    color: var(--text-secondary); background: none; border: none;
-    cursor: pointer; padding: 0; margin-bottom: 0.5rem; display: block;
-    transition: color 0.12s;
-  }
-  .scrip-back:active { color: var(--text-primary); }
-  .scrip-title {
-    font-family: var(--ff-title); font-size: 1.41rem;
-    color: var(--text-accent); letter-spacing: 1px; line-height: 1;
-    margin-bottom: 0.15rem;
-  }
-  .scrip-subtitle {
-    font-family: var(--ff-heading); 0.63rem;
-    letter-spacing: 0.2em; text-transform: uppercase;
-    color: var(--text-secondary);
-  }
-  .scrip-tabs {
-    flex-shrink: 0; display: flex;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg, var(--void));
-  }
-  .scrip-tab {
-    flex: 1; padding: 0.65rem 0.3rem;
-    font-family: var(--ff-heading); 0.63rem;
-    letter-spacing: 0.15em; text-transform: uppercase;
-    color: var(--text-secondary); background: none;
-    border: none; border-bottom: 1px solid transparent;
-    cursor: pointer; transition: color 0.12s;
-  }
-  .scrip-tab.active { color: var(--text-accent); border-bottom-color: var(--text-accent); }
-  .scrip-section { display: none; flex: 1; overflow-y: auto; }
-  .scrip-section.active { display: block; }
-  .scrip-sep {
-    font-family: var(--ff-heading); 0.56rem;
-    letter-spacing: 0.28em; text-transform: uppercase;
-    color: var(--text-secondary); padding: 0.9rem 1rem 0.4rem;
-    display: flex; align-items: center; gap: 0.6rem;
-  }
-  .scrip-sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-  /* Active research bar */
-  .scrip-active-card {
-    margin: 0.8rem 1rem;
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--viridian-bright);
-    padding: 0.8rem;
-  }
-  .scrip-active-name {
-    font-family: var(--ff-heading); 1.11rem;
-    letter-spacing: 0.05em; color: var(--text-primary);
-    margin-bottom: 0.4rem;
-  }
-  .scrip-progress-track {
-    height: 3px; background: var(--border); margin-bottom: 0.6rem;
-  }
-  .scrip-progress-fill {
-    height: 100%; background: var(--viridian-bright); transition: width 0.4s ease;
-  }
-  .scrip-active-btns { display: flex; gap: 0.5rem; }
-  .scrip-btn {
-    font-family: var(--ff-heading); 0.63rem;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    padding: 0.45rem 0.8rem; border: 1px solid var(--border);
-    background: none; color: var(--text-secondary); cursor: pointer;
-    transition: border-color 0.12s, color 0.12s;
-  }
-  .scrip-btn.primary { border-color: var(--viridian-bright); color: var(--viridian-bright); }
-  .scrip-btn:active { opacity: 0.65; }
-
-  /* Available skill row */
-  .scrip-skill-row {
-    border-top: 1px solid var(--border);
-    padding: 0.75rem 1rem;
-    display: flex; align-items: flex-start; gap: 0.7rem;
-  }
-  .scrip-skill-body { flex: 1; }
-  .scrip-skill-name {
-    font-family: var(--ff-heading); 1.06rem;
-    letter-spacing: 0.04em; color: var(--text-primary);
-    margin-bottom: 0.1rem;
-  }
-  .scrip-skill-meta {
-    font-family: var(--ff-heading); 0.52rem;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--text-secondary); margin-bottom: 0.2rem;
-  }
-  .scrip-skill-desc {
-    font-family: var(--ff-body); font-style: italic;
-    font-size: 0.96rem; color: var(--text-secondary); line-height: 1.55;
-  }
-  .scrip-research-btn {
-    font-family: var(--ff-heading); 0.58rem;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    padding: 0.35rem 0.6rem; border: 1px solid var(--border);
-    background: none; color: var(--text-secondary); cursor: pointer;
-    flex-shrink: 0; transition: border-color 0.12s, color 0.12s;
-    margin-top: 0.1rem;
-  }
-  .scrip-research-btn:active { border-color: var(--viridian-bright); color: var(--viridian-bright); }
-
-  /* Mastered skill row */
-  .scrip-mastered-row {
-    border-top: 1px solid var(--border);
-    padding: 0.65rem 1rem;
-    display: flex; align-items: center; gap: 0.6rem;
-  }
-  .scrip-mastered-glyph {
-    font-family: var(--ff-heading); 1.15rem;
-    color: var(--viridian-bright); flex-shrink: 0;
-  }
-  .scrip-mastered-body { flex: 1; }
-  .scrip-mastered-name {
-    font-family: var(--ff-heading); 0.99rem;
-    letter-spacing: 0.04em; color: var(--text-primary);
-  }
-  .scrip-mastered-desc {
-    font-family: var(--ff-body); font-style: italic;
-    font-size: 0.92rem; color: var(--text-secondary); line-height: 1.5;
-  }
-
-
-  /* AVAILABLE ACOLYTE TOGGLE */
-  .acolyte-avail-toggle { font-family:var(--ff-heading);font-size: 0.51rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.2rem 0.5rem;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;transition:all 0.2s;margin-top:0.3rem; }
-  .acolyte-avail-toggle.active { border-color:var(--viridian-bright);color:var(--viridian-bright);background:rgba(45,122,95,0.08); }
-</style>
-<style>
-  /* ═══════════════════════════════════════════════════
-     HOLISTIC VISUAL OVERHAUL — v0.7.39
-     Principles: editorial, handcrafted, ruled-paper feel
-     No glowing widgets; type and line as primary language
-  ═══════════════════════════════════════════════════ */
-
-  /* — TRANSITIONS for theme switch — */
-  *, *::before, *::after { transition-property: background-color, border-color, color, opacity; transition-duration: 0.25s; transition-timing-function: ease; }
-  /* Override for things that need specific transitions */
-  .char-xp-fill, .aether-fill, .stress-fill, .cc-bar-fill, .research-fill { transition: width 1s ease !important; }
-  .lp-tooltip { transition: bottom 0.3s cubic-bezier(0.16,1,0.3,1) !important; }
-  .journal-entry { transition: none !important; }
-
-  /* — BASE TYPE SCALE — */
-  html { font-size: 16px; }
-
-  /* — TOPBAR — more like a chapter header — */
-  #topbar {
-    padding: 0.6rem 1rem 0.5rem;
-    border-bottom: 1px solid var(--border);
-  }
-  .topbar-title {
-    font-family: var(--ff-title);
-    font-size: 1.05rem;
-    letter-spacing: 1px;
-    color: var(--gold);
-  }
-  .topbar-location {
-    font-size: 0.58rem;
-    letter-spacing: 0.1em;
-  }
-  .location-dot {
-    width: 4px; height: 4px;
-    background: var(--viridian-bright);
-  }
-
-  /* — RESOURCE BAR — alchemical ledger style — */
-  #resources {
-    background: transparent;
-    border-bottom: 1px solid var(--border);
-    padding: 0;
-  }
-  .resources-inner {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0;
-    padding: 0;
-  }
-  .resource-pill {
-    border-radius: 0;
-    border-right: 1px solid var(--border);
-    border-left: none;
-    border-bottom: none;
-    border-top: 2px solid var(--res-color, var(--gold));
-    padding: 0.38rem 0.3rem 0.3rem;
-    min-width: 0;
-  }
-  .resource-pill:last-child { border-right: none; }
-  .resource-pill.dominant {
-    background: rgba(var(--res-rgb, 201,168,76), 0.04);
-  }
-  .res-symbol { font-size: 0.88rem; opacity: 0.85; }
-  .res-name   { display: none; }
-  .res-value  { font-size: 0.82rem; font-weight: 600; }
-  .res-rate   { font-size: 0.48rem; opacity: 0.55; }
-
-  /* — TABS — minimal, like a notebook index — */
-  #tabs {
-    border-bottom: 1px solid var(--border);
-    background: var(--void);
-  }
-  .tab {
-    padding: 0.55rem 0.1rem;
-    gap: 0.15rem;
-    border-bottom: 2px solid transparent;
-    transition: color 0.15s, border-color 0.15s, background 0.15s !important;
-  }
-  .tab.active {
-    background: transparent;
-    border-bottom-color: var(--gold);
-  }
-  .tab-icon {
-    font-size: 0.95rem;
-    opacity: 0.85;
-    font-family: serif;
-  }
-  .tab-label {
-    font-size: 0.42rem;
-    letter-spacing: 0.16em;
-  }
-
-  /* — SECTION LABELS — ruled line with word in gap — */
-  .section-label {
-    font-size: 0.61rem;
-    letter-spacing: 0.22em;
-    color: var(--text-secondary);
-    margin-bottom: 0.7rem;
-    padding-bottom: 0.35rem;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  /* — JOURNAL ENTRIES — field notes feel — */
-  .journal-entry {
-    border-left: 1px solid var(--border);
-    padding: 0.7rem 0.85rem;
-    margin-bottom: 0.75rem;
-    background: transparent;
-  }
-  .journal-entry.urgent { border-left-color: var(--crimson-bright); }
-  .journal-entry.discovery { border-left-color: var(--indigo-bright); }
-  .entry-title {
-    font-size: 0.83rem;
-    letter-spacing: 0.07em;
-    color: var(--gold);
-  }
-  .entry-time { 0.95rem; }
-  .entry-body { font-size: 0.84rem; line-height: 1.7; }
-
-  /* — MISSION CARDS — dispatch memo look — */
-  .mission-card {
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--mission-color, var(--gold));
-    padding: 0.8rem 0.85rem;
-    margin-bottom: 0.55rem;
-    background: transparent;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-  }
-  .mission-card::before { display: none; }
-  .mission-card:active { background: rgba(201,168,76,0.02); }
-  .mission-title { 1.11rem; letter-spacing: 0.05em; }
-  .mission-badge {
-    font-size: 0.49rem;
-    letter-spacing: 0.1em;
-    padding: 0.15rem 0.4rem;
-    border: 1px solid currentColor;
-  }
-  .mission-desc { 1.24rem; line-height: 1.55; }
-  .mission-meta { 0.72rem; letter-spacing: 0.07em; }
-
-  /* — PLANET HOUR WIDGET — observatory log — */
-  .planet-hour-widget {
-    border: none;
-    border-bottom: 1px solid var(--border);
-    padding: 0.8rem 0;
-    margin-bottom: 0.9rem;
-    background: transparent;
-  }
-  .planet-hour-widget::before { display: none; }
-  .ph-title { 0.82rem; letter-spacing: 0.18em; }
-  .ph-planet { font-size: 0.78rem; }
-  .ph-segment { width: 14px; height: 4px; }
-  .ph-bonus { 0.72rem; letter-spacing: 0.07em; padding: 0.2rem 0.45rem; }
-
-  /* — CHARACTER PANEL — ledger entry — */
-  .char-header {
-    padding-bottom: 0.9rem;
-    margin-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
-    gap: 0.9rem;
-  }
-  .char-avatar {
-    width: 62px; height: 62px;
-    font-size: 1.17rem;
-    border: 1px solid var(--border);
-    color: var(--gold);
-  }
-  .char-avatar::after { inset: 2px; border: 1px solid var(--border); }
-  .char-name { font-size: 0.95rem; letter-spacing: 0.07em; }
-  .char-class { 1.22rem; }
-  .char-xp-bar { height: 2px; margin-bottom: 0.35rem; }
-  .char-xp-label { 0.69rem; letter-spacing: 0.1em; }
-
-  /* — STAT BLOCKS — field report table — */
-  .stat-block {
-    border: 1px solid var(--border);
-    padding: 0.55rem;
-    background: transparent;
-    border-radius: 0;
-  }
-  .stat-block::before { height: 1px; }
-  .stat-element { 0.65rem; letter-spacing: 0.12em; margin-bottom: 0.35rem; }
-  .stat-name { 1.11rem; }
-  .stat-val { 1.08rem; }
-  .aether-bar { height: 4px; margin-top: 0.4rem; }
-
-  /* — ACOLYTE CARDS — compact roster entry — */
-  .acolyte-card { margin-bottom: 0.3rem; }
-  .acolyte-name { 1.06rem; letter-spacing: 0.05em; }
-  .acolyte-class { 1.05rem; }
-  .stress-bar { height: 2px; }
-  .state-tag { 0.59rem; letter-spacing: 0.07em; padding: 0.12rem 0.35rem; }
-
-  /* — BUILDING CARDS — blueprint tiles — */
-  .building-card {
-    border: 1px solid var(--border);
-    padding: 0.75rem 0.65rem;
-    background: transparent;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.2s, background 0.2s !important;
-  }
-  .building-card:not(.locked):active { border-color: var(--gold); background: rgba(201,168,76,0.03); }
-  .building-icon { font-size: 0.78rem; margin-bottom: 0.3rem; opacity: 0.55; }
-  .building-name { 0.95rem; letter-spacing: 0.05em; }
-  .building-desc { 0.99rem; line-height: 1.45; }
-  .building-level { 0.65rem; letter-spacing: 0.1em; top: 0.45rem; right: 0.45rem; }
-
-  /* — TAROT CARDS — illustrated deck feel, geometric backs — */
-  .tarot-spread-area {
-    border: 1px solid var(--border);
-    padding: 1.2rem 0.9rem 1rem;
-    margin-bottom: 0.9rem;
-    background: transparent;
-    position: relative;
-    overflow: hidden;
-  }
-  .tarot-spread-area::before { display: none; }
-  .spread-title { 0.88rem; letter-spacing: 0.18em; margin-bottom: 1rem; }
-  .tarot-card {
-    width: 58px; height: 90px;
-    border: 1px solid var(--border-bright);
-    background: var(--deep);
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    transition: box-shadow 0.2s, border-color 0.2s !important;
-  }
-  .tarot-card.revealed { border-color: var(--gold); }
-  .tarot-card::before { inset: 4px; border: 1px solid rgba(201,168,76,0.07); }
-  /* Geometric card back — lattice pattern via SVG background */
-  .tarot-card.face-down {
-    background-image: repeating-linear-gradient(
-      45deg,
-      rgba(201,168,76,0.04) 0px, rgba(201,168,76,0.04) 1px,
-      transparent 1px, transparent 8px
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      rgba(201,168,76,0.04) 0px, rgba(201,168,76,0.04) 1px,
-      transparent 1px, transparent 8px
-    );
-  }
-  .tarot-card.face-down::after { content: '✦'; font-size: 1.17rem; color: var(--gold-dim); opacity: 0.35; }
-  .tarot-card-symbol { font-size: 1.02rem; opacity: 0.8; font-family: serif; }
-  .tarot-card-name { 0.49rem; letter-spacing: 0.08em; color: var(--gold); padding: 0 0.2rem; line-height: 1.3; text-align: center; }
-  .tarot-card-num { 0.69rem; color: var(--text-secondary); }
-  .effect-tag { padding: 0.35rem; border: 1px solid var(--border); background: transparent; }
-  .effect-name { 0.65rem; letter-spacing: 0.1em; }
-  .effect-val { 1.06rem; font-weight: 600; }
-
-  /* — BUTTONS — austere, typographic — */
-  .btn-primary {
-    font-size: 0.9rem;
-    letter-spacing: 0.2em;
-    padding: 1rem 2.5rem;
-    border: 1px solid var(--gold-dim);
-    background: transparent;
-    color: var(--gold);
-    cursor: pointer;
-    position: relative;
-    min-width: 190px;
-    transition: background 0.2s, border-color 0.2s !important;
-  }
-  .btn-primary::before { display: none; }
-  .btn-primary:active { background: rgba(201,168,76,0.1); border-color: var(--gold); }
-  .btn-action {
-    font-size: 0.67rem;
-    letter-spacing: 0.1em;
-    padding: 0.42rem 0.85rem;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s, color 0.15s !important;
-  }
-  .btn-action:active { background: rgba(201,168,76,0.08); border-color: var(--gold); color: var(--gold); }
-  .btn-action.primary { border-color: var(--gold-dim); color: var(--gold); }
-  .btn-action.danger { border-color: rgba(139,26,26,0.4); color: var(--crimson-bright); }
-
-  /* — TOASTS — dispatch note — */
-  .toast {
-    background: var(--deep);
-    border: 1px solid var(--border-bright);
-    padding: 0.65rem 0.9rem;
-    font-size: 0.78rem;
-    line-height: 1.5;
-    border-left: 3px solid var(--gold);
-  }
-  .toast-icon { font-size: 0.85rem; }
-
-  /* — MODALS — parchment overlays — */
-  .dm-event-inner {
-    background: var(--abyss);
-    border: 1px solid var(--border-bright);
-    padding: 1.6rem 1.3rem 1.2rem;
-  }
-  .dm-event-sigil { font-size: 0.94rem; margin-bottom: 0.35rem; }
-  .dm-event-type { 0.65rem; letter-spacing: 0.28em; margin-bottom: 0.5rem; }
-  .dm-event-title { font-size: 0.85rem; margin-bottom: 0.85rem; letter-spacing: 0.04em; }
-  .dm-event-body { font-size: 0.84rem; line-height: 1.7; margin-bottom: 1rem; }
-  .dm-event-btn {
-    font-size: 0.67rem; letter-spacing: 0.1em;
-    padding: 0.7rem;
-    border: 1px solid var(--border-bright);
-    background: transparent; color: var(--gold); cursor: pointer;
-    transition: background 0.15s !important;
-  }
-  .dm-event-btn:active { background: rgba(201,168,76,0.1); }
-
-  /* — SAVE MODAL — archive room — */
-  .save-modal-title { font-size: 1.33rem; letter-spacing: 2px; }
-  .save-modal-sub { 0.78rem; letter-spacing: 0.2em; }
-  .save-section {
-    border: 1px solid var(--border);
-    padding: 0.9rem;
-    margin-bottom: 0.7rem;
-    background: transparent;
-  }
-  .save-section-title { 0.86rem; letter-spacing: 0.14em; }
-  .save-btn {
-    font-size: 0.67rem;
-    letter-spacing: 0.12em;
-    padding: 0.65rem;
-    border: 1px solid var(--border);
-    background: transparent; color: var(--text-primary);
-    cursor: pointer;
-    transition: background 0.15s !important;
-  }
-  .save-btn.primary { border-color: var(--gold-dim); color: var(--gold); }
-  .save-btn.primary:active { background: rgba(201,168,76,0.1); }
-  .save-btn:active { background: rgba(255,255,255,0.04); }
-
-  /* — IDENTITY MODAL — initiation form — */
-  .identity-title { font-size: 1.45rem; letter-spacing: 2px; }
-  .identity-sub { 0.78rem; letter-spacing: 0.2em; margin-bottom: 1.8rem; }
-  .identity-label { 0.76rem; letter-spacing: 0.14em; }
-  .identity-input {
-    background: transparent;
-    border: 1px solid var(--border);
-    border-bottom: 2px solid var(--gold-dim);
-    color: var(--bone);
-    font-family: var(--ff-heading);
-    font-size: 0.78rem;
-    padding: 0.7rem;
-    outline: none;
-  }
-  .identity-input:focus { border-bottom-color: var(--gold); }
-  .identity-btn {
-    font-size: 0.84rem; letter-spacing: 0.2em;
-    padding: 0.85rem 2.3rem;
-    border: 1px solid var(--gold-dim);
-    background: transparent; color: var(--gold);
-    cursor: pointer; margin-top: 1rem;
-    transition: background 0.2s !important;
-  }
-  .identity-btn:active { background: rgba(201,168,76,0.1); }
-
-  /* — FORGE MODAL — workshop ledger — */
-  .forge-top { background: transparent; border-bottom: 1px solid var(--border); padding: 0.9rem 1rem; }
-  .forge-title { font-size: 1.41rem; letter-spacing: 2px; }
-  .forge-subtitle { 0.78rem; letter-spacing: 0.2em; }
-  .forge-tab {
-    font-size: 0.49rem; letter-spacing: 0.09em;
-    padding: 0.6rem 0.15rem;
-    background: transparent; border: none; cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: color 0.15s, border-color 0.15s !important;
-  }
-  .forge-tab.active { color: var(--amber-bright); border-bottom-color: var(--amber-bright); }
-  .recipe-card { border: 1px solid var(--border); border-left: 3px solid var(--recipe-color, var(--amber-bright)); padding: 0.85rem; margin-bottom: 0.65rem; background: transparent; position: relative; overflow: hidden; }
-  .recipe-card::before { display: none; }
-  .recipe-name { 1.08rem; }
-  .recipe-desc { 1.22rem; }
-  .recipe-craft-btn { 0.86rem; letter-spacing: 0.1em; padding: 0.45rem 1.1rem; border: 1px solid var(--amber-bright); background: transparent; color: var(--amber-bright); cursor: pointer; }
-  .recipe-craft-btn:active { background: rgba(212,137,10,0.12); }
-
-  /* — CODEX — reference compendium — */
-  .codex-cat {
-    font-size: 0.58rem; letter-spacing: 0.1em;
-    padding: 0.28rem 0.65rem;
-    border: 1px solid var(--border);
-    background: transparent; color: var(--text-secondary);
-    cursor: pointer;
-    transition: border-color 0.15s, color 0.15s, background 0.15s !important;
-  }
-  .codex-cat.active { border-color: var(--gold-dim); color: var(--gold); background: rgba(201,168,76,0.04); }
-  .codex-entry { border: 1px solid var(--border); padding: 0.75rem 0.85rem; margin-bottom: 0.45rem; background: transparent; }
-  .codex-entry-symbol { font-size: 0.86rem; width: 26px; opacity: 0.7; }
-  .codex-entry-name { 1.05rem; }
-  .codex-entry-cat { 0.65rem; }
-  .codex-entry-preview { 1.22rem; }
-  .codex-modal-term { font-size: 0.78rem; }
-  .codex-modal-symbol { font-size: 1.72rem; }
-  .codex-modal-body { font-size: 0.86rem; line-height: 1.75; }
-
-  /* — COMBAT — field operations — */
-  #combat-title { font-size: 1.17rem; }
-  #combat-phase-bar { 0.65rem; letter-spacing: 0.2em; }
-  .cc-name { 0.99rem; }
-  .cc-bar-lbl { 0.46rem; }
-  .cc-bar-val { 0.49rem; }
-  .cc-statline { 0.54rem; }
-  .skill-btn { 0.76rem; letter-spacing: 0.07em; padding: 0.5rem 0.35rem; }
-  .skill-btn-name { 0.78rem; }
-  .skill-btn-sub { 0.54rem; }
-  .skill-btn-cost { 0.49rem; }
-  .log-line { 1.24rem; }
-  .combat-pass-btn, .combat-retreat-btn { 0.65rem; letter-spacing: 0.12em; padding: 0.55rem; }
-
-  /* — INCOMING EXCHANGE — */
-  .incoming-modal-inner { background: var(--abyss); border: 1px solid var(--gold-dim); }
-  .incoming-modal-title { 0.86rem; letter-spacing: 0.2em; }
-  .incoming-modal-from { font-size: 1.02rem; }
-  .incoming-modal-coven { 1.18rem; }
-  .incoming-modal-label { 0.76rem; }
-  .incoming-modal-value { font-size: 0.86rem; }
-  .incoming-modal-btn { 0.95rem; letter-spacing: 0.1em; padding: 0.85rem; }
-
-  /* — BROADCAST BANNER — */
-  #dm-broadcast-banner {
-    background: var(--shadow);
-    border-bottom: 1px solid var(--indigo-bright);
-    border-top: 2px solid var(--indigo-bright);
-  }
-  .broadcast-icon { font-size: 0.9rem; }
-  .broadcast-text { font-size: 0.86rem; line-height: 1.5; }
-  .broadcast-dismiss { 0.76rem; letter-spacing: 0.1em; }
-
-  /* — LONG-PRESS TOOLTIP — */
-  .lp-tooltip { background: var(--deep); border: 1px solid var(--border-bright); padding: 0.9rem 1rem 0.8rem; }
-  .lp-tooltip-term { 1.18rem; letter-spacing: 0.1em; }
-  .lp-tooltip-body { font-size: 0.84rem; line-height: 1.7; }
-  .lp-tooltip-more { 0.78rem; letter-spacing: 0.15em; }
-
-  /* — SPLASH — keep dramatic, but with a subtle lattice background — */
-  #splash {
-    background-image: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 39px,
-      rgba(201,168,76,0.03) 39px,
-      rgba(201,168,76,0.03) 40px
-    );
-  }
-  :root.light #splash {
-    background-image: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 39px,
-      rgba(120,85,24,0.04) 39px,
-      rgba(120,85,24,0.04) 40px
-    );
-  }
-  .splash-sigil { width: 100px; height: 100px; margin-bottom: 1.5rem; }
-  .splash-title { font-size: 2.5rem; }
-  .splash-subtitle { font-size: 0.55rem; letter-spacing: 0.32em; margin-bottom: 2.5rem; }
-  .splash-text { font-size: 0.78rem; line-height: 1.8; margin-bottom: 2.5rem; }
-  .splash-warning { font-size: 0.43rem; }
-
-  /* — LIGHT THEME SPECIFIC OVERRIDES — */
-  :root.light .leaflet-tile {
-    filter: sepia(0.4) hue-rotate(15deg) brightness(0.82) saturate(0.7) !important;
-  }
-  :root.light .leaflet-popup-content-wrapper {
-    background: var(--deep) !important;
-    color: var(--bone) !important;
-    border-color: var(--border-bright) !important;
-  }
-  :root.light .leaflet-popup-tip { background: var(--deep) !important; }
-  :root.light #tabs, :root.light #topbar { background: var(--void); }
-  :root.light .tab.active { background: transparent; }
-  :root.light .building-card { background: transparent; }
-  :root.light .stat-block { background: transparent; }
-  :root.light .acolyte-card { background: transparent; }
-  :root.light .mission-card { background: transparent; }
-  :root.light .journal-entry { background: transparent; }
-  :root.light .research-item { background: transparent; }
-  :root.light .recipe-card { background: transparent; }
-  :root.light .codex-entry { background: transparent; }
-  :root.light .tarot-card { background: var(--deep); }
-  :root.light .toast { background: var(--deep); }
-
-  /* — RESEARCH ITEMS — */
-  .research-item { border: 1px solid var(--border); border-left: 3px solid var(--gold-dim); padding: 0.85rem; margin-bottom: 0.55rem; background: transparent; cursor: pointer; }
-  .research-name { 1.08rem; }
-  .research-desc { 1.22rem; }
-  .research-progress { height: 1px; background: var(--border); margin-bottom: 0.4rem; }
-  .research-fill { background: var(--gold-dim); }
-  .research-meta { 0.69rem; }
-
-  /* — NEARBY PLAYER MARKER — less lurid glow — */
-  .llair-player-other {
-    background: rgba(80,50,160,0.9);
-    border: 1px solid #b090f0;
-    border-radius: 2px;
-    box-shadow: 0 0 0 4px rgba(100,70,200,0.2), 0 0 12px rgba(100,70,200,0.5);
-  }
-
-  /* — EXCHANGE MODAL — */
-  .exchange-title { font-size: 1.17rem; letter-spacing: 2px; }
-  .exchange-sub { 0.76rem; letter-spacing: 0.15em; }
-  .exchange-col { border: 1px solid var(--border); padding: 0.75rem; background: transparent; }
-  .exchange-col-title { 0.78rem; }
-  .exchange-res-label { 0.86rem; }
-  .exchange-input { background: transparent; 0.95rem; border: 1px solid var(--border); color: var(--bone); padding: 0.28rem 0.38rem; }
-  .exchange-submit { 0.95rem; letter-spacing: 0.14em; padding: 0.75rem 1.8rem; border: 1px solid var(--gold-dim); background: transparent; color: var(--gold); cursor: pointer; }
-  .exchange-submit:active { background: rgba(201,168,76,0.1); }
-  .exchange-cancel { 0.76rem; letter-spacing: 0.12em; color: var(--text-secondary); background: none; border: none; cursor: pointer; padding: 0.4rem; }
-
-  /* — PLAYER MODAL — character sheet — */
-  .player-modal-inner { background: var(--abyss); border: 1px solid var(--border-bright); }
-  .pm-name { font-size: 0.95rem; }
-  .pm-coven { 1.24rem; }
-  .pm-section-title { 0.78rem; letter-spacing: 0.15em; }
-  .pm-acolyte { border: 1px solid var(--border); padding: 0.55rem; background: transparent; }
-  .pm-acolyte-name { 0.99rem; }
-  .pm-acolyte-class { 1.01rem; }
-  .pm-btn { 0.82rem; letter-spacing: 0.1em; padding: 0.55rem; border: 1px solid var(--border); background: transparent; }
-  .pm-btn.primary { border-color: var(--gold-dim); color: var(--gold); }
-  .pm-btn.primary:active { background: rgba(201,168,76,0.1); }
-  .pm-btn:active { background: rgba(255,255,255,0.04); }
-  .pm-res-pill { 0.76rem; letter-spacing: 0.06em; padding: 0.18rem 0.45rem; border: 1px solid var(--border); }
-
-  /* Skill cards in company panel */
-  .char-skill-card {
-    border: 1px solid var(--border);
-    border-left: 2px solid var(--gold-dim);
-    padding: 0.6rem 0.75rem;
-    margin-bottom: 0.45rem;
-    background: transparent;
-  }
-
-  /* Inventory grid */
-  .inv-item { border: 1px solid var(--border); padding: 0.75rem 0.65rem; background: transparent; position: relative; }
-  .inv-item-icon { font-size: 0.78rem; margin-bottom: 0.25rem; opacity: 0.6; }
-  .inv-item-name { 0.93rem; }
-  .inv-item-type { 0.63rem; }
-  .inv-item-effect { 1.01rem; }
-  .inv-item-qty { 0.86rem; top: 0.38rem; right: 0.45rem; }
-
-  /* Acolyte skill-bar */
-  .acolyte-avail-toggle { 0.63rem; letter-spacing: 0.08em; padding: 0.18rem 0.45rem; }
-
-
-  /* Acolyte modals (equip / teach) */
-  .acol-modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 600;
-    background: rgba(5,4,7,0.85);
-    align-items: flex-end;
-    justify-content: center;
-  }
-  .acol-modal.open { display: flex; }
-  .acol-modal-inner {
-    background: var(--bg, var(--abyss));
-    border-top: 1px solid var(--border);
-    width: 100%;
-    max-width: 430px;
-    max-height: 70vh;
-    overflow-y: auto;
-    padding: 1.2rem 1rem 2rem;
-  }
-  .acol-modal-title {
-    font-family: var(--ff-heading);
-    font-size: 0.77rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--text-primary);
-    margin-bottom: 0.9rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border);
-  }
-  .acol-modal-list { margin-bottom: 0.8rem; }
-  .equip-item-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.6rem;
-    padding: 0.65rem 0;
-    border-top: 1px solid var(--border);
-    cursor: pointer;
-    transition: opacity 0.15s;
-  }
-  .equip-item-row:active { opacity: 0.6; }
-  .equip-item-check {
-    font-family: var(--ff-heading);
-    font-size: 0.83rem;
-    color: var(--text-secondary);
-    flex-shrink: 0;
-    margin-top: 0.05rem;
-  }
-  .equip-item-name {
-    font-family: var(--ff-heading);
-    font-size: 0.77rem;
-    letter-spacing: 0.05em;
-    color: var(--text-primary);
-  }
-  .acol-modal-close {
-    font-family: var(--ff-heading);
-    font-size: 0.58rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    padding: 0.65rem 1rem;
-    border: 1px solid var(--border);
-    background: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    width: 100%;
-    margin-top: 0.5rem;
-  }
-
-  
-  /* ── SKILL BUTTON WRAP ── */
-  .skill-btn-wrap {
-    display: flex; align-items: stretch; border-top: 1px solid var(--border);
-  }
-  .skill-btn-wrap .skill-btn {
-    flex: 1; border: none; border-top: none; text-align: left;
-    align-items: flex-start; padding: 0.55rem 0.5rem;
-  }
-  .skill-btn-wrap .skill-btn:first-child { border-top: none; }
-  .skill-info-btn {
-    flex-shrink: 0; width: 2rem;
-    background: none; border: none; border-left: 1px solid var(--border);
-    color: var(--text-secondary); 1.06rem; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: color 0.12s;
-  }
-  .skill-info-btn:active { color: var(--text-primary); }
-
-  /* ── COMBATANT CARD NAME ROW ── */
-  .cc-name-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.3rem; }
-  .cc-inspect-btn {
-    background: none; border: none; color: var(--text-secondary);
-    font-size: 0.77rem; cursor: pointer; padding: 0 0.2rem; line-height: 1;
-    flex-shrink: 0; transition: color 0.12s;
-  }
-  .cc-inspect-btn:active { color: var(--text-primary); }
-
-  /* ── COMBAT OVERLAY (tooltip + inspect) ── */
-  #combat-overlay {
-    display: none; position: fixed; inset: 0; z-index: 500;
-    background: rgba(5,4,7,0.75); align-items: flex-end; justify-content: center;
-  }
-  #combat-overlay.open { display: flex; }
-  .combat-sheet {
-    background: var(--bg, var(--abyss)); border-top: 1px solid var(--border);
-    width: 100%; max-width: 430px; max-height: 72vh; overflow-y: auto;
-    padding: 1.1rem 1rem 2rem;
-  }
-  .csheet-head {
-    display: flex; align-items: baseline; gap: 0.6rem;
-    border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; margin-bottom: 0.8rem;
-  }
-  .csheet-icon { font-family: var(--ff-heading); font-size: 1.02rem; color: var(--text-secondary); }
-  .csheet-name { font-family: var(--ff-heading); 1.23rem; letter-spacing: 0.05em; color: var(--text-primary); flex: 1; }
-  .csheet-type { font-family: var(--ff-heading); 0.52rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-secondary); }
-  .csheet-sep {
-    font-family: var(--ff-heading); 0.52rem; letter-spacing: 0.28em;
-    text-transform: uppercase; color: var(--text-secondary);
-    display: flex; align-items: center; gap: 0.5rem;
-    margin: 0.8rem 0 0.4rem;
-  }
-  .csheet-sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-  .csheet-stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.3rem 0.5rem; margin-bottom: 0.2rem; }
-  .csheet-stat { font-family: var(--ff-heading); 0.63rem; letter-spacing: 0.06em; color: var(--text-secondary); }
-  .csheet-stat span { color: var(--text-primary); display: block; 0.99rem; }
-  .csheet-desc { font-family: var(--ff-body); font-style: italic; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.65; margin-bottom: 0.5rem; }
-  .csheet-tag {
-    display: inline-block; font-family: var(--ff-heading); 0.54rem;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    padding: 0.08rem 0.35rem; border: 1px solid var(--border); margin: 0.1rem 0.15rem 0 0;
-    color: var(--text-secondary);
-  }
-  .csheet-tag.attack { color: var(--crimson-bright); border-color: rgba(196,48,48,0.3); }
-  .csheet-tag.heal   { color: var(--viridian-bright); border-color: rgba(45,122,95,0.3); }
-  .csheet-tag.buff   { color: var(--amber-bright); border-color: rgba(212,137,10,0.3); }
-  .csheet-tag.debuff { color: var(--mist); border-color: rgba(107,92,128,0.3); }
-  .csheet-tag.item   { color: var(--amber-bright); border-color: rgba(212,137,10,0.25); }
-  .csheet-loot { font-family: var(--ff-body); font-size: 0.78rem; color: var(--text-secondary); }
-  .csheet-close {
-    width: 100%; margin-top: 1rem;
-    font-family: var(--ff-heading); 0.65rem; letter-spacing: 0.2em;
-    text-transform: uppercase; padding: 0.65rem;
-    border: 1px solid var(--border); background: none; color: var(--text-secondary); cursor: pointer;
-  }
-
-  /* ── LEVEL-UP MODAL ── */
-  #levelup-modal {
-    display: none; position: fixed; inset: 0; z-index: 600;
-    background: rgba(5,4,7,0.9); align-items: center; justify-content: center;
-    padding: 1rem;
-  }
-  #levelup-modal.open { display: flex; }
-  .levelup-inner {
-    background: var(--bg, var(--abyss)); border: 1px solid var(--border);
-    border-top: 3px solid var(--text-accent); width: 100%; max-width: 380px;
-    padding: 1.5rem 1.2rem;
-    max-height: 85vh; overflow-y: auto;
-  }
-  .levelup-roman {
-    font-family: var(--ff-title); font-size: 2.34rem; color: var(--text-accent);
-    text-align: center; line-height: 1; margin-bottom: 0.3rem;
-  }
-  .levelup-title {
-    font-family: var(--ff-heading); 0.9rem; letter-spacing: 0.3em;
-    text-transform: uppercase; color: var(--text-secondary); text-align: center;
-    margin-bottom: 1.2rem;
-  }
-  .levelup-gains { margin-bottom: 1rem; }
-  .levelup-gain-row {
-    display: flex; justify-content: space-between; align-items: center;
-    border-top: 1px solid var(--border); padding: 0.4rem 0;
-    font-family: var(--ff-heading); 0.82rem; letter-spacing: 0.06em;
-    color: var(--text-secondary);
-  }
-  .levelup-gain-row span { color: var(--viridian-bright); }
-  .levelup-spec-grid { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
-  .levelup-spec-card {
-    border: 1px solid var(--border); border-left: 3px solid var(--border);
-    padding: 0.7rem 0.8rem; cursor: pointer; transition: border-color 0.15s;
-  }
-  .levelup-spec-card:active, .levelup-spec-card.selected { border-left-color: var(--text-accent); }
-  .levelup-spec-name {
-    font-family: var(--ff-heading); 1.01rem; letter-spacing: 0.05em;
-    color: var(--text-primary); margin-bottom: 0.2rem;
-  }
-  .levelup-spec-desc {
-    font-family: var(--ff-body); font-style: italic; 1.23rem;
-    color: var(--text-secondary); line-height: 1.55;
-  }
-  .levelup-spec-bonus {
-    font-family: var(--ff-heading); 0.52rem; letter-spacing: 0.12em;
-    text-transform: uppercase; color: var(--amber-bright); margin-top: 0.3rem;
-  }
-
-  /* ── COMBAT DEFEAT / RETREAT SCREEN ── */
+  /* Victory overlay */
+  #combat-victory-overlay {
+    display: none; position: absolute; inset: 0; z-index: 50;
+    background: rgba(5,4,7,0.94);
+    flex-direction: column; align-items: center; justify-content: center;
+    padding: 2rem; text-align: center;
+  }
+  #combat-victory-overlay.open { display: flex; }
+  .victory-sigil { font-family: var(--ff-heading); font-size: 1.5rem; color: var(--text-accent); opacity: 0.4; margin-bottom: 0.6rem; }
+  .victory-title { font-family: var(--ff-title); font-size: 1.8rem; color: var(--text-accent); margin-bottom: 0.25rem; }
+  .victory-subtitle { font-family: var(--ff-heading); font-size: 0.52rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 1.2rem; }
+  .victory-rewards { width: 100%; max-width: 280px; margin-bottom: 1.4rem; }
+  .victory-reward-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding: 0.4rem 0; font-family: var(--ff-heading); font-size: 0.58rem; letter-spacing: 0.06em; color: var(--text-secondary); }
+  .victory-reward-row:last-child { border-bottom: 1px solid var(--border); }
+  .victory-reward-val { color: var(--viridian-bright); }
+  .victory-leave-btn { font-family: var(--ff-heading); font-size: 0.52rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 0.75rem 2.2rem; border: 1px solid var(--border-bright); background: none; color: var(--text-accent); cursor: pointer; }
+
+  /* Defeat overlay */
   #combat-defeat-overlay {
     display: none; position: absolute; inset: 0; z-index: 50;
-    background: rgba(5,4,7,0.92); flex-direction: column;
-    align-items: center; justify-content: center; padding: 2rem;
-    text-align: center;
+    background: rgba(5,4,7,0.96);
+    flex-direction: column; align-items: center; justify-content: center;
+    padding: 2rem; text-align: center;
   }
   #combat-defeat-overlay.open { display: flex; }
-  .defeat-sigil {
-    font-family: var(--ff-heading); font-size: 1.95rem;
-    color: var(--crimson-bright); opacity: 0.6; margin-bottom: 0.8rem;
+  .defeat-sigil { font-family: var(--ff-heading); font-size: 2.5rem; color: var(--crimson-bright); opacity: 0.3; margin-bottom: 0.7rem; }
+  .defeat-title { font-family: var(--ff-title); font-size: 1.6rem; color: var(--crimson-bright); margin-bottom: 0.3rem; }
+  .defeat-body  { font-family: var(--ff-body); font-style: italic; font-size: 0.95rem; color: var(--text-secondary); line-height: 1.65; margin-bottom: 0.8rem; max-width: 280px; }
+  .defeat-cost  { font-family: var(--ff-heading); font-size: 0.55rem; letter-spacing: 0.08em; color: var(--text-secondary); margin-bottom: 1.4rem; line-height: 1.9; }
+  .defeat-btn   { font-family: var(--ff-heading); font-size: 0.52rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 0.75rem 2.2rem; border: 1px solid rgba(139,26,26,0.4); background: none; color: var(--crimson-bright); cursor: pointer; }
+
+  /* Retreat confirm overlay */
+  #combat-retreat-overlay {
+    display: none; position: absolute; inset: 0; z-index: 60;
+    background: rgba(5,4,7,0.88); align-items: center; justify-content: center;
   }
-  .defeat-title {
-    font-family: var(--ff-title); font-size: 1.41rem; color: var(--crimson-bright);
-    margin-bottom: 0.5rem;
+  #combat-retreat-overlay.open { display: flex; }
+  .retreat-card {
+    background: var(--bg, var(--abyss)); border: 1px solid rgba(139,26,26,0.4);
+    padding: 1.5rem; max-width: 300px; width: 90%; text-align: center;
   }
-  .defeat-body {
-    font-family: var(--ff-body); font-style: italic; font-size: 0.85rem;
-    color: var(--text-secondary); line-height: 1.7; max-width: 300px;
-    margin-bottom: 1.2rem;
+  .retreat-title { font-family: var(--ff-heading); font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--crimson-bright); margin-bottom: 0.5rem; }
+  .retreat-body  { font-family: var(--ff-body); font-style: italic; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.2rem; }
+  .retreat-btns  { display: flex; gap: 0.5rem; }
+  .retreat-confirm { flex: 1; padding: 0.6rem; font-family: var(--ff-heading); font-size: 0.5rem; letter-spacing: 0.15em; text-transform: uppercase; border: 1px solid rgba(139,26,26,0.4); background: none; color: var(--crimson-bright); cursor: pointer; }
+  .retreat-cancel  { flex: 1; padding: 0.6rem; font-family: var(--ff-heading); font-size: 0.5rem; letter-spacing: 0.15em; text-transform: uppercase; border: 1px solid var(--border); background: none; color: var(--text-secondary); cursor: pointer; }
+
+  /* Combat modal (legacy) */
+  #combat-modal { display: contents; }
+
+  /* Rank badge */
+  .cc-rank { flex-shrink: 0; font-family: var(--ff-heading); font-size: 0.42rem; letter-spacing: 0.1em; color: var(--text-secondary); padding: 0.1rem 0.25rem; border: 1px solid var(--border); margin-right: 0.3rem; }
+
+  /* Inspect overlay */
+  #combat-overlay {
+    display: none; position: absolute; inset: 0; z-index: 40;
+    background: rgba(5,4,7,0.88);
+    align-items: flex-end; justify-content: center;
   }
-  .defeat-cost { font-family: var(--ff-heading); 0.63rem; letter-spacing: 0.1em;
-    color: var(--crimson-bright); margin-bottom: 1.2rem; line-height: 1.8; }
-  .defeat-btn {
-    font-family: var(--ff-heading); 0.74rem; letter-spacing: 0.2em;
-    text-transform: uppercase; padding: 0.75rem 2rem;
-    border: 1px solid var(--border); background: none;
-    color: var(--text-secondary); cursor: pointer; width: 100%; max-width: 280px;
+  #combat-overlay.open { display: flex; }
+  #combat-overlay-content {
+    background: var(--bg, var(--abyss));
+    border-top: 1px solid var(--border);
+    width: 100%; max-width: 430px;
+    max-height: 75vh; overflow-y: auto;
+    padding: 1.1rem 1rem 2rem;
+  }
+  .cov-title { font-family: var(--ff-heading); font-size: 0.8rem; letter-spacing: 0.06em; color: var(--text-primary); margin-bottom: 0.5rem; }
+  .cov-close { float: right; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 0.9rem; }
+  .cov-section { font-family: var(--ff-heading); font-size: 0.48rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-secondary); margin: 0.7rem 0 0.25rem; border-top: 1px solid var(--border); padding-top: 0.4rem; }
+  .cov-row { display: flex; justify-content: space-between; align-items: baseline; padding: 0.25rem 0; border-bottom: 1px solid rgba(201,168,76,0.06); font-family: var(--ff-heading); font-size: 0.6rem; }
+  .cov-key { color: var(--text-secondary); letter-spacing: 0.04em; }
+  .cov-val { color: var(--text-primary); }
+  .cov-body { font-family: var(--ff-body); font-style: italic; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; }
+
+  /* Astrological combat modifiers */
+  #combat-astro-modifier {
+    font-family: var(--ff-heading); font-size: 0.48rem;
+    letter-spacing: 0.1em; color: var(--text-secondary);
+    text-align: center; padding: 0.2rem 0.8rem;
+    background: rgba(61,61,170,0.04);
+    border-bottom: 1px solid rgba(61,61,170,0.12);
+    flex-shrink: 0;
   }
 
-  
-
-  /* ═══ COMPANY PANEL ═══ */
-  .company-hero {
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-    padding: 0.7rem 0.8rem;
-    background: rgba(255,255,255,0.015);
-    border: 1px solid var(--border);
-    margin-bottom: 0.7rem;
-  }
-
-  /* ROSTER STRIP */
-  .roster-strip {
-    border: 1px solid var(--gold-dim);
-    background: rgba(201,168,76,0.04);
-    padding: 0.5rem 0.7rem;
-    margin-bottom: 0.6rem;
-  }
-  .roster-strip-label {
-    font-family: var(--ff-heading);
-    font-size: 0.52rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--gold-dim);
-    margin-bottom: 0.4rem;
-  }
-  .roster-strip-cards {
-    display: flex;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-    min-height: 2rem;
-    align-items: center;
-  }
-  .roster-empty-msg {
-    font-family: var(--ff-body);
-    font-style: italic;
-    font-size: 0.72rem;
-    color: var(--text-secondary);
-  }
-  /* Each roster chip */
-  .roster-chip {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    background: rgba(201,168,76,0.1);
-    border: 1px solid var(--gold-dim);
-    padding: 0.25rem 0.5rem;
-    font-family: var(--ff-heading);
-    font-size: 0.6rem;
-    color: var(--bone);
-    letter-spacing: 0.04em;
-    cursor: pointer;
-  }
-  .roster-chip .chip-remove {
-    color: var(--ash);
-    font-size: 0.6rem;
-    line-height: 1;
-  }
-  .roster-chip:active { background: rgba(201,168,76,0.18); }
-  /* ═══ TARGETED MOBILE READABILITY FIXES ═══ */
-  /* Increase only specific elements that were genuinely unreadable */
-
-  .tab-label { font-size: 0.48rem !important; }
-  /* res sizes handled by grid bar CSS */
-  .section-label { font-size: 0.58rem !important; }
-
-  /* Building cards - were unreadably large, constrain them */
-  .building-card { padding: 0.65rem 0.6rem; }
-  .building-name { font-size: 0.7rem !important; }
-  .building-desc { font-size: 0.72rem !important; line-height: 1.45; }
-  .building-level { font-size: 0.52rem !important; }
-
-  /* Acolyte cards */
-  .acolyte-name  { font-size: 0.82rem !important; }
-  .acolyte-class { font-size: 0.68rem !important; }
-
-  /* Stat blocks */
-  .stat-val { font-size: 0.88rem !important; }
-  .stat-name { font-size: 0.62rem !important; }
-  .stat-element { font-size: 0.55rem !important; }
-
-  /* Journal / field event cards */
-  .mission-title { font-size: 0.82rem !important; }
-  .mission-desc  { font-size: 0.8rem  !important; }
-  .entry-title   { font-size: 0.82rem !important; }
-  .entry-body    { font-size: 0.85rem !important; }
-
-  /* Planetary hour widget */
-  .ph-planet { font-size: 1rem !important; }
-  .ph-title  { font-size: 0.62rem !important; }
-
-  /* Codex */
-  .codex-entry-name    { font-size: 0.82rem !important; }
-  .codex-entry-preview { font-size: 0.75rem !important; }
-  .codex-entry-cat     { font-size: 0.52rem !important; }
-
-  /* Combat */
-  .cc-name { font-size: 0.85rem !important; }
-  .cc-bar-lbl { font-size: 0.52rem !important; }
-  .cc-bar-val { font-size: 0.58rem !important; }
-  .cc-statline { font-size: 0.58rem !important; }
-  #combat-title { font-size: 1.5rem !important; }
-  #combat-phase-bar { font-size: 0.62rem !important; }
-  #combat-actor-label { font-size: 0.62rem !important; }
-  .log-line { font-size: 0.78rem !important; }
-  .combat-section-label { font-size: 0.58rem !important; }
-
-  /* Char header */
-  .char-name  { font-size: 1rem    !important; }
-  .char-class { font-size: 0.72rem !important; }
-  .char-xp-label { font-size: 0.58rem !important; }
-
-  /* Buttons */
-  .btn-action { font-size: 0.65rem !important; padding: 0.55rem 0.8rem !important; }
-  .acol-action-btn { font-size: 0.62rem !important; }
-  .acol-roster-toggle { font-size: 0.58rem !important; }
-
-  /* Tarot */
-  .tarot-card-name { font-size: 0.55rem !important; }
-  .spread-title { font-size: 0.62rem !important; }
-
-  /* Toasts */
-  .toast { font-size: 0.75rem !important; }
 
   /* ── SKILL CHECK RESULT OVERLAY ── */
   #skill-check-overlay {
@@ -3819,7 +2372,7 @@
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size: 0.51rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.8.0</span></span>
+    <span class="topbar-title">The Lair Below <span style="font-family:var(--ff-heading);font-size: 0.51rem;letter-spacing:0.1em;color:var(--gold-dim);vertical-align:middle;">v0.7.40</span></span>
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <button class="topbar-theme-btn" id="topbar-theme-btn" onclick="toggleTheme()" title="Toggle Light/Dark">◑</button>
       <button class="topbar-save-btn" id="topbar-save-btn" onclick="openSaveModal()" title="Save / Load">⌬</button>
@@ -4184,31 +2737,79 @@
 <!-- COMBAT TAB PANEL — shown as a tab when combat is active -->
 <div id="panel-combat" class="tab-panel">
 
+  <!-- COMBAT CONTEXT BAR — astro data at top -->
+  <div id="combat-context-bar">
+    <div id="cb-planet" class="cb-pill">—</div>
+    <div id="cb-moon" class="cb-pill">—</div>
+    <div id="cb-time" class="cb-pill">—</div>
+    <div id="cb-encounter" class="cb-encounter-name">—</div>
+  </div>
+
+  <!-- ROUND / PHASE -->
   <div id="combat-header">
     <div id="combat-title">Combat</div>
     <div id="combat-phase-bar">Initialising…</div>
     <div id="combat-init-track"></div>
   </div>
 
+  <!-- BATTLEFIELD — split enemies / allies -->
   <div id="combat-battlefield">
-    <div class="combat-section-label">ENEMIES</div>
+    <div class="cbt-section-head">
+      <span class="cbt-section-label">Enemies</span>
+      <span id="cbt-enemy-count" class="cbt-section-count"></span>
+    </div>
     <div id="combat-enemies"></div>
-    <div class="combat-section-label" style="margin-top:0.4rem;">YOUR COMPANY</div>
+
+    <div class="cbt-section-head" style="margin-top:0.5rem;">
+      <span class="cbt-section-label">Company</span>
+      <span id="cbt-ally-count" class="cbt-section-count"></span>
+    </div>
     <div id="combat-allies"></div>
   </div>
 
-  <div id="combat-log-panel"></div>
+  <!-- COMBAT LOG — collapsible -->
+  <div id="combat-log-wrap">
+    <div id="combat-log-toggle" onclick="toggleCombatLog()">
+      <span id="combat-log-label">Combat Log</span>
+      <span id="combat-log-chevron">▲</span>
+    </div>
+    <div id="combat-log-panel"></div>
+  </div>
 
+  <!-- ACTION AREA -->
   <div id="combat-actions">
     <div id="combat-actor-label">Awaiting…</div>
     <div id="combat-skill-grid"></div>
     <div id="combat-footer-btns">
-      <button class="combat-pass-btn" onclick="combatPass()">◯ Pass Turn</button>
-      <button class="combat-retreat-btn" onclick="closeCombat()">← Retreat</button>
+      <button class="combat-pass-btn" onclick="combatPass()">Pass Turn</button>
+      <button class="combat-retreat-btn" onclick="confirmRetreat()">Retreat</button>
     </div>
   </div>
 
-  <div id="combat-target-prompt">Tap an enemy to target — or press Pass to cancel</div>
+  <!-- TARGET PROMPT -->
+  <div id="combat-target-prompt">Select a target — or Pass to cancel</div>
+
+  <!-- RETREAT CONFIRM -->
+  <div id="combat-retreat-overlay">
+    <div class="retreat-card">
+      <div class="retreat-title">Retreat from Combat?</div>
+      <div class="retreat-body">Withdrawing now forfeits all rewards. The encounter will count as abandoned.</div>
+      <div class="retreat-btns">
+        <button class="retreat-confirm" onclick="closeCombat()">Retreat</button>
+        <button class="retreat-cancel" onclick="document.getElementById('combat-retreat-overlay').classList.remove('open')">Stay</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMBAT INSPECT OVERLAY -->
+  <div id="combat-overlay" onclick="closeCombatOverlay()">
+    <div id="combat-overlay-content" onclick="event.stopPropagation()">
+      <div id="combat-overlay-body"></div>
+      <button style="margin-top:1rem;font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;padding:0.6rem;border:1px solid var(--border);background:none;color:var(--text-secondary);cursor:pointer;width:100%;" onclick="closeCombatOverlay()">Close</button>
+    </div>
+  </div>
+
+  <!-- VICTORY OVERLAY -->
   <div id="combat-victory-overlay">
     <div class="victory-sigil">◈</div>
     <div class="victory-title">Victory</div>
@@ -4216,6 +2817,8 @@
     <div class="victory-rewards" id="victory-rewards"></div>
     <button class="victory-leave-btn" onclick="closeCombatVictory()">Return to the Lair</button>
   </div>
+
+  <!-- DEFEAT OVERLAY -->
   <div id="combat-defeat-overlay">
     <div class="defeat-sigil">✕</div>
     <div class="defeat-title" id="defeat-title">Fallen</div>
@@ -4223,7 +2826,7 @@
     <div class="defeat-cost" id="defeat-cost"></div>
     <button class="defeat-btn" onclick="closeCombat()">Return to the Lair</button>
   </div>
-  </div>
+
 </div>
 
 <!-- ACOLYTE DETAIL MODAL -->
@@ -5401,14 +4004,22 @@ randomMapMarkers[id] = marker;
   }
 
   function closeCombat(){
-    // Hide combat tab and return to field
     const combatTab = document.getElementById('tab-combat');
     if (combatTab) { combatTab.style.display = 'none'; combatTab.classList.remove('pulsing','active'); }
     document.getElementById('panel-combat')?.classList.remove('active');
-    switchTab('field');
-    _CS=null; _pendingSkill=null;
+    document.getElementById('combat-retreat-overlay')?.classList.remove('open');
+    _CS = null; _pendingSkill = null;
     document.getElementById('combat-target-prompt').classList.remove('active');
-    toast('You retreat through the passage. The threshold holds — for now.');
+    // Now safe to switch tab
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    const fieldPanel = document.getElementById('panel-field');
+    if (fieldPanel) fieldPanel.classList.add('active');
+    const tabs = document.querySelectorAll('.tab');
+    if (tabs[1]) tabs[1].classList.add('active'); // field tab
+    if (map) setTimeout(() => map.invalidateSize(), 50);
+    toast('You withdraw from the passage. The threshold holds — for now.');
+    persistState().catch(()=>{});
   }
 
   function combatLog(text,cls=''){
@@ -5419,45 +4030,115 @@ randomMapMarkers[id] = marker;
 
   function renderCombat(){
     if(!_CS)return;
-    document.getElementById('combat-title').textContent=_CS.title;
+    document.getElementById('combat-title').textContent=_CS.title||'Combat';
     const active=_CS.combatants[_CS.turnIdx];
     document.getElementById('combat-phase-bar').textContent='Round '+_CS.round+(active?'  ·  '+active.name+"'s turn":'');
-    // Init track
+    updateCombatContextBar();
     const track=document.getElementById('combat-init-track');
-    track.innerHTML=_CS.combatants.map((c,i)=>`<div class="init-token ${c.side==='enemy'?'enemy-token':'ally-token'}${i===_CS.turnIdx?' active':''}${c.dead?' dead-token':''}" title="${c.name}"><span class="init-num">${i+1}</span><span>${c.icon}</span></div>`).join('');
-    // Battlefield
-    document.getElementById('combat-enemies').innerHTML=_CS.combatants.filter(c=>c.side==='enemy').map(renderCard).join('');
-    document.getElementById('combat-allies').innerHTML=_CS.combatants.filter(c=>c.side==='ally').map(renderCard).join('');
-    if(active){document.querySelectorAll('.combatant-card').forEach(el=>el.classList.remove('active-card'));document.querySelector('[data-cid="'+active.id+'"]')?.classList.add('active-card');}
+    track.innerHTML=_CS.combatants.map((cb,i)=>{
+      const cls=['init-token',cb.side==='enemy'?'enemy':'ally',i===_CS.turnIdx?'active-token':'',cb.dead?'dead-token':''].filter(Boolean).join(' ');
+      return '<div class="'+cls+'" title="'+cb.name+'">'+(cb.icon||'◈')+'</div>';
+    }).join('');
+    const enemies=_CS.combatants.filter(cb=>cb.side==='enemy');
+    const allies=_CS.combatants.filter(cb=>cb.side==='ally');
+    document.getElementById('combat-enemies').innerHTML=enemies.map(renderCard).join('');
+    document.getElementById('combat-allies').innerHTML=allies.map(renderCard).join('');
+    const eCnt=document.getElementById('cbt-enemy-count');
+    const aCnt=document.getElementById('cbt-ally-count');
+    if(eCnt)eCnt.textContent=enemies.filter(cb=>!cb.dead).length+'/'+enemies.length+' standing';
+    if(aCnt)aCnt.textContent=allies.filter(cb=>!cb.dead).length+'/'+allies.length+' standing';
+    document.querySelectorAll('.combatant-card').forEach(el=>el.classList.remove('active-card'));
+    if(active)document.querySelector('[data-cid="'+active.id+'"]')?.classList.add('active-card');
     renderActions();
   }
 
-  function renderCard(c){
-    const hpPct=Math.max(0,Math.min(100,(c.hp/c.maxHp)*100));
-    const mpPct=c.maxMana>0?Math.max(0,Math.min(100,(c.mana/c.maxMana)*100)):0;
-    const stPct=Math.min(100,c.stress||0);
-    const hpCls=c.side==='enemy'?'hp-fill-enemy':'hp-fill-ally';
-    const pips=(c.effects||[]).map(ef=>`<span class="effect-pip ${ef.type}">${ef.type}${ef.stacks>1?' ×'+ef.stacks:''} ${ef.turns}t</span>`).join('');
-    const sline=c.side==='enemy'
-      ?`<span>DODGE:${c.dodge||0}%</span><span>ARM:${c.armour||0}</span>`
-      :`<span>INIT:${Math.round(c.initiative)}</span><span>CRIT:${c.derived?.crit||0}%</span><span>DODGE:${c.derived?.dodge||0}%</span>${(c.shield||0)>0?`<span class="stat-hi">◈${c.shield}</span>`:''}${(c.stress||0)>=80?'<span class="stat-danger">⚠</span>':''}`;
-    const hpColor = hpPct < 25 ? 'var(--crimson-bright)' : hpPct < 50 ? 'var(--amber-bright)' : '';
-    return `<div class="combatant-card ${c.side}-card${c.dead?' dead-card':''}" data-cid="${c.id}" onclick="handleCombatantClick('${c.id}')">
-      ${c.side==='ally'?`<span class="cc-rank">R${c.rank}</span>`:''}
-      <span class="cc-icon">${c.icon}</span>
-      <div class="cc-body">
-        <div class="cc-name-row">
-          <span class="cc-name">${c.name}${c.dead?' <span style="color:var(--ash);font-size: 0.64rem;">[fallen]</span>':''}</span>
-          <button class="cc-inspect-btn" onclick="event.stopPropagation();inspectCombatant('${c.id}')" title="Inspect">ⓘ</button>
+  function updateCombatContextBar() {
+    const ph=(typeof getPlanetaryHour==='function'&&playerLat)?getPlanetaryHour(playerLat,playerLng):null;
+    const pEl=document.getElementById('cb-planet');
+    if(pEl&&ph)pEl.textContent=ph.planet+' Hour';
+    const mEl=document.getElementById('cb-moon');
+    if(mEl)mEl.textContent=getMoonPhaseName();
+    const tEl=document.getElementById('cb-time');
+    if(tEl)tEl.textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const eEl=document.getElementById('cb-encounter');
+    if(eEl&&_CS)eEl.textContent=_CS.title||'Encounter';
+  }
+
+  function getMoonPhaseName() {
+    const lunarCycle=29.53058867;
+    const known=new Date(2000,0,6,18,14);
+    const phase=(((Date.now()-known)/(864e5)%lunarCycle)+lunarCycle)%lunarCycle;
+    if(phase<1.85)return'New Moon';
+    if(phase<5.54)return'Waxing Crescent';
+    if(phase<9.22)return'First Quarter';
+    if(phase<12.91)return'Waxing Gibbous';
+    if(phase<16.61)return'Full Moon';
+    if(phase<20.30)return'Waning Gibbous';
+    if(phase<23.99)return'Last Quarter';
+    return'Waning Crescent';
+  }
+
+  function toggleCombatLog(){
+    const w=document.getElementById('combat-log-wrap');
+    if(w)w.classList.toggle('collapsed');
+    const ch=document.getElementById('combat-log-chevron');
+    if(ch)ch.textContent=w?.classList.contains('collapsed')?'▼':'▲';
+  }
+
+  function confirmRetreat(){
+    document.getElementById('combat-retreat-overlay')?.classList.add('open');
+  }
+
+  function closeCombatOverlay(){
+    document.getElementById('combat-overlay')?.classList.remove('open');
+  }
+
+  function renderCard(cb){
+    const hpPct  = Math.max(0, Math.min(100, (cb.hp / cb.maxHp) * 100));
+    const mpPct  = cb.maxMana > 0 ? Math.max(0, Math.min(100, (cb.mana / cb.maxMana) * 100)) : 0;
+    const stPct  = Math.min(100, cb.stress || 0);
+    const hpCls  = cb.side === 'enemy' ? 'hp-fill-enemy' : 'hp-fill-ally';
+    const hpCol  = hpPct < 25 ? 'var(--crimson-bright)' : hpPct < 50 ? 'var(--amber-bright)' : '';
+    const pips   = (cb.effects||[]).map(ef =>
+      `<span class="effect-pip ${ef.type}">${ef.type}${ef.stacks>1?' ×'+ef.stacks:''} ${ef.turns}t</span>`
+    ).join('');
+
+    const statline = cb.side === 'enemy'
+      ? `<span>Dodge ${cb.dodge||0}%</span><span>Arm ${cb.armour||0}</span><span>Init ${Math.round(cb.initiative||0)}</span>`
+      : `<span>Init ${Math.round(cb.initiative||0)}</span><span>Crit ${cb.derived?.crit||0}%</span><span>Dodge ${cb.derived?.dodge||0}%</span>`
+        + ((cb.shield||0)>0 ? `<span class="stat-hi">Shield ${cb.shield}</span>` : '')
+        + ((cb.stress||0)>=80 ? '<span class="stat-danger">High Stress</span>' : '');
+
+    return `<div class="combatant-card ${cb.side}-card${cb.dead?' dead-card':''}" data-cid="${cb.id}" onclick="handleCombatantClick('${cb.id}')">
+      <div class="cc-card-inner">
+        <div class="cc-icon-col">${cb.icon||'◈'}</div>
+        <div class="cc-body">
+          <div class="cc-name-row">
+            <span class="cc-name">${cb.name}${cb.dead?'<span class="cc-fallen-tag">fallen</span>':''}</span>
+            <button class="cc-inspect-btn" onclick="event.stopPropagation();inspectCombatant('${cb.id}')" title="Inspect">ⓘ</button>
+          </div>
+          <div class="cc-bars">
+            <div class="cc-bar-row">
+              <span class="cc-bar-lbl">HP</span>
+              <div class="cc-bar"><div class="cc-bar-fill ${hpCls}" style="width:${hpPct}%;${hpCol?'background:'+hpCol:''}"></div></div>
+              <span class="cc-bar-val" style="${hpCol?'color:'+hpCol:''}">${Math.ceil(cb.hp)}/${cb.maxHp}</span>
+            </div>
+            ${cb.maxMana>0?`<div class="cc-bar-row">
+              <span class="cc-bar-lbl">MP</span>
+              <div class="cc-bar"><div class="cc-bar-fill mana-fill" style="width:${mpPct}%"></div></div>
+              <span class="cc-bar-val">${Math.ceil(cb.mana||0)}/${cb.maxMana}</span>
+            </div>`:''}
+            ${cb.side==='ally'?`<div class="cc-bar-row">
+              <span class="cc-bar-lbl">STR</span>
+              <div class="cc-bar"><div class="cc-bar-fill stress-fill-c" style="width:${stPct}%"></div></div>
+              <span class="cc-bar-val">${Math.round(cb.stress||0)}%</span>
+            </div>`:''}
+          </div>
+          <div class="cc-statline">${statline}</div>
+          ${pips?`<div class="cc-effects">${pips}</div>`:''}
         </div>
-        <div class="cc-bars">
-          <div class="cc-bar-row"><span class="cc-bar-lbl">HP</span><div class="cc-bar"><div class="cc-bar-fill ${hpCls}" style="width:${hpPct}%;${hpColor?'background:'+hpColor:''}"></div></div><span class="cc-bar-val" style="${hpColor?'color:'+hpColor:''}">${Math.ceil(c.hp)}/${c.maxHp}</span></div>
-          ${c.maxMana>0?`<div class="cc-bar-row"><span class="cc-bar-lbl">MP</span><div class="cc-bar"><div class="cc-bar-fill mana-fill" style="width:${mpPct}%"></div></div><span class="cc-bar-val">${Math.ceil(c.mana)}/${c.maxMana}</span></div>`:''}
-          ${c.side==='ally'?`<div class="cc-bar-row"><span class="cc-bar-lbl">STR</span><div class="cc-bar"><div class="cc-bar-fill stress-fill-c" style="width:${stPct}%"></div></div><span class="cc-bar-val">${Math.round(c.stress)}%</span></div>`:''}
-        </div>
-        <div class="cc-statline">${sline}</div>
-        ${pips?`<div class="cc-effects">${pips}</div>`:''}
-      </div></div>`;
+      </div>
+    </div>`;
   }
 
   function renderActions(){
@@ -6381,6 +5062,13 @@ randomMapMarkers[id] = marker;
     if (btn) btn.style.borderColor = visible ? 'rgba(201,168,76,0.3)' : 'var(--gold)';
   }
   function switchTab(tab) {
+    // Block tab switching when combat is active — only 'combat' is allowed
+    if (_CS && tab !== 'combat') {
+      // Pulse the combat tab to remind player they're in combat
+      document.getElementById('tab-combat')?.classList.add('pulsing');
+      toast('Combat is active. Retreat first.');
+      return;
+    }
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     const ORDER = ['journal','field','company','lair','arcana','codex'];
@@ -6390,9 +5078,6 @@ randomMapMarkers[id] = marker;
     if (tab === 'combat') {
       document.getElementById('tab-combat')?.classList.add('active');
       document.getElementById('tab-combat')?.classList.remove('pulsing');
-    } else if (_CS) {
-      // Combat is ongoing — keep combat tab pulsing to signal player can return
-      document.getElementById('tab-combat')?.classList.add('pulsing');
     }
     if (tab === 'recruit') {
       document.getElementById('tab-recruit')?.classList.add('active');
@@ -6483,6 +5168,22 @@ randomMapMarkers[id] = marker;
       research: _researchData || { active: null, progress: 0, queue: [] },
       inventory: { ...inventory },
       availableAcolytes: { ...availableAcolytes },
+      // Persist combat state so player returns to same combat on reload
+      combatState: _CS ? {
+        title: _CS.title,
+        round: _CS.round,
+        turnIdx: _CS.turnIdx,
+        combatants: _CS.combatants.map(cb => ({
+          id: cb.id, name: cb.name, side: cb.side, icon: cb.icon,
+          hp: cb.hp, maxHp: cb.maxHp, mana: cb.mana, maxMana: cb.maxMana,
+          stress: cb.stress, dead: cb.dead, armour: cb.armour||0,
+          dodge: cb.dodge||0, initiative: cb.initiative||0,
+          isPlayer: cb.isPlayer||false, rank: cb.rank||0,
+          skills: cb.skills||[], effects: cb.effects||[],
+          derived: cb.derived||{}, xpReward: cb.xpReward||0,
+          loot: cb.loot||[], traits: cb.traits||[],
+        })),
+      } : null,
     };
   }
 
@@ -9748,6 +8449,21 @@ async function refreshFieldEventCards() {
       });
     }
     // Restore spread positions from saved state if present
+    // Restore combat state — force player back into combat if they reloaded mid-fight
+    if (state.combatState && state.combatState.combatants?.length) {
+      _CS = state.combatState;
+      setTimeout(() => {
+        if (_CS) {
+          const combatTab = document.getElementById('tab-combat');
+          if (combatTab) { combatTab.style.display = ''; combatTab.classList.add('pulsing'); }
+          switchTab('combat');
+          renderCombat();
+          renderActions();
+          toast('Combat restored — the encounter awaits.');
+        }
+      }, 1200);
+    }
+
     if (_researchData?.tarotSpread) {
       _currentSpread = _researchData.tarotSpread.map(s => {
         if (!s) return null;
@@ -9821,7 +8537,7 @@ async function refreshFieldEventCards() {
     if (sk.targeting?.target) costLine.push(`Target: ${sk.targeting.target.replace(/-/g,' ')}`);
     if (sk.targeting?.hits && sk.targeting.hits > 1) costLine.push(`${sk.targeting.hits} hits`);
 
-    document.getElementById('combat-sheet-inner').innerHTML = `
+    document.getElementById('combat-overlay-body').innerHTML = `
       <div class="csheet-head">
         <div class="csheet-icon">◈</div>
         <div class="csheet-name">${sk.name || key}</div>
@@ -9842,75 +8558,69 @@ async function refreshFieldEventCards() {
   // ══════════════════════════════════════════
   function inspectCombatant(cid) {
     if (!_CS) return;
-    const c = _CS.combatants.find(x => x.id === cid);
-    if (!c) return;
+    const cb = _CS.combatants.find(x => x.id === cid);
+    if (!cb) return;
+    const body = document.getElementById('combat-overlay-body');
+    if (!body) return;
 
-    const sheet = document.getElementById('combat-sheet-inner');
-
-    if (c.side === 'enemy') {
-      // Enemy: stats, abilities, resistances, loot
-      const resLabels = ['Solar','Lunar','Jovian','Martial','Saturnine','Venusian','Mercurial'];
-      const resistHtml = Object.entries(c.resistances||{}).filter(([,v])=>v).map(([k,v])=>
-        `<span class="csheet-tag">${k} ${v>0?'-'+v+'%':'+'+Math.abs(v)+'%'}</span>`).join('') || '<span style="font-family:var(--ff-body);font-style:italic;font-size: 0.78rem;color:var(--text-secondary);">No resistances recorded.</span>';
-      const abHtml = (c.abilities||[]).map(a=>`<span class="csheet-tag">${a}</span>`).join('') || '<span style="font-family:var(--ff-body);font-style:italic;font-size: 0.78rem;color:var(--text-secondary);">None observed.</span>';
-      const lootHtml = (c.loot||[]).map(l=>`<div style="font-family:var(--ff-body);font-size: 0.78rem;color:var(--text-secondary);">${l.name||l} ${l.amount?'×'+l.amount:''}</div>`).join('') || '<span style="font-family:var(--ff-body);font-style:italic;font-size: 0.78rem;color:var(--text-secondary);">Nothing certain.</span>';
-      const hpPct = Math.round((c.hp/c.maxHp)*100);
-
-      sheet.innerHTML = `
-        <div class="csheet-head">
-          <div class="csheet-icon">${c.icon}</div>
-          <div class="csheet-name">${c.name}</div>
-          <div class="csheet-type">${c.dead?'Fallen':'Enemy'}</div>
+    if (cb.side === 'enemy') {
+      const hpPct = Math.round((cb.hp / cb.maxHp) * 100);
+      const lootHtml = (cb.loot||[]).map(l =>
+        `<div class="cov-row"><span class="cov-key">${l.name||l}</span><span class="cov-val">${l.amount?'×'+l.amount:''}</span></div>`
+      ).join('') || '<div class="cov-body">Nothing certain.</div>';
+      const abHtml = (cb.abilities||[]).map(a =>
+        `<div class="cov-row"><span class="cov-key">${a}</span></div>`
+      ).join('') || '<div class="cov-body">None observed.</div>';
+      const resistHtml = Object.entries(cb.resistances||{}).filter(([,v])=>v).map(([k,v]) =>
+        `<div class="cov-row"><span class="cov-key">${k}</span><span class="cov-val" style="color:${v>0?'var(--viridian-bright)':'var(--crimson-bright)'}">${v>0?'-'+v+'%':'+'+Math.abs(v)+'%'}</span></div>`
+      ).join('') || '<div class="cov-body">No resistances recorded.</div>';
+      body.innerHTML = `
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem;">
+          <span style="font-family:var(--ff-heading);font-size:1.4rem;color:var(--crimson-bright);">${cb.icon||'▽'}</span>
+          <div>
+            <div class="cov-title">${cb.name}</div>
+            <div style="font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.15em;color:var(--text-secondary);text-transform:uppercase;">${cb.dead?'Fallen':'Enemy'}</div>
+          </div>
         </div>
-        <div class="csheet-stat-grid">
-          <div class="csheet-stat">HP<span>${Math.ceil(c.hp)} / ${c.maxHp} <span style="color:var(--text-secondary);font-size: 0.58rem;">(${hpPct}%)</span></span></div>
-          <div class="csheet-stat">Armour<span>${c.armour||0}</span></div>
-          <div class="csheet-stat">Dodge<span>${c.dodge||0}%</span></div>
-          <div class="csheet-stat">Initiative<span>${Math.round(c.initiative)}</span></div>
-          <div class="csheet-stat">Damage<span>${c.damageExpr||'—'}</span></div>
-          <div class="csheet-stat">XP<span>${c.xpReward||0}</span></div>
-        </div>
-        <div class="csheet-sep">Abilities</div>
-        <div style="margin-bottom:0.4rem;">${abHtml}</div>
-        <div class="csheet-sep">Resistances</div>
-        <div style="margin-bottom:0.4rem;">${resistHtml}</div>
-        <div class="csheet-sep">Potential Loot</div>
-        <div>${lootHtml}</div>
-        <button class="csheet-close" onclick="document.getElementById('combat-overlay').classList.remove('open')">Close</button>`;
+        <div class="cov-row"><span class="cov-key">HP</span><span class="cov-val" style="color:${hpPct<30?'var(--crimson-bright)':'var(--viridian-bright)'}">${Math.ceil(cb.hp)} / ${cb.maxHp} (${hpPct}%)</span></div>
+        <div class="cov-row"><span class="cov-key">Armour</span><span class="cov-val">${cb.armour||0}</span></div>
+        <div class="cov-row"><span class="cov-key">Dodge</span><span class="cov-val">${cb.dodge||0}%</span></div>
+        <div class="cov-row"><span class="cov-key">Initiative</span><span class="cov-val">${Math.round(cb.initiative||0)}</span></div>
+        <div class="cov-row"><span class="cov-key">Base Damage</span><span class="cov-val">${cb.damageExpr||'—'}</span></div>
+        <div class="cov-row"><span class="cov-key">XP Reward</span><span class="cov-val">${cb.xpReward||0}</span></div>
+        <div class="cov-section">Abilities</div>${abHtml}
+        <div class="cov-section">Resistances</div>${resistHtml}
+        <div class="cov-section">Potential Loot</div>${lootHtml}`;
     } else {
-      // Ally: stats, skills, equipment, stress
-      const skills = getSkillsFor(c);
-      const CAT_COL = {attack:'attack',heal:'heal',buff:'buff',debuff:'debuff'};
-      const skillsHtml = skills.length
-        ? skills.map(sk=>`<span class="csheet-tag ${CAT_COL[sk.category]||''}">${sk.name||sk._key}</span>`).join('')
-        : '<span style="font-family:var(--ff-body);font-style:italic;font-size: 0.78rem;color:var(--text-secondary);">No skills learned.</span>';
-      const invHtml = (c.inventory||[]).map(it=>`<span class="csheet-tag item">${it.name||it}</span>`).join('') ||
-        '<span style="font-family:var(--ff-body);font-style:italic;font-size: 0.78rem;color:var(--text-secondary);">Unequipped.</span>';
-      const d = c.derived || {};
-
-      sheet.innerHTML = `
-        <div class="csheet-head">
-          <div class="csheet-icon">${c.icon}</div>
-          <div class="csheet-name">${c.name}</div>
-          <div class="csheet-type">${c.isPlayer?'Player Character':'Acolyte'}</div>
+      const d = cb.derived || {};
+      const skills = getSkillsFor(cb);
+      const skillsHtml = skills.map(sk =>
+        `<div class="cov-row"><span class="cov-key">${sk.name||sk._key}</span><span class="cov-val" style="font-size:0.5rem;">${sk.category||''}</span></div>`
+      ).join('') || '<div class="cov-body">No skills learned.</div>';
+      const invHtml = (cb.inventory||[]).map(it =>
+        `<div class="cov-row"><span class="cov-key">${it.name||it}</span></div>`
+      ).join('') || '<div class="cov-body">Nothing equipped.</div>';
+      const stressColor = (cb.stress||0)>=80?'var(--crimson-bright)':(cb.stress||0)>=50?'var(--amber-bright)':'var(--viridian-bright)';
+      body.innerHTML = `
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem;">
+          <span style="font-family:var(--ff-heading);font-size:1.4rem;color:var(--viridian-bright);">${cb.icon||'△'}</span>
+          <div>
+            <div class="cov-title">${cb.name}</div>
+            <div style="font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.15em;color:var(--text-secondary);text-transform:uppercase;">${cb.isPlayer?'Player Character':'Acolyte'}</div>
+          </div>
         </div>
-        <div class="csheet-stat-grid">
-          <div class="csheet-stat">HP<span>${Math.ceil(c.hp)} / ${c.maxHp}</span></div>
-          <div class="csheet-stat">Mana<span>${Math.ceil(c.mana||0)} / ${c.maxMana||0}</span></div>
-          <div class="csheet-stat">Stress<span>${Math.round(c.stress||0)}%</span></div>
-          <div class="csheet-stat">Initiative<span>${Math.round(c.initiative)}</span></div>
-          <div class="csheet-stat">Crit<span>${d.crit||0}%</span></div>
-          <div class="csheet-stat">Dodge<span>${d.dodge||0}%</span></div>
-          <div class="csheet-stat">Accuracy<span>${d.accuracy||0}</span></div>
-          ${(c.shield||0)>0?`<div class="csheet-stat">Shield<span>${c.shield}</span></div>`:''}
-        </div>
-        <div class="csheet-sep">Skills</div>
-        <div style="margin-bottom:0.4rem;">${skillsHtml}</div>
-        <div class="csheet-sep">Equipment</div>
-        <div>${invHtml}</div>
-        <button class="csheet-close" onclick="document.getElementById('combat-overlay').classList.remove('open')">Close</button>`;
+        <div class="cov-row"><span class="cov-key">HP</span><span class="cov-val">${Math.ceil(cb.hp)} / ${cb.maxHp}</span></div>
+        <div class="cov-row"><span class="cov-key">Mana</span><span class="cov-val">${Math.ceil(cb.mana||0)} / ${cb.maxMana||0}</span></div>
+        <div class="cov-row"><span class="cov-key">Stress</span><span class="cov-val" style="color:${stressColor}">${Math.round(cb.stress||0)}%</span></div>
+        <div class="cov-row"><span class="cov-key">Initiative</span><span class="cov-val">${Math.round(cb.initiative||0)}</span></div>
+        <div class="cov-row"><span class="cov-key">Crit</span><span class="cov-val">${d.crit||0}%</span></div>
+        <div class="cov-row"><span class="cov-key">Dodge</span><span class="cov-val">${d.dodge||0}%</span></div>
+        <div class="cov-row"><span class="cov-key">Accuracy</span><span class="cov-val">${d.accuracy||0}</span></div>
+        ${(cb.shield||0)>0?`<div class="cov-row"><span class="cov-key">Shield</span><span class="cov-val">${cb.shield}</span></div>`:''}
+        <div class="cov-section">Skills</div>${skillsHtml}
+        <div class="cov-section">Equipment</div>${invHtml}`;
     }
-    document.getElementById('combat-overlay').classList.add('open');
+    document.getElementById('combat-overlay')?.classList.add('open');
   }
 
   // ══════════════════════════════════════════
