@@ -4418,7 +4418,7 @@ randomMapMarkers[id] = marker;
   }
 
   // Full resolution pipeline: skill checks → combat → reward → cleanup
-  async async function runEventResolution(ev, evId) {
+  async function runEventResolution(ev, evId) {
     // 1. Skill checks
     if (ev.skillChecks && ev.skillChecks.length) {
       const passed = await runSkillChecks(ev.skillChecks);
@@ -4528,7 +4528,7 @@ randomMapMarkers[id] = marker;
     persistState().catch(() => {});
   }
 
-  async async function deleteWorldEventAfterResolve(ev, evId) {
+  async function deleteWorldEventAfterResolve(ev, evId) {
     if (!ev) return;
     try {
       if (ev.src === 'inbox' || ev.src === 'player') {
@@ -7861,7 +7861,7 @@ async function refreshFieldEventCards() {
     document.getElementById('dm-event-modal').classList.add('open');
   }
 
-  async async function resolveJournalEvent(jid, btn, acceptReward) {
+  async function resolveJournalEvent(jid, btn, acceptReward) {
     const ev = _worldEventStore.get(jid);
     const entry = btn?.closest('.journal-entry');
 
