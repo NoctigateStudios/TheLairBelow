@@ -2674,7 +2674,7 @@
 </style>
 <style>
   /* ═══════════════════════════════════════════════════
-     HOLISTIC VISUAL OVERHAUL — v0.7.36
+     HOLISTIC VISUAL OVERHAUL — v0.7.37
      Principles: editorial, handcrafted, ruled-paper feel
      No glowing widgets; type and line as primary language
   ═══════════════════════════════════════════════════ */
@@ -3687,6 +3687,97 @@
     background: none; color: var(--text-accent); cursor: pointer;
   }
 
+  
+  /* ── CHARACTER CREATION STEPS ── */
+  .cc-step { width: 100%; }
+  #identity-modal {
+    max-height: 90vh; overflow-y: auto;
+  }
+  .cc-class-card {
+    border: 1px solid var(--border); border-left: 3px solid var(--border);
+    padding: 0.8rem 0.9rem; cursor: pointer; transition: border-color 0.12s;
+  }
+  .cc-class-card.selected { border-left-color: var(--text-accent); background: rgba(201,168,76,0.04); }
+  .cc-class-name {
+    font-family: var(--ff-heading); font-size: 0.8rem;
+    letter-spacing: 0.05em; color: var(--text-primary); margin-bottom: 0.15rem;
+  }
+  .cc-class-role {
+    font-family: var(--ff-body); font-style: italic;
+    font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 0.4rem;
+  }
+  .cc-class-stats {
+    display: flex; flex-wrap: wrap; gap: 0.3rem 0.6rem;
+    font-family: var(--ff-heading); font-size: 0.5rem;
+    letter-spacing: 0.08em; color: var(--text-secondary);
+  }
+  .cc-stat-row {
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid var(--border); padding: 0.35rem 0;
+  }
+  .cc-stat-name {
+    font-family: var(--ff-heading); font-size: 0.65rem;
+    letter-spacing: 0.06em; color: var(--text-secondary);
+  }
+  .cc-stat-controls { display: flex; align-items: center; gap: 0.4rem; }
+  .cc-stat-btn {
+    width: 24px; height: 24px; background: none; border: 1px solid var(--border);
+    color: var(--text-primary); font-size: 1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.1s; line-height: 1; padding: 0;
+  }
+  .cc-stat-btn:active { border-color: var(--text-accent); }
+  .cc-stat-val {
+    font-family: var(--ff-heading); font-size: 0.85rem;
+    color: var(--text-primary); min-width: 2rem; text-align: center;
+  }
+  .cc-trait-card {
+    border: 1px solid var(--border); padding: 0.65rem 0.8rem;
+    cursor: pointer; transition: border-color 0.12s; display: flex;
+    align-items: flex-start; gap: 0.6rem;
+  }
+  .cc-trait-card.selected { border-color: var(--text-accent); background: rgba(201,168,76,0.03); }
+  .cc-trait-card.selected.negative { border-color: var(--crimson-bright); background: rgba(196,48,48,0.04); }
+  .cc-trait-check {
+    font-family: var(--ff-heading); font-size: 0.75rem;
+    color: var(--text-secondary); flex-shrink: 0; margin-top: 0.1rem;
+    transition: color 0.12s;
+  }
+  .cc-trait-card.selected .cc-trait-check { color: var(--text-accent); }
+  .cc-trait-card.selected.negative .cc-trait-check { color: var(--crimson-bright); }
+  .cc-trait-body { flex: 1; }
+  .cc-trait-name {
+    font-family: var(--ff-heading); font-size: 0.7rem;
+    letter-spacing: 0.04em; color: var(--text-primary);
+    display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.1rem;
+  }
+  .cc-trait-cost {
+    font-family: var(--ff-heading); font-size: 0.5rem;
+    letter-spacing: 0.1em; padding: 0.05rem 0.3rem;
+    border: 1px solid; border-radius: 0;
+  }
+  .cc-trait-cost.pos { color: var(--viridian-bright); border-color: rgba(45,122,95,0.4); }
+  .cc-trait-cost.neg { color: var(--amber-bright); border-color: rgba(212,137,10,0.4); }
+  .cc-trait-desc {
+    font-family: var(--ff-body); font-style: italic;
+    font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;
+  }
+  .cc-trait-effect {
+    font-family: var(--ff-heading); font-size: 0.48rem;
+    letter-spacing: 0.08em; color: var(--text-secondary);
+    margin-top: 0.2rem;
+  }
+
+  
+  .ad-tab {
+    flex:1; padding:0.5rem 0.2rem;
+    font-family:var(--ff-heading); font-size:0.5rem;
+    letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--text-secondary); background:none;
+    border:none; border-bottom:1px solid transparent; cursor:pointer;
+  }
+  .ad-tab.active { color:var(--text-accent); border-bottom-color:var(--text-accent); }
+
   </style>
 </head>
 <body>
@@ -3809,10 +3900,7 @@
       <span class="tab-icon">☽</span>
       <span class="tab-label">Arcana</span>
     </button>
-    <button class="tab" onclick="switchTab('codex')">
-      <span class="tab-icon">∷</span>
-      <span class="tab-label">Codex</span>
-    </button>
+    <!-- codex tab hidden for beta -->
     <button class="tab tab-combat" id="tab-combat" onclick="switchTab('combat')" style="display:none;">
       <span class="tab-icon">✕</span>
       <span class="tab-label">Combat</span>
@@ -4138,6 +4226,40 @@
   </div>
 </div>
 
+<!-- ACOLYTE DETAIL MODAL -->
+<div id="acolyte-detail-modal" onclick="this.classList.remove('open')" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(5,4,7,0.82);align-items:flex-end;justify-content:center;">
+  <div onclick="event.stopPropagation()" style="background:var(--bg,var(--abyss));border-top:1px solid var(--border);width:100%;max-width:430px;max-height:85vh;overflow-y:auto;padding:1.2rem 1rem 2rem;">
+    <div id="ad-header" style="border-bottom:1px solid var(--border);padding-bottom:0.7rem;margin-bottom:0.8rem;">
+      <div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.3rem;">
+        <span id="ad-glyph" style="font-family:var(--ff-heading);font-size:1.4rem;color:var(--amber-bright);">◈</span>
+        <div>
+          <div id="ad-name" style="font-family:var(--ff-heading);font-size:0.9rem;letter-spacing:0.04em;color:var(--text-primary);"></div>
+          <div id="ad-class" style="font-family:var(--ff-body);font-style:italic;font-size:0.88rem;color:var(--text-secondary);"></div>
+        </div>
+        <div id="ad-roster-badge" style="margin-left:auto;font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.15rem 0.5rem;border:1px solid var(--border);color:var(--text-secondary);"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.3rem;margin-top:0.5rem;">
+        <div style="text-align:center;border:1px solid rgba(196,48,48,0.25);padding:0.3rem;"><div style="font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-secondary);">HP</div><div id="ad-hp" style="font-family:var(--ff-heading);font-size:0.85rem;color:var(--crimson-bright);"></div></div>
+        <div style="text-align:center;border:1px solid rgba(61,61,170,0.25);padding:0.3rem;"><div style="font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-secondary);">Mana</div><div id="ad-mana" style="font-family:var(--ff-heading);font-size:0.85rem;color:var(--indigo-bright);"></div></div>
+        <div style="text-align:center;border:1px solid rgba(201,168,76,0.2);padding:0.3rem;"><div style="font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-secondary);">Crit</div><div id="ad-crit" style="font-family:var(--ff-heading);font-size:0.85rem;color:var(--gold);"></div></div>
+        <div style="text-align:center;border:1px solid rgba(45,122,95,0.25);padding:0.3rem;"><div style="font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-secondary);">Dodge</div><div id="ad-dodge" style="font-family:var(--ff-heading);font-size:0.85rem;color:var(--viridian-bright);"></div></div>
+      </div>
+    </div>
+    <!-- Tabs: Stats / Skills / Inventory / Traits -->
+    <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:0.7rem;">
+      <button class="ad-tab active" onclick="switchAdTab('stats',this)">Stats</button>
+      <button class="ad-tab" onclick="switchAdTab('skills',this)">Skills</button>
+      <button class="ad-tab" onclick="switchAdTab('inventory',this)">Inventory</button>
+      <button class="ad-tab" onclick="switchAdTab('traits',this)">Traits</button>
+    </div>
+    <div id="ad-stats" class="ad-section active"></div>
+    <div id="ad-skills" class="ad-section" style="display:none;"></div>
+    <div id="ad-inventory" class="ad-section" style="display:none;"></div>
+    <div id="ad-traits" class="ad-section" style="display:none;"></div>
+    <button onclick="document.getElementById('acolyte-detail-modal').classList.remove('open')" style="margin-top:1rem;font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;padding:0.7rem;border:1px solid var(--border);background:none;color:var(--text-secondary);cursor:pointer;width:100%;">Close</button>
+  </div>
+</div>
+
 <!-- COMBAT INSPECT / TOOLTIP OVERLAY -->
 <div id="combat-overlay" onclick="this.classList.remove('open')">
   <div class="combat-sheet" onclick="event.stopPropagation()" id="combat-sheet-inner"></div>
@@ -4255,17 +4377,53 @@
 
 <!-- IDENTITY MODAL -->
 <div id="identity-modal">
-  <div class="identity-title">Name Your Soul</div>
-  <p class="identity-sub">Your name and coven will be visible to nearby seekers</p>
-  <div class="identity-field">
-    <label class="identity-label">Your Name</label>
-    <input class="identity-input" id="identity-name" type="text" placeholder="The Archivist" maxlength="24" autocomplete="off">
+  <!-- Step 1: Name -->
+  <div id="cc-step-1" class="cc-step">
+    <div class="identity-title">Name Your Soul</div>
+    <p class="identity-sub">Before you descend, you must be known.</p>
+    <div class="identity-field">
+      <label class="identity-label">Your Name</label>
+      <input class="identity-input" id="identity-name" type="text" placeholder="The Archivist" maxlength="24" autocomplete="off">
+    </div>
+    <div class="identity-field">
+      <label class="identity-label">Your Coven</label>
+      <input class="identity-input" id="identity-coven" type="text" placeholder="The Order of the Veiled Star" maxlength="36" autocomplete="off">
+    </div>
+    <button class="identity-btn" onclick="ccStep2()">Choose a Class →</button>
   </div>
-  <div class="identity-field">
-    <label class="identity-label">Your Coven</label>
-    <input class="identity-input" id="identity-coven" type="text" placeholder="The Order of the Veiled Star" maxlength="36" autocomplete="off">
+
+  <!-- Step 2: Class -->
+  <div id="cc-step-2" class="cc-step" style="display:none;">
+    <div class="identity-title">Choose Your Class</div>
+    <p class="identity-sub">Your class shapes your starting stats and the skills you can learn.</p>
+    <div id="cc-class-grid" style="display:flex;flex-direction:column;gap:0.6rem;margin:1rem 0;max-height:40vh;overflow-y:auto;"></div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+      <button class="identity-btn" style="flex:0 0 auto;background:none;border:1px solid var(--border);" onclick="ccBack(1)">← Back</button>
+      <button class="identity-btn" id="cc-step2-next" onclick="ccStep3()" style="flex:1;">Allocate Stats →</button>
+    </div>
   </div>
-  <button class="identity-btn" onclick="saveIdentity()">Enter the Lair</button>
+
+  <!-- Step 3: Stat allocation -->
+  <div id="cc-step-3" class="cc-step" style="display:none;">
+    <div class="identity-title">Allocate Points</div>
+    <p class="identity-sub" id="cc-points-label">15 points to spend</p>
+    <div id="cc-stat-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;margin:0.8rem 0;"></div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+      <button class="identity-btn" style="flex:0 0 auto;background:none;border:1px solid var(--border);" onclick="ccBack(2)">← Back</button>
+      <button class="identity-btn" id="cc-step3-next" onclick="ccStep4()" style="flex:1;">Choose Traits →</button>
+    </div>
+  </div>
+
+  <!-- Step 4: Traits -->
+  <div id="cc-step-4" class="cc-step" style="display:none;">
+    <div class="identity-title">Choose Traits</div>
+    <p class="identity-sub" id="cc-trait-label">Traits cost or refund stat points. Budget: <span id="cc-trait-budget">0</span></p>
+    <div id="cc-trait-grid" style="display:flex;flex-direction:column;gap:0.45rem;margin:0.8rem 0;max-height:38vh;overflow-y:auto;"></div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+      <button class="identity-btn" style="flex:0 0 auto;background:none;border:1px solid var(--border);" onclick="ccBack(3)">← Back</button>
+      <button class="identity-btn" onclick="ccFinish()">Enter the Lair</button>
+    </div>
+  </div>
 </div>
 
 <!-- FORGE MODAL -->
@@ -5416,6 +5574,10 @@ randomMapMarkers[id] = marker;
     const ss=sk.damage?.scaleStat; if(ss&&ss!=='none'&&actor.stats?.[ss])dmg+=Math.floor(actor.stats[ss]*(sk.damage.scaleAmt||50)/100);
     const isCrit=Math.random()*100<(actor.derived?.crit||5);
     if(isCrit)dmg=Math.round(dmg*(sk.damage?.critMult||1.5));
+    // Sadistic trait: +10% damage to enemies below 30% HP
+    if (hasActiveTrait(actor, 'sadistic') && target.hp < target.maxHp * 0.3) {
+      dmg = Math.round(dmg * 1.1);
+    }
     dmg=Math.max(1,dmg-(target.armour||0));
     const resist=target.resistances?.[sk.damage?.type||'physical']||0;
     if(resist>0)dmg=Math.round(dmg*(1-resist/100));
@@ -5490,7 +5652,10 @@ randomMapMarkers[id] = marker;
     const target=targets[Math.floor(Math.random()*targets.length)];
     const sk={_key:'basic',name:enemy.name,category:'attack',damage:{type:'physical',dice:enemy.damageExpr||'1d6',flat:0,scaleStat:'none',scaleAmt:0,critMult:1.3},targeting:{target:'single-ally',hits:1,accuracyMod:0}};
     resolveAttack(sk,enemy,target);
-    const sd=Math.max(0,(enemy.stats?.stress||5)-(target.derived?.stressRes||0)/10);
+    const baseStress = enemy.stats?.stress||5;
+    const stressRes = (target.derived?.stressRes||0)/10;
+    const paranoidMult = hasActiveTrait(target, 'paranoid') ? 1.2 : 1;
+    const sd = Math.max(0, (baseStress - stressRes) * paranoidMult);
     if(sd>0)target.stress=Math.min(100,(target.stress||0)+sd);
     checkCombatEnd();
     if(_CS){renderCombat();setTimeout(()=>advanceTurn(),600);}
@@ -5535,6 +5700,7 @@ randomMapMarkers[id] = marker;
   ];
 
   // ── TAROT SPREAD SYSTEM ──────────────────────────────────────────────────
+  let _worldTarotCards = null; // loaded from Firebase /world/tarot
   let _currentSpread = [null, null, null]; // { card, reversed, effect } per slot
 
   const SPREAD_POSITIONS = ['The Past', 'The Present', 'The Future'];
@@ -6523,6 +6689,8 @@ randomMapMarkers[id] = marker;
           </div>`).join('')
         : `<div style="font-family:var(--ff-body);font-style:italic;font-size: 0.64rem;color:var(--text-secondary);padding:0.3rem 0;">No equipment carried.</div>`;
 
+      el.onclick = () => openAcolyteDetail(a);
+      el.style.cursor = 'pointer';
       el.innerHTML = `
         <div class="acol-top-row">
           <div class="acolyte-avatar">${GLYPHS[idx % GLYPHS.length]}</div>
@@ -6594,13 +6762,17 @@ randomMapMarkers[id] = marker;
       const isOssuary = key === 'ossuary';
       const clickFn = !locked ? (isForge ? 'openForge()' : isScriptorium ? 'openScriptorium()' : isAltar ? "switchTab('arcana')" : isScrying ? 'openScryingChamber()' : isOssuary ? 'openOssuary()' : '') : '';
       const clickAttr = clickFn ? `onclick="${clickFn}" style="cursor:pointer"` : '';
+      // Build upgrade cost display
+      const upgradeCost = b.upgradeCost && lvl < maxLvl && b.upgradeCost[lvl] ? b.upgradeCost[lvl] : null;
+      const upgradeEffect = b.effects && b.effects[lvl] ? b.effects[lvl] : null;
       return `<div class="building-card ${locked?'locked':''}" ${clickAttr}>
-        <span class="building-level">${locked ? 'Locked' : 'Lv. '+lvl}</span>
-
+        <span class="building-level">${locked ? 'Locked' : 'Lv. '+lvl+' / '+maxLvl}</span>
         <div class="building-name">${b.name || key}</div>
         <p class="building-desc">${b.desc || ''}</p>
-        ${!locked&&clickFn?`<div style="font-family:var(--ff-heading);font-size: 0.38rem;color:var(--text-secondary);margin-top:0.35rem;letter-spacing:0.1em;">→ Open</div>`:''}
-        ${!locked&&lvl<maxLvl?`<div style="font-family:var(--ff-heading);font-size: 0.38rem;color:var(--gold-dim);margin-top:0.1rem;letter-spacing:0.06em;">Upgrade available</div>`:''}
+        ${!locked&&upgradeEffect?`<div style="font-family:var(--ff-body);font-style:italic;font-size:0.72rem;color:var(--viridian-bright);margin-top:0.25rem;line-height:1.4;">${upgradeEffect}</div>`:''}
+        ${!locked&&clickFn?`<div style="font-family:var(--ff-heading);font-size:0.5rem;color:var(--text-secondary);margin-top:0.35rem;letter-spacing:0.1em;">→ Open</div>`:''}
+        ${!locked&&lvl<maxLvl&&upgradeCost?`<button onclick="event.stopPropagation();upgradeBuilding('${key}',${upgradeCost})" style="margin-top:0.5rem;font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.6rem;border:1px solid rgba(201,168,76,0.3);background:none;color:var(--gold);cursor:pointer;width:100%;">Upgrade — ${upgradeCost} ♄ Saturnine</button>`:''}
+        ${locked?`<div style="font-family:var(--ff-heading);font-size:0.5rem;color:var(--text-secondary);margin-top:0.3rem;letter-spacing:0.08em;">Not yet excavated</div>`:''}
       </div>`;
     }).join('');
   }
@@ -7042,15 +7214,247 @@ async function refreshFieldEventCards() {
   }
 
   function saveIdentity() {
+    // Legacy shim — called if someone skips to finish directly
+    ccFinish();
+  }
+
+  // ── CHARACTER CREATION STATE ──
+  let _ccData = { name:'', coven:'', classKey:'', classData:null, stats:{}, traits:[], basePoints:15 };
+  let _worldTraits = {}; // loaded from Firebase /world/traits
+
+  async function loadWorldTraits() {
+    try {
+      const d = await fetch(`${FB_URL}/world/traits.json?cb=`+Date.now()).then(r=>r.json());
+      if (d && !d.error) _worldTraits = d;
+    } catch(e) {}
+  }
+
+  // STEP 1 → 2: validate name, load classes
+  async function ccStep2() {
     const n = document.getElementById('identity-name').value.trim();
-    const c = document.getElementById('identity-coven').value.trim();
     if (!n) { toast('You must name yourself before descending.'); return; }
+    _ccData.name  = n;
+    _ccData.coven = document.getElementById('identity-coven').value.trim() || 'The Unsanctified';
+
+    document.getElementById('cc-step-1').style.display = 'none';
+    document.getElementById('cc-step-2').style.display = '';
+
+    // Load classes from Firebase
+    const grid = document.getElementById('cc-class-grid');
+    grid.innerHTML = '<div style="font-family:var(--ff-body);font-style:italic;font-size:0.9rem;color:var(--text-secondary);">Loading classes…</div>';
+    try {
+      const classes = await fetch(`${FB_URL}/world/classes.json?cb=`+Date.now()).then(r=>r.json());
+      if (!classes || classes.error) throw new Error('no classes');
+      grid.innerHTML = Object.entries(classes).map(([key, cls]) => {
+        const statLine = cls.stats
+          ? Object.entries(cls.stats).map(([s,v]) => `<span>${s.slice(0,3).toUpperCase()} ${v}</span>`).join('')
+          : '';
+        return `<div class="cc-class-card" id="cc-cls-${key}" onclick="ccPickClass('${key}')">
+          <div class="cc-class-name">${cls.name||key}</div>
+          <div class="cc-class-role">${cls.role||''}</div>
+          <div class="cc-class-stats">${statLine}</div>
+          ${cls.lore ? `<div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);margin-top:0.4rem;line-height:1.5;">${cls.lore}</div>` : ''}
+        </div>`;
+      }).join('');
+    } catch(e) {
+      // Fallback to hardcoded classes
+      const fallback = {
+        'hermeticist':  { name:'Hermeticist',  role:'Seeker of hidden correspondences', stats:{fortitude:8,wrath:8,intuition:14,empathy:10,endurance:9,memory:13,cunning:15,gnosis:3,speed:10} },
+        'flagellant':   { name:'Flagellant',   role:'Body as instrument, will as fuel',  stats:{fortitude:14,wrath:12,intuition:8,empathy:6,endurance:13,memory:7,cunning:9,gnosis:0,speed:9} },
+        'plague-scribe':{ name:'Plague-Scribe',role:'The archivist of ruin',             stats:{fortitude:7,wrath:6,intuition:13,empathy:9,endurance:8,memory:15,cunning:14,gnosis:2,speed:8} },
+      };
+      grid.innerHTML = Object.entries(fallback).map(([key, cls]) =>
+        `<div class="cc-class-card" id="cc-cls-${key}" onclick="ccPickClass('${key}')">
+          <div class="cc-class-name">${cls.name}</div>
+          <div class="cc-class-role">${cls.role}</div>
+        </div>`
+      ).join('');
+    }
+  }
+
+  function ccPickClass(key) {
+    document.querySelectorAll('.cc-class-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('cc-cls-'+key)?.classList.add('selected');
+    _ccData.classKey = key;
+    // Store class data from Firebase or fallback
+    const cardEl = document.getElementById('cc-cls-'+key);
+    _ccData.classData = { name: cardEl?.querySelector('.cc-class-name')?.textContent || key };
+  }
+
+  // STEP 2 → 3: stat allocation
+  async function ccStep3() {
+    if (!_ccData.classKey) { toast('Choose a class first.'); return; }
+    document.getElementById('cc-step-2').style.display = 'none';
+    document.getElementById('cc-step-3').style.display = '';
+
+    // Load class stats from Firebase for base values
+    let baseStats = {fortitude:10,wrath:8,intuition:12,empathy:10,endurance:10,memory:8,cunning:12,gnosis:0,speed:10};
+    try {
+      const cls = await fetch(`${FB_URL}/world/classes/${_ccData.classKey}.json?cb=`+Date.now()).then(r=>r.json());
+      if (cls && !cls.error) {
+        _ccData.classData = cls;
+        if (cls.stats) baseStats = { ...baseStats, ...cls.stats };
+      }
+    } catch(e) {}
+
+    _ccData.stats = { ...baseStats };
+    _ccData.basePoints = 15;
+    ccRenderStatGrid();
+  }
+
+  function ccRenderStatGrid() {
+    const STAT_LABELS = {
+      fortitude:'Fortitude', wrath:'Wrath', intuition:'Intuition',
+      empathy:'Empathy', endurance:'Endurance', memory:'Memory',
+      cunning:'Cunning', gnosis:'Gnosis', speed:'Speed'
+    };
+    const STAT_COLORS = {
+      fortitude:'#c43030', wrath:'#c43030', intuition:'#4a7a8b',
+      empathy:'#4a7a8b', endurance:'#8b7355', memory:'#8b7355',
+      cunning:'#6b9ac4', speed:'#6b9ac4', gnosis:'#3d3daa'
+    };
+    const spent = Object.values(_ccData.stats).reduce((a,b)=>a+b,0)
+      - Object.values(_ccData.classData?.stats||{}).reduce((a,b)=>a+b,0) || 0;
+    const traitCost = (_ccData.traits||[]).reduce((sum,t) => sum + ((_worldTraits[t]?.cost)||0), 0);
+    const remaining = _ccData.basePoints - spent - traitCost;
+
+    document.getElementById('cc-points-label').innerHTML =
+      `<strong style="color:${remaining<0?'var(--crimson-bright)':remaining===0?'var(--viridian-bright)':'var(--text-primary)'}">${remaining}</strong> points remaining`;
+
+    document.getElementById('cc-stat-grid').innerHTML = Object.entries(STAT_LABELS).map(([key, label]) => {
+      const val = _ccData.stats[key] || 0;
+      return `<div class="cc-stat-row">
+        <span class="cc-stat-name" style="color:${STAT_COLORS[key]}">${label}</span>
+        <div class="cc-stat-controls">
+          <button class="cc-stat-btn" onclick="ccAdjStat('${key}',-1)">−</button>
+          <span class="cc-stat-val">${val}</span>
+          <button class="cc-stat-btn" onclick="ccAdjStat('${key}',+1)">+</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function ccAdjStat(key, delta) {
+    const spent = Object.values(_ccData.stats).reduce((a,b)=>a+b,0)
+      - Object.values(_ccData.classData?.stats||{}).reduce((a,b)=>a+b,0) || 0;
+    const traitCost = (_ccData.traits||[]).reduce((sum,t) => sum+((_worldTraits[t]?.cost)||0),0);
+    const remaining = _ccData.basePoints - spent - traitCost;
+    const cur = _ccData.stats[key] || 0;
+    if (delta > 0 && remaining <= 0) { toast('No points remaining.'); return; }
+    if (delta < 0 && cur <= 1) { toast('Minimum value is 1.'); return; }
+    _ccData.stats[key] = cur + delta;
+    ccRenderStatGrid();
+  }
+
+  // STEP 3 → 4: traits
+  async function ccStep4() {
+    document.getElementById('cc-step-3').style.display = 'none';
+    document.getElementById('cc-step-4').style.display = '';
+
+    await loadWorldTraits();
+    ccRenderTraits();
+  }
+
+  function ccRenderTraits() {
+    const traitCost = (_ccData.traits||[]).reduce((sum,t)=>sum+((_worldTraits[t]?.cost)||0),0);
+    document.getElementById('cc-trait-budget').textContent =
+      (_ccData.basePoints - traitCost) + ' pts budget';
+
+    // Fallback traits if none in Firebase
+    const traits = Object.keys(_worldTraits).length > 0 ? _worldTraits : {
+      'paranoid':    { name:'Paranoid',   cost:0, desc:'Stress accumulates 20% faster, but you detect ambushes before allies do.',  effects:{stressRate:1.2, ambushDetect:true}, negative:true },
+      'sadistic':    { name:'Sadistic',   cost:0, desc:'Deal +10% damage to enemies below 30% HP. Stress from witnessing deaths is halved.', effects:{lowHpDmg:1.1}, negative:true },
+      'meticulous':  { name:'Meticulous', cost:2, desc:'+2 Memory. Research and skill-check preparation takes half as long.', effects:{memory:2} },
+      'insomniac':   { name:'Insomniac',  cost:0, desc:'+1 Speed, −2 Endurance. You act faster but tire more easily.', effects:{speed:1,endurance:-2}, negative:true },
+      'devout':      { name:'Devout',     cost:2, desc:'+2 Gnosis. Rites cost 10% less essence to perform.', effects:{gnosis:2} },
+      'sardonic':    { name:'Sardonic',   cost:1, desc:'+1 Cunning. Your detachment gives you clarity in crisis.', effects:{cunning:1} },
+    };
+
+    document.getElementById('cc-trait-grid').innerHTML = Object.entries(traits).map(([key, t]) => {
+      const selected = (_ccData.traits||[]).includes(key);
+      const isNeg = t.negative || (t.cost||0) <= 0;
+      const costLabel = (t.cost||0) > 0 ? `-${t.cost} pts` : (t.cost||0) < 0 ? `+${Math.abs(t.cost)} pts` : '0 pts';
+      const costCls = (t.cost||0) > 0 ? 'pos' : 'neg';
+      const effectLine = t.effects ? Object.entries(t.effects)
+        .filter(([,v])=>typeof v==='number')
+        .map(([k,v])=>`${k} ${v>0?'+'+v:v}`)
+        .join(', ') : '';
+      return `<div class="cc-trait-card${selected?' selected':''}${isNeg&&selected?' negative':''}" onclick="ccToggleTrait('${key}')">
+        <span class="cc-trait-check">${selected?'◆':'◇'}</span>
+        <div class="cc-trait-body">
+          <div class="cc-trait-name">${t.name||key}
+            <span class="cc-trait-cost ${costCls}">${costLabel}</span>
+          </div>
+          <div class="cc-trait-desc">${t.desc||''}</div>
+          ${effectLine?`<div class="cc-trait-effect">${effectLine}</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function ccToggleTrait(key) {
+    const idx = (_ccData.traits||[]).indexOf(key);
+    const t = _worldTraits[key] || {};
+    const traitCost = (_ccData.traits||[]).reduce((sum,k)=>sum+((_worldTraits[k]?.cost)||0),0);
+    if (idx >= 0) {
+      _ccData.traits.splice(idx, 1);
+    } else {
+      // Check budget — positive-cost traits reduce point budget
+      const newTotal = traitCost + (t.cost||0);
+      if (newTotal > _ccData.basePoints) { toast('Not enough points for this trait.'); return; }
+      if (!_ccData.traits) _ccData.traits = [];
+      _ccData.traits.push(key);
+    }
+    ccRenderTraits();
+    // Also update stat grid budget display
+    ccRenderStatGrid();
+  }
+
+  function ccBack(toStep) {
+    for (let i=1; i<=4; i++) {
+      const el = document.getElementById('cc-step-'+i);
+      if (el) el.style.display = i===toStep ? '' : 'none';
+    }
+  }
+
+  function ccFinish() {
+    const n = _ccData.name || document.getElementById('identity-name')?.value.trim();
+    if (!n) { toast('Enter your name first.'); ccBack(1); return; }
+    if (!_ccData.classKey) { toast('Choose a class first.'); ccBack(2); return; }
+
     playerName = n;
-    playerCoven = c || 'The Unsanctified';
+    playerCoven = _ccData.coven || 'The Unsanctified';
     localStorage.setItem('llair_name', playerName);
     localStorage.setItem('llair_coven', playerCoven);
+
+    // Apply trait stat effects
+    const finalStats = { ..._ccData.stats };
+    (_ccData.traits||[]).forEach(key => {
+      const t = (_worldTraits[key]) || {};
+      if (t.effects) Object.entries(t.effects).forEach(([s,v]) => {
+        if (typeof v === 'number' && finalStats[s] !== undefined) {
+          finalStats[s] = Math.max(1, (finalStats[s]||0) + v);
+        }
+      });
+    });
+
+    // Set up character data
+    _characterData = {
+      name: playerName, coven: playerCoven,
+      class: _ccData.classData?.name || _ccData.classKey,
+      classKey: _ccData.classKey,
+      level: 1, xp: 0,
+      stats: finalStats,
+      traits: _ccData.traits || [],
+      skills: [],
+      inventory: [],
+      stress: 0,
+    };
+
     document.getElementById('identity-modal').classList.remove('open');
-    toast('Welcome, ' + playerName + ' of ' + playerCoven + '.');
+    refreshCharacterBar();
+    persistState().catch(()=>{});
+    toast('Welcome, ' + playerName + '.');
     publishPresence();
   }
 
@@ -9251,13 +9655,15 @@ async function refreshFieldEventCards() {
     if (_researchData?.tarotSpread) {
       _currentSpread = _researchData.tarotSpread.map(s => {
         if (!s) return null;
-        const card = majorArcana.find(c => c.name === s.cardName);
-        if (!card) return null;
+        // Look in world cards first, then hardcoded majorArcana
+        const allCards = [...majorArcana, ...(_worldTarotCards || [])];
+        const card = allCards.find(cd => cd.name === s.cardName) 
+          || { name: s.cardName, num: '?', sym: '◈' };
         const effect = TAROT_EFFECTS[card.name];
         const eff = s.reversed ? effect?.rev : effect?.up;
-        return { card, reversed: s.reversed, effect: eff || { label: 'Effect restored.' } };
+        return { card, reversed: s.reversed, effect: eff || { label: 'Fate persists.' } };
       });
-      setTimeout(renderTarotSpread, 100);
+      setTimeout(renderTarotSpread, 200);
     }
   }
 
@@ -9964,6 +10370,135 @@ async function refreshFieldEventCards() {
     closeCombat();
   }
 
+
+
+  // Check if a combatant (or the player) has a specific trait
+  function hasActiveTrait(combatant, traitKey) {
+    if (combatant?.isPlayer) {
+      return (_characterData?.traits||[]).includes(traitKey);
+    }
+    return (combatant?.traits||[]).includes(traitKey);
+  }
+
+  // Apply trait bonuses to a skill check (meticulous, devout, etc.)
+  function applyTraitCheckBonus(stat, baseBonus) {
+    let bonus = baseBonus;
+    const traits = _characterData?.traits || [];
+    if (traits.includes('meticulous') && (stat==='memory'||stat==='cunning')) bonus += 2;
+    if (traits.includes('devout') && stat==='gnosis') bonus += 2;
+    if (traits.includes('sardonic') && stat==='cunning') bonus += 1;
+    return bonus;
+  }
+
+
+  // ── ACOLYTE DETAIL MODAL ──
+  function openAcolyteDetail(a) {
+    const GLYPHS = ['△','▽','◈','◇','○','◬'];
+    const idx = (_acolytesData||[]).indexOf(a);
+    const glyph = GLYPHS[idx % GLYPHS.length];
+    const derived = derivedStats(a.stats||{}, a.level||1);
+    const onRoster = a.onRoster === true;
+
+    document.getElementById('ad-glyph').textContent = glyph;
+    document.getElementById('ad-name').textContent = a.name;
+    document.getElementById('ad-class').textContent = (a.class||'—') + ' · Lv.' + (a.level||1)
+      + (a.stress >= 75 ? ' · ⚠ High Stress' : '');
+    document.getElementById('ad-hp').textContent   = Math.round(derived.hp);
+    document.getElementById('ad-mana').textContent = Math.round(derived.mana);
+    document.getElementById('ad-crit').textContent = Math.round(derived.crit) + '%';
+    document.getElementById('ad-dodge').textContent= Math.round(derived.dodge) + '%';
+    const badge = document.getElementById('ad-roster-badge');
+    badge.textContent = onRoster ? '◆ Roster' : '◇ Off Roster';
+    badge.style.color = onRoster ? 'var(--amber-bright)' : 'var(--text-secondary)';
+    badge.style.borderColor = onRoster ? 'rgba(212,137,10,0.4)' : 'var(--border)';
+
+    // Stats tab
+    const ELEM = [
+      { name:'Fire',  color:'#c43030', stats:['fortitude','wrath'] },
+      { name:'Water', color:'#4a7a8b', stats:['intuition','empathy'] },
+      { name:'Earth', color:'#8b7355', stats:['endurance','memory'] },
+      { name:'Air',   color:'#6b9ac4', stats:['cunning','speed'] },
+      { name:'Aether',color:'#3d3daa', stats:['gnosis'] },
+    ];
+    const stats = a.stats||{};
+    document.getElementById('ad-stats').innerHTML = ELEM.map(el =>
+      `<div style="border-top:1px solid var(--border);padding:0.5rem 0;">
+        <div style="font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;color:${el.color};margin-bottom:0.3rem;">${el.name}</div>
+        ${el.stats.map(s => {
+          const v = stats[s]||0; const pct = Math.round((v/20)*100);
+          return `<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;">
+            <span style="font-family:var(--ff-heading);font-size:0.6rem;letter-spacing:0.05em;color:var(--text-secondary);width:72px;">${s.charAt(0).toUpperCase()+s.slice(1)}</span>
+            <div style="flex:1;height:3px;background:var(--stone);"><div style="height:100%;background:${el.color};width:${pct}%;transition:width 0.3s;"></div></div>
+            <span style="font-family:var(--ff-heading);font-size:0.7rem;color:var(--text-primary);width:20px;text-align:right;">${v}</span>
+          </div>`;
+        }).join('')}
+      </div>`
+    ).join('');
+
+    // Skills tab
+    const skills = a.skills||[];
+    document.getElementById('ad-skills').innerHTML = skills.length
+      ? skills.map(sk => `<div style="border-top:1px solid var(--border);padding:0.6rem 0;">
+          <div style="font-family:var(--ff-heading);font-size:0.65rem;letter-spacing:0.04em;color:var(--text-primary);">${sk.name||sk.key||sk}</div>
+          <div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);line-height:1.5;">${sk.desc||''}</div>
+        </div>`).join('')
+      : '<div style="font-family:var(--ff-body);font-style:italic;font-size:0.88rem;color:var(--text-secondary);padding:0.5rem 0;">No skills learned. Use + Teach Skill from Company panel.</div>';
+
+    // Inventory tab
+    const inv = a.inventory||[];
+    document.getElementById('ad-inventory').innerHTML = inv.length
+      ? inv.map(it => `<div style="border-top:1px solid var(--border);padding:0.5rem 0;font-family:var(--ff-heading);font-size:0.7rem;letter-spacing:0.04em;color:var(--amber-bright);">${it.name||it}</div>`).join('')
+      : '<div style="font-family:var(--ff-body);font-style:italic;font-size:0.88rem;color:var(--text-secondary);padding:0.5rem 0;">No equipment.</div>';
+
+    // Traits tab
+    const traits = a.states||a.traits||[];
+    const worldTraits = _worldTraits || {};
+    document.getElementById('ad-traits').innerHTML = traits.length
+      ? traits.map(t => {
+          const td = worldTraits[t.toLowerCase?.()];
+          return `<div style="border-top:1px solid var(--border);padding:0.6rem 0;">
+            <div style="font-family:var(--ff-heading);font-size:0.65rem;letter-spacing:0.04em;color:var(--text-primary);">${td?.name||t}</div>
+            <div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);line-height:1.5;">${td?.desc||'No description available.'}</div>
+          </div>`;
+        }).join('')
+      : '<div style="font-family:var(--ff-body);font-style:italic;font-size:0.88rem;color:var(--text-secondary);padding:0.5rem 0;">No traits.</div>';
+
+    // Reset to stats tab
+    document.querySelectorAll('.ad-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.ad-tab')?.classList.add('active');
+    document.querySelectorAll('.ad-section').forEach(s => s.style.display = 'none');
+    document.getElementById('ad-stats').style.display = '';
+
+    document.getElementById('acolyte-detail-modal').classList.add('open');
+  }
+
+  function switchAdTab(tab, btn) {
+    document.querySelectorAll('.ad-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.ad-section').forEach(s => s.style.display = 'none');
+    if (btn) btn.classList.add('active');
+    const el = document.getElementById('ad-'+tab);
+    if (el) el.style.display = '';
+  }
+
+
+  function upgradeBuilding(key, cost) {
+    // Default to Saturnine (index 4) as upgrade currency — can be overridden
+    const saturnineIdx = 4;
+    if ((values[saturnineIdx]||0) < cost) {
+      toast('Insufficient Saturnine essence. Need ' + cost + ' ♄.');
+      return;
+    }
+    values[saturnineIdx] -= cost;
+    if (!_lairData) _lairData = { buildings: {} };
+    if (!_lairData.buildings) _lairData.buildings = {};
+    const curLvl = _lairData.buildings[key] || 0;
+    _lairData.buildings[key] = curLvl + 1;
+    renderLairBuildings(_lairData.buildings);
+    updateCaps();
+    document.querySelectorAll('.resource-pill .res-value').forEach((el,i) => { el.textContent = Math.floor(values[i]); });
+    persistState().catch(()=>{});
+    toast(`${key.replace(/-/g,' ')} upgraded to Lv.${curLvl+1}.`);
+  }
 
 </script>
 

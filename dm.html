@@ -143,6 +143,8 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
   <button class="nb" onclick="nav('grimoires')" data-page="grimoires"><span class="ni">†</span> Grimoires</button>
   <button class="nb" onclick="nav('acolytes')" data-page="acolytes"><span class="ni">◈</span> Acolyte Rolls</button>
   <button class="nb" onclick="nav('characters')" data-page="characters"><span class="ni">✦</span> Characters &amp; Classes</button>
+  <button class="nb" onclick="nav('traits')" data-page="traits"><span class="ni">◇</span> Traits</button>
+  <button class="nb" onclick="nav('questlines')" data-page="questlines"><span class="ni">○</span> Questlines</button>
   <button class="nb" onclick="nav('reset')" data-page="reset"><span class="ni">↺</span> Reset &amp; Class Pick</button>
   <div class="nav-sec">Combat</div>
   <button class="nb" onclick="nav('combatsys')" data-page="combatsys"><span class="ni">†</span> Combat System</button>
@@ -558,9 +560,10 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
     <input type="text" id="rst-buildings" value='{"alchemical-forge":1,"altar":1,"dormitorium":1,"scriptorium":1}'></div>
     <div class="fld"><label>Starting Resources (7 values: Solar Lunar Jovian Martial Saturnine Venusian Mercurial)</label>
     <input type="text" id="rst-resources" value="847,312,154,98,41,203,189"></div>
-    <div style="margin-top:0.5rem;display:flex;gap:0.5rem;">
+    <div style="margin-top:0.5rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
       <button class="btn b-breach" onclick="resetPlayer()">↺ Reset to Level 1</button>
-      <button class="btn b-seal" onclick="document.getElementById('rst-preview').style.display='none'">Cancel</button>
+      <button class="btn b-rune" onclick="hardDeleteCharacter()" style="border-color:var(--crimson);">✕ Delete Character Data</button>
+      <button class="btn" onclick="document.getElementById('rst-preview').style.display='none'">Cancel</button>
     </div>
   </div>
 </div>
@@ -3111,6 +3114,332 @@ async function seedBuiltinCards() {
   }
 }
 
+
+// ══════════════════════════════════════════
+// TRAITS
+// ══════════════════════════════════════════
+async function loadTraits() {
+  try {
+    const traits = await fbGet('world/traits') || {};
+    const list = document.getElementById('traits-list');
+    if (!Object.keys(traits).length) {
+      list.innerHTML = '<div class="panel" style="font-family:var(--ff-b);font-style:italic;font-size:1rem;color:var(--pale);">No traits defined. Create the first trait.</div>';
+      return;
+    }
+    list.innerHTML = Object.entries(traits).map(([key, t]) => `
+      <div class="entity-card" style="cursor:pointer;" onclick="editTrait('${key}')">
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <div class="entity-name">${t.name||key}</div>
+          <span style="font-family:var(--ff-h);font-size:0.42rem;padding:0.1rem 0.4rem;border:1px solid;color:${(t.cost||0)>0?'var(--go)':'var(--mist)'};border-color:${(t.cost||0)>0?'rgba(201,168,76,0.3)':'rgba(107,92,128,0.3)'};">${(t.cost||0)>0?'-'+(t.cost||0)+' pts':((t.cost||0)<0?'+'+ Math.abs(t.cost||0)+' pts':'free')}</span>
+          ${t.negative?'<span style="font-family:var(--ff-h);font-size:0.42rem;color:var(--crimson);">negative</span>':''}
+        </div>
+        <div class="entity-sub">${t.desc||''}</div>
+        ${t.effects?`<div style="font-family:var(--ff-h);font-size:0.42rem;color:var(--ash);margin-top:0.2rem;">${Object.entries(t.effects).filter(([,v])=>typeof v==='number').map(([k,v])=>k+' '+(v>0?'+':'')+v).join(' · ')}</div>`:''}
+      </div>`).join('');
+    log('Loaded '+Object.keys(traits).length+' traits','ok');
+  } catch(e) { log('Error: '+e.message,'err'); }
+}
+
+function openTraitEditor() {
+  document.getElementById('trait-key').value = '';
+  document.getElementById('trait-key-in').value = '';
+  document.getElementById('trait-name').value = '';
+  document.getElementById('trait-desc').value = '';
+  document.getElementById('trait-cost').value = '0';
+  document.getElementById('trait-negative').value = 'false';
+  document.getElementById('trait-flags').value = '';
+  ['fortitude','wrath','intuition','empathy','endurance','memory','cunning','speed','gnosis'].forEach(s => {
+    document.getElementById('te-'+s).value = '';
+  });
+  document.getElementById('trait-ed-title').textContent = 'New Trait';
+  document.getElementById('trait-editor').style.display = 'block';
+  document.getElementById('trait-editor').scrollIntoView({behavior:'smooth'});
+}
+
+async function editTrait(key) {
+  try {
+    const t = await fbGet('world/traits/'+key);
+    if (!t) return;
+    document.getElementById('trait-key').value = key;
+    document.getElementById('trait-key-in').value = key;
+    document.getElementById('trait-name').value = t.name||'';
+    document.getElementById('trait-desc').value = t.desc||'';
+    document.getElementById('trait-cost').value = t.cost||0;
+    document.getElementById('trait-negative').value = t.negative ? 'true':'false';
+    ['fortitude','wrath','intuition','empathy','endurance','memory','cunning','speed','gnosis'].forEach(s => {
+      document.getElementById('te-'+s).value = t.effects?.[s] || '';
+    });
+    // Reconstruct flags from non-stat effects
+    const flags = Object.entries(t.effects||{}).filter(([,v])=>typeof v!=='number').map(([k,v])=>k+':'+v).join(', ');
+    document.getElementById('trait-flags').value = flags;
+    document.getElementById('trait-ed-title').textContent = 'Edit: '+t.name;
+    document.getElementById('trait-editor').style.display = 'block';
+    document.getElementById('trait-editor').scrollIntoView({behavior:'smooth'});
+  } catch(e) { log('Error: '+e.message,'err'); }
+}
+
+async function saveTrait() {
+  const key = document.getElementById('trait-key-in').value.trim().toLowerCase().replace(/\s+/g,'-')
+    || document.getElementById('trait-name').value.toLowerCase().replace(/\s+/g,'-');
+  if (!key) { toast('Enter a trait key.'); return; }
+  const effects = {};
+  ['fortitude','wrath','intuition','empathy','endurance','memory','cunning','speed','gnosis'].forEach(s => {
+    const v = parseFloat(document.getElementById('te-'+s).value);
+    if (!isNaN(v) && v !== 0) effects[s] = v;
+  });
+  // Parse flags string: "stressRate:1.2, ambushDetect:true"
+  const flagsRaw = document.getElementById('trait-flags').value;
+  flagsRaw.split(',').map(f=>f.trim()).filter(Boolean).forEach(f => {
+    const [k,v] = f.split(':').map(x=>x.trim());
+    if (k && v) {
+      if (v==='true') effects[k]=true;
+      else if (v==='false') effects[k]=false;
+      else if (!isNaN(parseFloat(v))) effects[k]=parseFloat(v);
+      else effects[k]=v;
+    }
+  });
+  const t = {
+    name: document.getElementById('trait-name').value,
+    desc: document.getElementById('trait-desc').value,
+    cost: parseInt(document.getElementById('trait-cost').value)||0,
+    negative: document.getElementById('trait-negative').value==='true',
+    effects: Object.keys(effects).length ? effects : null,
+  };
+  try {
+    await fbPut('world/traits/'+key, t);
+    log('Trait saved: '+t.name,'ok');
+    toast('✓ Trait saved.');
+    document.getElementById('trait-editor').style.display='none';
+    loadTraits();
+  } catch(e) { log('Error: '+e.message,'err'); }
+}
+
+async function deleteTrait(key) {
+  if (!key || !confirm('Delete trait "'+key+'"?')) return;
+  try {
+    await fbDel('world/traits/'+key);
+    log('Trait deleted: '+key,'warn');
+    document.getElementById('trait-editor').style.display='none';
+    loadTraits();
+  } catch(e) { log('Error: '+e.message,'err'); }
+}
+
+// ══════════════════════════════════════════
+// QUESTLINES
+// ══════════════════════════════════════════
+let _questNodes = []; // nodes being edited
+
+async function loadQuestlines() {
+  try {
+    const quests = await fbGet('world/questlines') || {};
+    const list = document.getElementById('questlines-list');
+    if (!Object.keys(quests).length) {
+      list.innerHTML = '<div class="panel" style="font-family:var(--ff-b);font-style:italic;font-size:1rem;color:var(--pale);">No questlines defined.</div>';
+      return;
+    }
+    list.innerHTML = Object.entries(quests).map(([key, q]) => `
+      <div class="entity-card" style="cursor:pointer;" onclick="editQuestline('${key}')">
+        <div class="entity-name">${q.title||key}</div>
+        <div class="entity-sub">${q.desc||''}</div>
+        <div style="font-family:var(--ff-h);font-size:0.42rem;color:var(--ash);margin-top:0.2rem;">
+          ${Object.keys(q.nodes||{}).length} nodes · starts at: ${q.startNode||'start'}
+        </div>
+      </div>`).join('');
+    log('Loaded '+Object.keys(quests).length+' questlines','ok');
+  } catch(e) { log('Error: '+e.message,'err'); }
+}
+
+function openQuestEditor() {
+  document.getElementById('quest-key').value = '';
+  document.getElementById('quest-key-in').value = '';
+  document.getElementById('quest-title').value = '';
+  document.getElementById('quest-desc').value = '';
+  document.getElementById('quest-start').value = 'start';
+  _questNodes = [];
+  renderQuestNodes();
+  document.getElementById('quest-ed-title').textContent = 'New Questline';
+  document.getElementById('quest-editor').style.display = 'block';
+  document.getElementById('quest-editor').scrollIntoView({behavior:'smooth'});
+}
+
+async function editQuestline(key) {
+  try {
+    const q = await fbGet('world/questlines/'+key);
+    if (!q) return;
+    document.getElementById('quest-key').value = key;
+    document.getElementById('quest-key-in').value = key;
+    document.getElementById('quest-title').value = q.title||'';
+    document.getElementById('quest-desc').value = q.desc||'';
+    document.getElementById('quest-start').value = q.startNode||'start';
+    _questNodes = Object.entries(q.nodes||{}).map(([id, n]) => ({id, ...n}));
+    renderQuestNodes();
+    document.getElementById('quest-ed-title').textContent = 'Edit: '+q.title;
+    document.getElementById('quest-editor').style.display = 'block';
+    document.getElementById('quest-editor').scrollIntoView({behavior:'smooth'});
+  } catch(e) { log('Error: '+e.message,'err'); }
+}
+
+function addQuestNode() {
+  _questNodes.push({ id:'node_'+Date.now(), text:'', choices:[] });
+  renderQuestNodes();
+}
+
+function renderQuestNodes() {
+  const el = document.getElementById('quest-nodes-list');
+  el.innerHTML = _questNodes.map((node, ni) => `
+    <div style="border:1px solid var(--bd);padding:0.7rem;margin-bottom:0.5rem;">
+      <div style="display:flex;gap:0.4rem;align-items:center;margin-bottom:0.4rem;">
+        <input type="text" value="${node.id}" oninput="_questNodes[${ni}].id=this.value" style="width:100px;font-size:0.85rem;font-family:var(--ff-h);background:var(--i-bg);border:1px solid var(--bd);color:var(--fg);padding:0.2rem 0.3rem;" placeholder="node id">
+        <button onclick="_questNodes.splice(${ni},1);renderQuestNodes()" style="background:none;border:none;color:var(--ash);cursor:pointer;font-size:0.9rem;">✕</button>
+      </div>
+      <textarea oninput="_questNodes[${ni}].text=this.value" style="width:100%;min-height:55px;font-size:0.88rem;background:var(--i-bg);border:1px solid var(--bd);color:var(--fg);padding:0.3rem;box-sizing:border-box;" placeholder="Node text shown to player…">${node.text||''}</textarea>
+      <div style="font-family:var(--ff-h);font-size:0.44rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ash);margin:0.4rem 0 0.2rem;">Choices</div>
+      ${(node.choices||[]).map((ch, ci) => `
+        <div style="display:grid;grid-template-columns:1fr 80px 80px auto;gap:0.3rem;margin-bottom:0.3rem;align-items:center;">
+          <input type="text" value="${ch.label||''}" oninput="_questNodes[${ni}].choices[${ci}].label=this.value" style="font-size:0.82rem;background:var(--i-bg);border:1px solid var(--bd);color:var(--fg);padding:0.2rem 0.3rem;" placeholder="Choice text">
+          <input type="text" value="${ch.nextNode||''}" oninput="_questNodes[${ni}].choices[${ci}].nextNode=this.value" style="font-size:0.78rem;background:var(--i-bg);border:1px solid var(--bd);color:var(--fg);padding:0.2rem 0.3rem;" placeholder="→ node">
+          <input type="text" value="${ch.effect||''}" oninput="_questNodes[${ni}].choices[${ci}].effect=this.value" style="font-size:0.78rem;background:var(--i-bg);border:1px solid var(--bd);color:var(--fg);padding:0.2rem 0.3rem;" placeholder="effect">
+          <button onclick="_questNodes[${ni}].choices.splice(${ci},1);renderQuestNodes()" style="background:none;border:none;color:var(--ash);cursor:pointer;">✕</button>
+        </div>`).join('')}
+      <button onclick="_questNodes[${ni}].choices.push({label:'',nextNode:'',effect:''});renderQuestNodes()" style="font-family:var(--ff-h);font-size:0.42rem;letter-spacing:0.08em;text-transform:uppercase;background:none;border:1px solid var(--bd);color:var(--ash);cursor:pointer;padding:0.2rem 0.5rem;margin-top:0.2rem;">+ Choice</button>
+    </div>`).join('');
+}
+
+async function saveQuestline() {
+  const key = document.getElementById('quest-key-in').value.trim() || ('quest-'+Date.now());
+  const nodes = {};
+  _questNodes.forEach(n => { nodes[n.id] = { text:n.text, choices:n.choices||[] }; });
+  const q = {
+    title: document.getElementById('quest-title').value,
+    desc:  document.getElementById('quest-desc').value,
+    startNode: document.getElementById('quest-start').value||'start',
+    nodes,
+  };
+  try {
+    await fbPut('world/questlines/'+key, q);
+    log('Questline saved: '+q.title,'ok');
+    toast('✓ Questline saved.');
+    document.getElementById('quest-editor').style.display='none';
+    loadQuestlines();
+  } catch(e) { log('Error: '+e.message,'err'); }
+}
+
+async function deleteQuestline(key) {
+  if (!key || !confirm('Delete questline "'+key+'"?')) return;
+  try {
+    await fbDel('world/questlines/'+key);
+    log('Questline deleted: '+key,'warn');
+    document.getElementById('quest-editor').style.display='none';
+    loadQuestlines();
+  } catch(e) { log('Error: '+e.message,'err'); }
+}
+
+// ══════════════════════════════════════════
+// HARD DELETE CHARACTER
+// ══════════════════════════════════════════
+async function hardDeleteCharacter() {
+  const id = document.getElementById('rst-sel').value;
+  if (!id) { toast('Choose a seeker first.'); return; }
+  const name = allPlayers[id]?.presence?.name || id.slice(0,8);
+  if (!confirm('PERMANENTLY DELETE all data for ' + name + '?\nThis removes their save, events, and presence. Cannot be undone.')) return;
+  try {
+    await Promise.all([
+      fbDel('saves/'+id),
+      fbDel('events/'+id),
+      fbDel('broadcasts/'+id),
+      fbDel('players/'+id),
+    ]);
+    log('Hard deleted: '+name,'warn');
+    toast('✕ '+name+' deleted from all records.');
+    document.getElementById('rst-preview').style.display='none';
+    await loadAll();
+  } catch(e) { log('Error: '+e.message,'err'); }
+}
+
 </script>
+
+<div id="page-traits" class="page">
+<div class="pg-head">
+  <div class="pg-title">Traits</div>
+  <div class="pg-desc">Define character traits available during character creation. Positive traits cost stat points; negative traits refund them. Traits apply mechanical effects in combat and skill checks.</div>
+</div>
+<div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+  <button class="btn b-rune" onclick="loadTraits()">↻ Refresh</button>
+  <button class="btn b-seal" onclick="openTraitEditor()">+ New Trait</button>
+</div>
+<div id="traits-list"></div>
+
+<div class="panel" id="trait-editor" style="display:none;margin-top:1rem;">
+  <div class="ph" id="trait-ed-title">New Trait</div>
+  <input type="hidden" id="trait-key">
+  <div class="g2">
+    <div class="fld"><label>Trait Key (slug)</label><input type="text" id="trait-key-in" placeholder="paranoid"></div>
+    <div class="fld"><label>Display Name</label><input type="text" id="trait-name" placeholder="Paranoid"></div>
+  </div>
+  <div class="fld"><label>Description (shown to player)</label><textarea id="trait-desc" placeholder="Stress accumulates 20% faster, but you detect ambushes before allies."></textarea></div>
+  <div class="fld">
+    <label>Point Cost <span style="color:var(--ash);font-size:0.85em;">(positive = costs points, negative = refunds points)</span></label>
+    <input type="number" id="trait-cost" value="0" min="-5" max="5">
+  </div>
+  <div class="fld"><label>Negative Trait <span style="color:var(--ash);font-size:0.85em;">(shown in red during creation)</span></label>
+    <select id="trait-negative"><option value="false">No (beneficial)</option><option value="true">Yes (detrimental)</option></select>
+  </div>
+  <div class="ph" style="margin-top:0.8rem;">Mechanical Effects</div>
+  <div class="pg-desc" style="margin-bottom:0.6rem;">Stats to modify when this trait is applied. Use numeric values (+/-). Leave blank for no effect.</div>
+  <div class="g4" id="trait-effects-grid">
+    <div class="fld"><label>Fortitude</label><input type="number" id="te-fortitude" placeholder="0"></div>
+    <div class="fld"><label>Wrath</label><input type="number" id="te-wrath" placeholder="0"></div>
+    <div class="fld"><label>Intuition</label><input type="number" id="te-intuition" placeholder="0"></div>
+    <div class="fld"><label>Empathy</label><input type="number" id="te-empathy" placeholder="0"></div>
+    <div class="fld"><label>Endurance</label><input type="number" id="te-endurance" placeholder="0"></div>
+    <div class="fld"><label>Memory</label><input type="number" id="te-memory" placeholder="0"></div>
+    <div class="fld"><label>Cunning</label><input type="number" id="te-cunning" placeholder="0"></div>
+    <div class="fld"><label>Speed</label><input type="number" id="te-speed" placeholder="0"></div>
+    <div class="fld"><label>Gnosis</label><input type="number" id="te-gnosis" placeholder="0"></div>
+  </div>
+  <div class="fld"><label>Special Flags <span style="color:var(--ash);font-size:0.85em;">(comma-separated: stressRate:1.2, ambushDetect:true, lowHpDmg:1.1)</span></label>
+    <input type="text" id="trait-flags" placeholder="stressRate:1.2"></div>
+  <div style="display:flex;gap:0.5rem;margin-top:0.8rem;">
+    <button class="btn b-ward" onclick="saveTrait()">✓ Save Trait</button>
+    <button class="btn b-seal" onclick="deleteTrait(document.getElementById('trait-key').value)">✕ Delete</button>
+    <button class="btn" onclick="document.getElementById('trait-editor').style.display='none'">Cancel</button>
+  </div>
+</div>
+</div>
+
+
+<div id="page-questlines" class="page">
+<div class="pg-head">
+  <div class="pg-title">Questlines</div>
+  <div class="pg-desc">Define multi-step story questlines with branching choices. Each node can have choices that lead to other nodes, apply rewards, trigger combat, or end the questline.</div>
+</div>
+<div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+  <button class="btn b-rune" onclick="loadQuestlines()">↻ Refresh</button>
+  <button class="btn b-seal" onclick="openQuestEditor()">+ New Questline</button>
+</div>
+<div id="questlines-list"></div>
+
+<div class="panel" id="quest-editor" style="display:none;margin-top:1rem;">
+  <div class="ph" id="quest-ed-title">New Questline</div>
+  <input type="hidden" id="quest-key">
+  <div class="g2">
+    <div class="fld"><label>Quest Key</label><input type="text" id="quest-key-in" placeholder="the-iron-testament"></div>
+    <div class="fld"><label>Title</label><input type="text" id="quest-title" placeholder="The Iron Testament"></div>
+  </div>
+  <div class="fld"><label>Description</label><textarea id="quest-desc"></textarea></div>
+  <div class="fld"><label>Starting Node ID</label><input type="text" id="quest-start" value="start" placeholder="start"></div>
+
+  <div class="ph" style="margin-top:1rem;">Nodes <span style="font-size:0.85em;color:var(--ash);">(each node is a story beat)</span></div>
+  <div id="quest-nodes-list" style="margin-bottom:0.6rem;"></div>
+  <button class="btn b-rune" onclick="addQuestNode()">+ Add Node</button>
+
+  <div style="display:flex;gap:0.5rem;margin-top:1rem;">
+    <button class="btn b-ward" onclick="saveQuestline()">✓ Save Questline</button>
+    <button class="btn b-seal" onclick="deleteQuestline(document.getElementById('quest-key').value)">✕ Delete</button>
+    <button class="btn" onclick="document.getElementById('quest-editor').style.display='none'">Cancel</button>
+  </div>
+</div>
+</div>
+
 </body>
 </html>
