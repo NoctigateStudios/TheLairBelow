@@ -2674,7 +2674,7 @@
 </style>
 <style>
   /* ═══════════════════════════════════════════════════
-     HOLISTIC VISUAL OVERHAUL — v0.7.38
+     HOLISTIC VISUAL OVERHAUL — v0.7.39
      Principles: editorial, handcrafted, ruled-paper feel
      No glowing widgets; type and line as primary language
   ═══════════════════════════════════════════════════ */
@@ -5470,7 +5470,9 @@ randomMapMarkers[id] = marker;
     label.textContent=active.name+' — Choose an Action';
     const skills=getSkillsFor(active);
     const CAT_COL={attack:'var(--crimson-bright)',heal:'var(--viridian-bright)',buff:'var(--amber-bright)',debuff:'var(--mist)',revive:'var(--indigo-bright)',utility:'var(--gold)'};
-    grid.innerHTML=skills.map(sk=>{
+
+    // Skills
+    const skillBtns=skills.map(sk=>{
       const cat=sk.category||sk.cat||'attack';
       const col=CAT_COL[cat]||'var(--gold)';
       const bcls='skill-btn'+(cat==='attack'||cat==='debuff'?' attack-btn':cat==='heal'||cat==='revive'?' heal-btn':'');
@@ -5485,10 +5487,37 @@ randomMapMarkers[id] = marker;
         </button>
         <button class="skill-info-btn" onclick="showSkillTooltip('${sk._key}',event)" title="Skill info">ⓘ</button>
       </div>`;
-    }).join('')+`<div class="skill-btn-wrap"><button class="skill-btn" onclick="combatBasicAttack()">
+    }).join('');
+
+    // Basic attack always available
+    const basicBtn=`<div class="skill-btn-wrap"><button class="skill-btn" onclick="combatBasicAttack()">
         <span class="skill-btn-name">Strike</span>
         <span class="skill-btn-sub">Basic · No cost</span>
       </button></div>`;
+
+    // Consumable items from player inventory (or acolyte's carried items)
+    const combatItems = active.isPlayer
+      ? Object.entries(inventory||{}).filter(([,qty])=>qty>0)
+      : (active.sourceAcolyte?.inventory||[]).map(i=>[(i.name||i),1]);
+
+    const itemBtns = combatItems.map(([key,qty])=>{
+      const r=RECIPES.find(x=>x.key===key);
+      if(!r) return '';
+      const isConsumable=(r.cat==='consumables')||(r.type||'').toLowerCase().includes('consumable');
+      if(!isConsumable) return '';
+      return `<div class="skill-btn-wrap">
+        <button class="skill-btn heal-btn" onclick="useCombatItem('${key}','${active.id}')">
+          <span class="skill-btn-name">${r.name}</span>
+          <span class="skill-btn-sub">×${qty} · ${r.effect||'Use item'}</span>
+        </button>
+      </div>`;
+    }).filter(Boolean).join('');
+
+    const itemSection = itemBtns
+      ? `<div style="font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-secondary);margin-top:0.5rem;padding-top:0.4rem;border-top:1px solid var(--border);">Items</div>${itemBtns}`
+      : '';
+
+    grid.innerHTML = skillBtns + basicBtn + itemSection;
   }
 
   function getSkillsFor(combatant){
@@ -7401,15 +7430,17 @@ async function refreshFieldEventCards() {
     const budgetEl = document.getElementById('cc-trait-budget');
     budgetEl.innerHTML = `<strong style="color:${totalBudget<0?'var(--crimson-bright)':totalBudget<3?'var(--amber-bright)':'var(--viridian-bright)'}">${totalBudget}</strong> points remaining after traits`;
 
-    // Fallback traits if none in Firebase
-    const traits = Object.keys(_worldTraits).length > 0 ? _worldTraits : {
-      'paranoid':    { name:'Paranoid',   cost:0, desc:'Stress accumulates 20% faster, but you detect ambushes before allies do.',  effects:{stressRate:1.2, ambushDetect:true}, negative:true },
-      'sadistic':    { name:'Sadistic',   cost:0, desc:'Deal +10% damage to enemies below 30% HP. Stress from witnessing deaths is halved.', effects:{lowHpDmg:1.1}, negative:true },
-      'meticulous':  { name:'Meticulous', cost:2, desc:'+2 Memory. Research and skill-check preparation takes half as long.', effects:{memory:2} },
-      'insomniac':   { name:'Insomniac',  cost:0, desc:'+1 Speed, −2 Endurance. You act faster but tire more easily.', effects:{speed:1,endurance:-2}, negative:true },
-      'devout':      { name:'Devout',     cost:2, desc:'+2 Gnosis. Rites cost 10% less essence to perform.', effects:{gnosis:2} },
-      'sardonic':    { name:'Sardonic',   cost:1, desc:'+1 Cunning. Your detachment gives you clarity in crisis.', effects:{cunning:1} },
-    };
+    // Only use Firebase traits — no fallbacks
+    const traits = _worldTraits;
+
+    if (!Object.keys(traits).length) {
+      document.getElementById('cc-trait-grid').innerHTML =
+        `<div style="font-family:var(--ff-body);font-style:italic;font-size:0.95rem;color:var(--text-secondary);padding:0.8rem 0;line-height:1.7;">
+          No traits defined yet. The DM can add traits from the Traits page in dm.html.<br>
+          You can continue without choosing any traits.
+        </div>`;
+      return;
+    }
 
     document.getElementById('cc-trait-grid').innerHTML = Object.entries(traits).map(([key, t]) => {
       const selected = (_ccData.traits||[]).includes(key);
@@ -10563,6 +10594,70 @@ async function refreshFieldEventCards() {
     document.querySelectorAll('.resource-pill .res-value').forEach((el,i) => { el.textContent = Math.floor(values[i]); });
     persistState().catch(()=>{});
     toast(`${key.replace(/-/g,' ')} upgraded to Lv.${curLvl+1}.`);
+  }
+
+
+  // ── USE ITEM IN COMBAT ──
+  function useCombatItem(itemKey, actorId) {
+    if (!_CS) return;
+    const actor = _CS.combatants.find(cb => cb.id === actorId);
+    if (!actor) return;
+    const r = RECIPES.find(x => x.key === itemKey);
+    if (!r) { toast('Item not found.'); return; }
+
+    // Deduct from inventory
+    if (actor.isPlayer) {
+      if ((inventory[itemKey]||0) <= 0) { toast('None left.'); return; }
+      inventory[itemKey]--;
+      if (inventory[itemKey] <= 0) delete inventory[itemKey];
+    } else {
+      // Acolyte — remove from their carried inventory
+      const src = actor.sourceAcolyte;
+      if (src?.inventory) {
+        const idx = src.inventory.findIndex(i=>(i.name||i)===r.name);
+        if (idx >= 0) src.inventory.splice(idx, 1);
+      }
+    }
+
+    // Resolve effect based on recipe type/effect text
+    const effect = (r.effect||'').toLowerCase();
+    const name = r.name;
+
+    // Healing items
+    if (effect.includes('heal') || effect.includes('hp') || effect.includes('restore')) {
+      const healAmt = parseInt(effect.match(/\+?(\d+)/)?.[1] || '20');
+      const targets = effect.includes('all') ? _CS.combatants.filter(c=>c.side==='ally'&&!c.dead) : [actor];
+      targets.forEach(t => {
+        const old = t.hp;
+        t.hp = Math.min(t.maxHp||t.hp, t.hp + healAmt);
+        combatLog(`${name}: ${t.name} restored ${Math.round(t.hp-old)} HP.`, 'heal');
+      });
+    }
+    // Mana restore
+    else if (effect.includes('mana')) {
+      const manaAmt = parseInt(effect.match(/\+?(\d+)/)?.[1] || '15');
+      actor.mana = Math.min(actor.maxMana||99, (actor.mana||0) + manaAmt);
+      combatLog(`${name}: ${actor.name} recovered ${manaAmt} mana.`, 'system');
+    }
+    // Stress reduction
+    else if (effect.includes('stress')) {
+      const stressAmt = parseInt(effect.match(/\+?(\d+)/)?.[1] || '10');
+      actor.stress = Math.max(0, (actor.stress||0) - stressAmt);
+      combatLog(`${name}: ${actor.name} stress reduced by ${stressAmt}.`, 'system');
+    }
+    // Blight/status clear
+    else if (effect.includes('blight') || effect.includes('clear') || effect.includes('clears')) {
+      actor.effects = (actor.effects||[]).filter(e => !['blight','poison','burn'].includes(e.type));
+      combatLog(`${name}: ${actor.name} cleared of status effects.`, 'system');
+    }
+    // Buff — generic
+    else {
+      combatLog(`${name} used. ${r.effect||''}`, 'system');
+    }
+
+    renderCombat();
+    persistState().catch(()=>{});
+    advanceTurn();
   }
 
 </script>
