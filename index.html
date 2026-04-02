@@ -4353,7 +4353,7 @@
       const data = await res.json();
       if (!data || data.error) return;
 
-      // DM-placed events — support both flat lat/lng and nested location.lat/lng
+      // DM-placed events — support both top-level lat/lng and nested location:{lat,lng}
       const dmEvts = data.dm || {};
       Object.entries(dmEvts).forEach(([id, ev]) => {
         if (!ev) return;
@@ -4361,7 +4361,6 @@
         const elng = ev.lng ?? ev.location?.lng;
         if (!elat || !elng) return;
         if (dmMapMarkers[id]) return; // already on map
-        // Normalise so popup & activation always finds lat/lng at top level
         const normEv = { ...ev, lat: elat, lng: elng, id, src: 'dm' };
         const marker = L.marker([elat, elng], { icon: makeIcon(ev.type || 'story', 'dm') }).addTo(map);
         marker.bindPopup(makeEventPopup(normEv), { maxWidth: 240, className: '' });
@@ -4412,26 +4411,23 @@
     const ev = _worldEventStore.get(evId);
     if (!ev) { toast('Event data not found — try refreshing the map.'); return; }
     document.querySelector('.leaflet-popup-close-button')?.click();
-
-    // Route through the full resolution engine (handles checks + combat + reward)
     runEventResolution(ev, evId);
   }
 
-  // Full event resolution — skill checks → combat → reward → cleanup
+  // Full resolution pipeline: skill checks → combat → reward → cleanup
   async function runEventResolution(ev, evId) {
-    // 1. Skill checks (if any) — run them first, block combat/reward on failure
+    // 1. Skill checks
     if (ev.skillChecks && ev.skillChecks.length) {
-      const passed = await runSkillChecks(ev.skillChecks, ev);
+      const passed = await runSkillChecks(ev.skillChecks);
       if (!passed) {
-        // Failed checks: apply failure stress/cost and stop here
-        applyCheckFailure(ev);
+        applyCheckFailurePenalty(ev);
         deleteWorldEventAfterResolve(ev, evId);
         return;
       }
     }
 
-    // 2. Combat (if enemies defined)
-    if (ev.enemies && ev.enemies.length) {
+    // 2. Combat
+    if (ev.type === 'combat' || (ev.enemies && ev.enemies.length)) {
       showCombat(ev).catch(err => {
         console.error('Combat error:', err);
         toast('Combat failed to load: ' + (err.message || err));
@@ -4440,101 +4436,92 @@
       return;
     }
 
-    // 3. Pure story / gather / recruit
+    // 3. Recruit
     if (ev.type === 'recruit') {
       showRecruitTab(ev);
       deleteWorldEventAfterResolve(ev, evId);
       return;
     }
-    if (ev.type === 'gather') {
-      toast(ev.actionText || 'You mark the site. The essence pools here during the right hour.');
-      deleteWorldEventAfterResolve(ev, evId);
-      return;
-    }
 
-    // Story / narrative — apply reward and show outcome
+    // 4. Gather / story — apply reward and toast
     if (ev.rewardRes) applyDmEventReward(ev);
     toast(ev.actionText || 'The moment settles into memory. Something has shifted.');
     deleteWorldEventAfterResolve(ev, evId);
   }
 
   // ── Skill check runner ─────────────────────────────────────────────────────
-  // Runs each check in sequence, shows animated results in a toast-style overlay.
-  // Returns true if all checks pass (or there are none), false if any fail.
-  async function runSkillChecks(checks, ev) {
-    const STAT_NAMES = {
+  // Runs each check in sequence. Posts a result card to the journal feed.
+  // Returns true if all pass, false on first failure.
+  async function runSkillChecks(checks) {
+    const STAT_LABEL = {
       fortitude:'Fortitude', wrath:'Wrath', intuition:'Intuition',
       empathy:'Empathy', endurance:'Endurance', memory:'Memory',
-      cunning:'Cunning', gnosis:'Gnosis', speed:'Speed'
+      cunning:'Cunning', gnosis:'Gnosis', speed:'Speed',
     };
-
-    // Build roster: player + acolytes
+    // Build roster: player + all acolytes
     const roster = [];
-    if (_characterData) roster.push({ name: _characterData.name || playerName || 'Seeker', stats: _characterData.stats || {}, isPlayer: true });
-    (_acolytesData || []).forEach(a => roster.push({ name: a.name, stats: a.stats || {}, isPlayer: false }));
+    if (_characterData) {
+      roster.push({ name: _characterData.name || playerName || 'Seeker', stats: _characterData.stats || {} });
+    }
+    (_acolytesData || []).forEach(a => roster.push({ name: a.name, stats: a.stats || {} }));
 
     let allPassed = true;
-
     for (const check of checks) {
-      const stat    = (check.stat || 'cunning').toLowerCase();
-      const dc      = parseInt(check.diff || check.dc || check.difficulty || 10);
-      const successText = check.successText || check.success || '';
-      const failText    = check.failText    || check.failure || '';
+      const stat = (check.stat || 'cunning').toLowerCase();
+      const dc   = parseInt(check.diff || check.dc || check.difficulty || 12);
 
-      // Pick the party member with the highest value in the required stat
-      let best = { name: 'Seeker', statVal: 10 };
+      // Best party member for this stat
+      let best = { name: roster[0]?.name || 'Seeker', statVal: 10 };
       roster.forEach(r => {
-        const v = r.stats[stat] || 0;
+        const v = Number(r.stats[stat]) || 0;
         if (v > best.statVal) best = { name: r.name, statVal: v };
       });
 
-      // Roll d20 + stat
-      const roll   = Math.floor(Math.random() * 20) + 1;
-      const total  = roll + best.statVal;
-      const passed = total >= dc;
+      const roll  = Math.floor(Math.random() * 20) + 1;
+      const total = roll + best.statVal;
+      const pass  = total >= dc;
+      const col   = pass ? 'var(--viridian-bright)' : 'var(--crimson-bright)';
+      const label = pass ? 'SUCCESS' : 'FAILURE';
 
-      // Show a result card in the journal
+      // Insert result card into journal feed and switch to it
       const feed = document.getElementById('journal-feed');
       if (feed) {
-        const col   = passed ? 'var(--viridian-bright)' : 'var(--crimson-bright)';
-        const icon  = passed ? '✓' : '✗';
-        const label = passed ? 'SUCCESS' : 'FAILURE';
-        const extra = passed
-          ? (successText ? `<p class="entry-body" style="margin-top:0.3rem;">${successText}</p>` : '')
-          : (failText    ? `<p class="entry-body" style="margin-top:0.3rem;">${failText}</p>`    : '');
-
         const card = document.createElement('div');
         card.className = 'journal-entry';
-        card.style.borderLeftColor = col;
+        card.style.cssText = `border-left-color:${col};`;
+        const extraText = pass
+          ? (check.successText || check.success || '')
+          : (check.failText    || check.failure  || '');
         card.innerHTML = `
           <div class="entry-header">
-            <span class="entry-title" style="color:${col};">${icon} ${STAT_NAMES[stat]||stat} Check — DC ${dc}</span>
+            <span class="entry-title" style="color:${col};">${pass ? '✓' : '✗'} ${STAT_LABEL[stat] || stat} Check — DC ${dc}</span>
             <span class="entry-time">${label}</span>
           </div>
           <p class="entry-body">
-            ${best.name} rolls <strong>${roll}</strong> + ${best.statVal} ${STAT_NAMES[stat]||stat}
-            = <strong style="color:${col};">${total}</strong>
-            vs DC ${dc}
+            <strong>${best.name}</strong> rolls <strong>${roll}</strong>
+            + ${best.statVal} ${STAT_LABEL[stat] || stat}
+            = <strong style="color:${col};">${total}</strong> vs DC ${dc}
           </p>
-          ${extra}`;
+          ${extraText ? `<p class="entry-body" style="margin-top:0.3rem;font-style:italic;">${extraText}</p>` : ''}`;
         feed.insertBefore(card, feed.firstChild);
         switchTab('journal');
-        await new Promise(r => setTimeout(r, 1800)); // brief pause so player reads it
+        // Brief pause so the player can read the result before the next check
+        await new Promise(r => setTimeout(r, 1600));
       }
 
-      if (!passed) { allPassed = false; break; } // stop on first failure
+      if (!pass) { allPassed = false; break; }
     }
     return allPassed;
   }
 
-  function applyCheckFailure(ev) {
-    // Apply stress to all acolytes on failure
-    const stressDmg = ev.failureStress || 10;
+  // Apply stress penalty on failed checks
+  function applyCheckFailurePenalty(ev) {
+    const stress = ev.failureStress || 10;
     (_acolytesData || []).forEach(a => {
-      a.stress = Math.min(100, (a.stress || 0) + stressDmg);
+      a.stress = Math.min(100, (a.stress || 0) + stress);
     });
     if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
-    toast('✗ The check failed. The acolytes bear the cost.');
+    toast(`✗ The check failed. ${stress} stress falls on the company.`);
     persistState().catch(() => {});
   }
 
@@ -4542,12 +4529,13 @@
     if (!ev) return;
     try {
       if (ev.src === 'inbox') {
-        // Personal inbox event — delete from events/{playerId}/{evtId}
+        // Personal DM inbox event — delete from events/{playerId}/{evtId}
         const myId = getOrCreatePlayerId();
-        const fbKey = ev.id; // the Firebase key under events/{myId}/
-        if (fbKey) await fetch(`${FB_URL}/events/${myId}/${fbKey}.json`, { method: 'DELETE' }).catch(() => {});
+        if (ev.id) {
+          await fetch(`${FB_URL}/events/${myId}/${ev.id}.json`, { method: 'DELETE' }).catch(() => {});
+        }
       } else if (ev.id) {
-        // World event (dm or random)
+        // Shared world event (dm or random path)
         const src = ev.src || 'random';
         await fetch(`${FB_URL}/world/events/${src}/${ev.id}.json`, { method: 'DELETE' });
         if (dmMapMarkers[ev.id]) { dmMapMarkers[ev.id].remove(); delete dmMapMarkers[ev.id]; }
@@ -5671,29 +5659,40 @@
       case 'stat_buff':
       case 'stat_debuff':
         if (eff.stat && eff.value) {
+          // Snapshot original values BEFORE applying so reversal is exact
+          const _snapshots = [];
           (_acolytesData||[]).forEach(a => {
             if (!a.stats) a.stats = {};
-            a.stats[eff.stat] = Math.max(1, (a.stats[eff.stat]||10) + eff.value);
+            const base = a.stats[eff.stat] !== undefined ? a.stats[eff.stat] : 10;
+            _snapshots.push({ id: a.id, base });
+            a.stats[eff.stat] = Math.max(1, base + eff.value);
           });
+          let _charBase = null;
           if (_characterData?.stats) {
-            _characterData.stats[eff.stat] = Math.max(1, (_characterData.stats[eff.stat]||10) + eff.value);
+            _charBase = _characterData.stats[eff.stat] !== undefined ? _characterData.stats[eff.stat] : 10;
+            _characterData.stats[eff.stat] = Math.max(1, _charBase + eff.value);
           }
+          // Update both acolyte cards and main character stat bars immediately
           if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
-          // Schedule reversal
+          refreshCharacterBar();
+          // Schedule exact reversal using captured base values
           if (durationH > 0) {
             setTimeout(() => {
-              (_acolytesData||[]).forEach(a => {
-                if (a.stats) a.stats[eff.stat] = Math.max(1, (a.stats[eff.stat]||10) - eff.value);
+              _snapshots.forEach(snap => {
+                const a = (_acolytesData||[]).find(x => x.id === snap.id);
+                if (a?.stats) a.stats[eff.stat] = snap.base;
               });
-              if (_characterData?.stats) {
-                _characterData.stats[eff.stat] = Math.max(1, (_characterData.stats[eff.stat]||10) - eff.value);
+              if (_characterData?.stats && _charBase !== null) {
+                _characterData.stats[eff.stat] = _charBase;
               }
-              toast(`Tarot effect expired: ${eff.stat} returns to base.`);
+              if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
+              refreshCharacterBar();
+              toast(`✦ Tarot effect expired — ${eff.stat} returns to base.`);
               persistState();
             }, durationH * 3600000);
           }
         }
-        tarotEffects.push({ ...eff, until });
+        tarotEffects.push({ ...eff, until, _snapshots, _charBase });
         break;
 
       case 'level_bonus':
@@ -6081,21 +6080,20 @@
     if (tab === 'arcana') { renderSkillResearch(); renderTarotSpread(); }
   }
 
-  // ── Navigate map to an event's coordinates ─────────────────────────────────
+  // Navigate the map to a specific lat/lng and highlight the pin
   function flyToEventLocation(lat, lng) {
     switchTab('field');
-    // Wait for the panel to become visible before flying
     setTimeout(() => {
       if (!map) return;
       map.invalidateSize();
       map.flyTo([lat, lng], 16, { animate: true, duration: 1.2 });
-      // Drop a temporary highlight ring so the player knows what to look at
+      // Temporary gold highlight ring so the spot is obvious
       const ring = L.circleMarker([lat, lng], {
-        radius: 18, color: '#c9a84c', weight: 2,
-        fillColor: '#c9a84c', fillOpacity: 0.08
+        radius: 20, color: '#c9a84c', weight: 2,
+        fillColor: '#c9a84c', fillOpacity: 0.1,
       }).addTo(map);
-      setTimeout(() => ring.remove(), 8000);
-    }, 120);
+      setTimeout(() => ring.remove(), 9000);
+    }, 150);
   }
 
   // Codex and long-press are initialised directly in enterGame above
@@ -6521,22 +6519,20 @@
   async function refreshFieldEventCards() {
     try {
       const myId = getOrCreatePlayerId();
-      // Load world events (random + world-dm) AND player's personal DM inbox in parallel
       const [worldRes, inboxRes] = await Promise.all([
         fetch(`${FB_URL}/world/events.json?cb=` + Date.now()),
         fetch(`${FB_URL}/events/${myId}.json?cb=`  + Date.now()),
       ]);
       const worldData = worldRes.ok ? await worldRes.json() : null;
       const inboxData = inboxRes.ok ? await inboxRes.json() : null;
-      _cachedWorldEvents = worldData;
+      if (worldData) _cachedWorldEvents = worldData;
       renderFieldEventCards(worldData, inboxData);
     } catch(e) {}
   }
 
   function renderFieldEventCards(data, inboxData) {
     const container = document.getElementById('field-events-list');
-    const el = document.getElementById('field-events-list');
-    if (!el) return;
+    if (!container) return;
     const TYPE_COLOR = {
       combat:  'var(--crimson-bright)',
       story:   'var(--indigo-bright)',
@@ -6545,19 +6541,18 @@
     };
     const TYPE_SIGIL = { combat:'⚠', story:'✦', gather:'☽', recruit:'⬡' };
 
-    // World events (placed on shared world map)
+    // World events (shared map)
     const worldEvts = [
       ...Object.entries((data?.dm     || {})).map(([id,ev]) => ({...ev, id, src:'dm'})),
       ...Object.entries((data?.random || {})).map(([id,ev]) => ({...ev, id, src:'random'})),
     ].filter(ev => ev && ev.title);
 
-    // Personal inbox events (DM sent directly to this player)
-    // Show only unread ones (read:false or not yet read this session)
+    // Personal inbox DM events — unread only
     const inboxEvts = inboxData
       ? Object.entries(inboxData)
           .filter(([id, ev]) => ev && ev.title && ev.read !== true)
-          .map(([id, ev]) => ({...ev, id, src:'inbox',
-            // Normalise location
+          .map(([id, ev]) => ({
+            ...ev, id, src: 'inbox',
             lat: ev.lat ?? ev.location?.lat,
             lng: ev.lng ?? ev.location?.lng,
           }))
@@ -6566,37 +6561,36 @@
     const allEvts = [...worldEvts, ...inboxEvts];
 
     if (!allEvts.length) {
-      el.innerHTML = '<div style="font-family:var(--ff-body);font-style:italic;font-size: 0.82rem;color:var(--text-secondary);padding:0.5rem 0;">The field is quiet. The ether holds its breath.</div>';
+      container.innerHTML = '<div style="font-family:var(--ff-body);font-style:italic;font-size: 0.82rem;color:var(--text-secondary);padding:0.5rem 0;">The field is quiet. The ether holds its breath.</div>';
       return;
     }
 
     const lbl = document.getElementById('field-events-label');
     if (lbl) lbl.textContent = `Obligations & Omens (${allEvts.length})`;
 
-    el.innerHTML = allEvts.map(ev => {
+    container.innerHTML = allEvts.map(ev => {
       const type  = ev.type || 'story';
       const color = TYPE_COLOR[type] || 'var(--gold)';
       const sigil = TYPE_SIGIL[type] || '✦';
-      // Badge: inbox DM events get a purple DM badge
-      const badge = (ev.src === 'dm' || ev.src === 'inbox')
+      const isDm  = ev.src === 'dm' || ev.src === 'inbox';
+      const badge = isDm
         ? `<span class="mission-badge" style="color:var(--dm-bright,#a855f7);font-size: 0.49rem;">DM</span>`
         : `<span class="mission-badge ${type}">${type}</span>`;
       const rewardLine = ev.reward
         ? `<span style="color:var(--gold-dim);font-family:var(--ff-heading);font-size: 0.49rem;letter-spacing:0.06em;">↳ ${ev.reward}</span>`
         : '';
       const checkLine = ev.skillChecks?.length
-        ? `<span style="color:var(--viridian-bright);font-family:var(--ff-heading);font-size: 0.49rem;letter-spacing:0.06em;">⌛ ${ev.skillChecks.length} check${ev.skillChecks.length>1?'s':''}</span>`
+        ? `<span style="color:var(--viridian-bright);font-family:var(--ff-heading);font-size: 0.49rem;letter-spacing:0.06em;">⌛ ${ev.skillChecks.length} check${ev.skillChecks.length > 1 ? 's' : ''}</span>`
         : '';
       const combatLine = ev.enemies?.length
         ? `<span style="color:var(--crimson-bright);font-family:var(--ff-heading);font-size: 0.49rem;letter-spacing:0.06em;">⚔ Combat</span>`
         : '';
-      // Location coords — normalised flat
       const evLat = ev.lat ?? ev.location?.lat;
       const evLng = ev.lng ?? ev.location?.lng;
       const coordLine = evLat
-        ? `<span style="font-family:var(--ff-heading);font-size:0.49rem;color:var(--gold-dim);cursor:pointer;" onclick="flyToEventLocation(${evLat},${evLng})">◎ ${Number(evLat).toFixed(4)}, ${Number(evLng).toFixed(4)}</span>`
+        ? `<span style="font-family:var(--ff-heading);font-size:0.49rem;color:var(--gold-dim);cursor:pointer;"
+             onclick="event.stopPropagation();flyToEventLocation(${evLat},${evLng})">◎ ${Number(evLat).toFixed(4)}, ${Number(evLng).toFixed(4)}</span>`
         : '';
-
       const evId = 'ev_' + Math.random().toString(36).slice(2,9);
       _worldEventStore.set(evId, ev);
       return `<div class="mission-card" style="--mission-color:${color}" data-evid="${evId}">
@@ -6605,13 +6599,12 @@
           ${badge}
         </div>
         <p class="mission-desc">${ev.desc || ''}</p>
-        <div class="mission-meta">
+        <div class="mission-meta" style="display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;">
           ${rewardLine}${checkLine}${combatLine}${coordLine}
         </div>
       </div>`;
     }).join('');
 
-    // Wire click listeners
     container.querySelectorAll('[data-evid]').forEach(card => {
       card.addEventListener('click', () => activateWorldEvent(card.dataset.evid));
     });
@@ -7760,7 +7753,7 @@
       btn.className = 'dm-event-btn' + (primary ? ' primary' : '');
       btn.textContent = label;
       btn.onclick = async () => {
-        // Disable all buttons immediately
+        // Disable immediately to prevent double-tap
         actionsEl.querySelectorAll('.dm-event-btn').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
 
         if (!applyReward) {
@@ -7768,12 +7761,12 @@
           return;
         }
 
-        // Run skill checks first
+        // Run skill checks first (closes modal, shows results in journal)
         if (ev.skillChecks && ev.skillChecks.length) {
           closeDmEventModal();
-          const passed = await runSkillChecks(ev.skillChecks, ev);
+          const passed = await runSkillChecks(ev.skillChecks);
           if (!passed) {
-            applyCheckFailure(ev);
+            applyCheckFailurePenalty(ev);
             return;
           }
         } else {
@@ -7789,14 +7782,14 @@
           return;
         }
 
-        // No combat — just reward
+        // No checks, no combat — just apply reward
         if (ev.rewardRes) applyDmEventReward(ev);
       };
       actionsEl.appendChild(btn);
     };
 
-    if (ev.btn1) makeBtn(ev.btn1, true, true);   // primary button grants reward
-    if (ev.btn2) makeBtn(ev.btn2, false, false);  // secondary button declines reward
+    if (ev.btn1) makeBtn(ev.btn1, true, true);
+    if (ev.btn2) makeBtn(ev.btn2, false, false);
     if (!ev.btn1 && !ev.btn2) makeBtn('Acknowledge', true, true);
 
     // Show reward summary if present
@@ -7808,18 +7801,14 @@
       actionsEl.parentElement.insertBefore(rwd, actionsEl);
     }
 
-    // If event has a location, add a "Go to Map" button that flies to the pin
-    if (ev.location?.lat && ev.location?.lng) {
+    // Go to Location — flies the map to the pin
+    const evLat = ev.location?.lat ?? ev.lat;
+    const evLng = ev.location?.lng ?? ev.lng;
+    if (evLat && evLng) {
       const btn = document.createElement('button');
       btn.className = 'dm-event-btn';
       btn.textContent = '◎ Go to Location';
-      btn.onclick = () => { closeDmEventModal(); flyToEventLocation(ev.location.lat, ev.location.lng); };
-      actionsEl.appendChild(btn);
-    } else if (ev.lat && ev.lng) {
-      const btn = document.createElement('button');
-      btn.className = 'dm-event-btn';
-      btn.textContent = '◎ Go to Location';
-      btn.onclick = () => { closeDmEventModal(); flyToEventLocation(ev.lat, ev.lng); };
+      btn.onclick = () => { closeDmEventModal(); flyToEventLocation(evLat, evLng); };
       actionsEl.appendChild(btn);
     }
 
@@ -7830,15 +7819,15 @@
     const ev = _worldEventStore.get(jid);
     const entry = btn?.closest('.journal-entry');
 
+    // Decline path — just mark and delete
     if (!acceptReward) {
-      // Player declined — just mark and delete
       if (entry) {
         entry.style.opacity = '0.35';
         entry.style.pointerEvents = 'none';
-        const resolved = document.createElement('div');
-        resolved.style.cssText = 'font-family:var(--ff-heading);font-size: 0.47rem;color:var(--text-secondary);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.4rem;';
-        resolved.textContent = '— Withdrawn —';
-        entry.appendChild(resolved);
+        const lbl = document.createElement('div');
+        lbl.style.cssText = 'font-family:var(--ff-heading);font-size: 0.47rem;color:var(--text-secondary);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.4rem;';
+        lbl.textContent = '— Withdrawn —';
+        entry.appendChild(lbl);
       }
       if (ev?._evtId) {
         const myId = getOrCreatePlayerId();
@@ -7847,29 +7836,23 @@
       return;
     }
 
-    // Disable buttons immediately to prevent double-tap
-    if (entry) {
-      entry.style.pointerEvents = 'none';
-      entry.querySelectorAll('.btn-action').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
-    }
+    if (!ev) { toast('Event data lost — please refresh.'); return; }
 
-    if (!ev) {
-      toast('Event data lost — please refresh.');
-      return;
-    }
+    // Disable buttons immediately to prevent double-tap
+    if (entry) entry.querySelectorAll('.btn-action').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
 
     // Run skill checks first
     if (ev.skillChecks && ev.skillChecks.length) {
-      const passed = await runSkillChecks(ev.skillChecks, ev);
+      const passed = await runSkillChecks(ev.skillChecks);
       if (!passed) {
-        applyCheckFailure(ev);
-        // Mark journal entry as resolved
+        applyCheckFailurePenalty(ev);
         if (entry) {
           entry.style.opacity = '0.35';
-          const resolved = document.createElement('div');
-          resolved.style.cssText = 'font-family:var(--ff-heading);font-size: 0.47rem;color:var(--crimson-bright);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.4rem;';
-          resolved.textContent = '— Check Failed —';
-          entry.appendChild(resolved);
+          entry.style.pointerEvents = 'none';
+          const lbl = document.createElement('div');
+          lbl.style.cssText = 'font-family:var(--ff-heading);font-size: 0.47rem;color:var(--crimson-bright);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.4rem;';
+          lbl.textContent = '— Check Failed —';
+          entry.appendChild(lbl);
         }
         if (ev._evtId) {
           const myId = getOrCreatePlayerId();
@@ -7879,14 +7862,15 @@
       }
     }
 
-    // Trigger combat if enemies are defined
+    // Trigger combat if enemies defined
     if (ev.enemies && ev.enemies.length) {
       if (entry) {
         entry.style.opacity = '0.35';
-        const resolved = document.createElement('div');
-        resolved.style.cssText = 'font-family:var(--ff-heading);font-size: 0.47rem;color:var(--crimson-bright);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.4rem;';
-        resolved.textContent = '— Combat Initiated —';
-        entry.appendChild(resolved);
+        entry.style.pointerEvents = 'none';
+        const lbl = document.createElement('div');
+        lbl.style.cssText = 'font-family:var(--ff-heading);font-size: 0.47rem;color:var(--crimson-bright);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.4rem;';
+        lbl.textContent = '— Combat Initiated —';
+        entry.appendChild(lbl);
       }
       if (ev._evtId) {
         const myId = getOrCreatePlayerId();
@@ -7899,15 +7883,15 @@
       return;
     }
 
-    // All clear — apply reward and mark resolved
+    // No combat — apply reward and mark resolved
     if (ev.rewardRes) applyDmEventReward(ev);
-
     if (entry) {
       entry.style.opacity = '0.35';
-      const resolved = document.createElement('div');
-      resolved.style.cssText = 'font-family:var(--ff-heading);font-size: 0.47rem;color:var(--text-secondary);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.4rem;';
-      resolved.textContent = '— Resolved —';
-      entry.appendChild(resolved);
+      entry.style.pointerEvents = 'none';
+      const lbl = document.createElement('div');
+      lbl.style.cssText = 'font-family:var(--ff-heading);font-size: 0.47rem;color:var(--text-secondary);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.4rem;';
+      lbl.textContent = '— Resolved —';
+      entry.appendChild(lbl);
     }
     if (ev._evtId) {
       const myId = getOrCreatePlayerId();
@@ -9085,15 +9069,36 @@
 
   // Restore tarot effects from saved research data
   function restoreTarotEffects() {
+    const now = Date.now();
     if (_researchData?.tarotEffects) {
-      const now = Date.now();
       tarotEffects = (_researchData.tarotEffects||[]).filter(e => e.until > now);
+      // Re-schedule stat reversals that are still live — the setTimeout was lost on reload
+      tarotEffects.forEach(e => {
+        if ((e.type === 'stat_buff' || e.type === 'stat_debuff') && e.stat && e.until > now) {
+          const remaining = e.until - now;
+          const snapshots = e._snapshots || [];
+          const charBase  = e._charBase  !== undefined ? e._charBase : null;
+          setTimeout(() => {
+            snapshots.forEach(snap => {
+              const a = (_acolytesData||[]).find(x => x.id === snap.id);
+              if (a?.stats) a.stats[e.stat] = snap.base;
+            });
+            if (_characterData?.stats && charBase !== null) {
+              _characterData.stats[e.stat] = charBase;
+            }
+            if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
+            refreshCharacterBar();
+            tarotEffects = tarotEffects.filter(x => x !== e);
+            toast(`✦ Tarot effect expired — ${e.stat} returns to base.`);
+            persistState();
+          }, remaining);
+        }
+      });
     }
     // Restore spread positions from saved state if present
     if (_researchData?.tarotSpread) {
       _currentSpread = _researchData.tarotSpread.map(s => {
         if (!s) return null;
-        // Re-find card object from majorArcana array
         const card = majorArcana.find(c => c.name === s.cardName);
         if (!card) return null;
         const effect = TAROT_EFFECTS[card.name];
