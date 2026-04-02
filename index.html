@@ -5333,18 +5333,55 @@
 
 <!-- IDENTITY MODAL -->
 <div id="identity-modal">
-  <div class="identity-title">Name Your Soul</div>
-  <p class="identity-sub">Your name and coven will be visible to nearby seekers</p>
-  <div class="identity-field">
-    <label class="identity-label">Your Name</label>
-    <input class="identity-input" id="identity-name" type="text" placeholder="The Archivist" maxlength="24" autocomplete="off">
+  <!-- Step 1: Name -->
+  <div id="cc-step-1" class="cc-step">
+    <div class="identity-title">Name Your Soul</div>
+    <p class="identity-sub">Before you descend, you must be known.</p>
+    <div class="identity-field">
+      <label class="identity-label">Your Name</label>
+      <input class="identity-input" id="identity-name" type="text" placeholder="The Archivist" maxlength="24" autocomplete="off">
+    </div>
+    <div class="identity-field">
+      <label class="identity-label">Your Coven</label>
+      <input class="identity-input" id="identity-coven" type="text" placeholder="The Order of the Veiled Star" maxlength="36" autocomplete="off">
+    </div>
+    <button class="identity-btn" onclick="ccStep2()">Choose a Class →</button>
   </div>
-  <div class="identity-field">
-    <label class="identity-label">Your Coven</label>
-    <input class="identity-input" id="identity-coven" type="text" placeholder="The Order of the Veiled Star" maxlength="36" autocomplete="off">
+
+  <!-- Step 2: Class -->
+  <div id="cc-step-2" class="cc-step" style="display:none;">
+    <div class="identity-title">Choose Your Class</div>
+    <p class="identity-sub">Your class shapes your starting stats and the skills you can learn.</p>
+    <div id="cc-class-grid" style="display:flex;flex-direction:column;gap:0.6rem;margin:1rem 0;max-height:40vh;overflow-y:auto;"></div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+      <button class="identity-btn" style="flex:0 0 auto;background:none;border:1px solid var(--border);" onclick="ccBack(1)">← Back</button>
+      <button class="identity-btn" id="cc-step2-next" onclick="ccStep3()" style="flex:1;">Allocate Stats →</button>
+    </div>
   </div>
-  <button class="identity-btn" onclick="saveIdentity()">Enter the Lair</button>
+
+  <!-- Step 3: Stat allocation -->
+  <div id="cc-step-3" class="cc-step" style="display:none;">
+    <div class="identity-title">Allocate Points</div>
+    <p class="identity-sub" id="cc-points-label">15 points to spend</p>
+    <div id="cc-stat-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;margin:0.8rem 0;"></div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+      <button class="identity-btn" style="flex:0 0 auto;background:none;border:1px solid var(--border);" onclick="ccBack(2)">← Back</button>
+      <button class="identity-btn" id="cc-step3-next" onclick="ccStep4()" style="flex:1;">Choose Traits →</button>
+    </div>
+  </div>
+
+  <!-- Step 4: Traits -->
+  <div id="cc-step-4" class="cc-step" style="display:none;">
+    <div class="identity-title">Choose Traits</div>
+    <p class="identity-sub" id="cc-trait-label">Traits cost or refund stat points. Budget: <span id="cc-trait-budget">0</span></p>
+    <div id="cc-trait-grid" style="display:flex;flex-direction:column;gap:0.45rem;margin:0.8rem 0;max-height:38vh;overflow-y:auto;"></div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+      <button class="identity-btn" style="flex:0 0 auto;background:none;border:1px solid var(--border);" onclick="ccBack(3)">← Back</button>
+      <button class="identity-btn" onclick="ccFinish()">Enter the Lair</button>
+    </div>
+  </div>
 </div>
+
 
 <!-- FORGE MODAL -->
 <div id="forge-modal">
@@ -8241,7 +8278,7 @@ async function refreshFieldEventCards() {
 
   function setSaveStatus(id, cls, msg) {
     const el = document.getElementById(id);
-    el.className = 'save-status' + (cls ? ' ' + cls : '');
+    el.tName = 'save-status' + (cls ? ' ' + cls : '');
     el.textContent = msg;
   }
 
