@@ -3577,7 +3577,117 @@
 
   /* Toasts */
   .toast { font-size: 0.75rem !important; }
-</style>
+
+  /* ── SKILL CHECK RESULT OVERLAY ── */
+  #skill-check-overlay {
+    display: none; position: fixed; inset: 0; z-index: 700;
+    background: rgba(5,4,7,0.92);
+    align-items: center; justify-content: center; padding: 1.5rem;
+  }
+  #skill-check-overlay.open { display: flex; }
+  .sc-result-card {
+    background: var(--bg, var(--abyss));
+    border: 1px solid var(--border);
+    width: 100%; max-width: 360px; padding: 2rem 1.5rem 1.5rem;
+    text-align: center;
+  }
+  .sc-result-verdict {
+    font-family: var(--ff-title);
+    font-size: 2.8rem;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .sc-result-stat {
+    font-family: var(--ff-heading);
+    font-size: 0.58rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 1.2rem;
+  }
+  .sc-result-roll {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.5rem; margin-bottom: 0.8rem;
+  }
+  .sc-dice-val {
+    font-family: var(--ff-heading);
+    font-size: 2.2rem;
+    width: 56px; height: 56px;
+    border: 2px solid;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sc-roll-detail {
+    text-align: left;
+    font-family: var(--ff-heading);
+    font-size: 0.55rem;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+  .sc-roll-total {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+  }
+  .sc-result-extra {
+    font-family: var(--ff-body);
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    margin: 0.8rem 0 1.2rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--border);
+  }
+  .sc-continue-btn {
+    font-family: var(--ff-heading);
+    font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 0.75rem 2rem; border: 1px solid var(--border);
+    background: none; color: var(--text-secondary); cursor: pointer;
+    width: 100%; transition: border-color 0.12s, color 0.12s;
+  }
+  .sc-continue-btn:active { border-color: var(--text-accent); color: var(--text-accent); }
+
+  /* ── COMBAT VICTORY OVERLAY ── */
+  #combat-victory-overlay {
+    display: none; position: absolute; inset: 0; z-index: 50;
+    background: rgba(5,4,7,0.93);
+    flex-direction: column; align-items: center; justify-content: center;
+    padding: 2rem; text-align: center;
+  }
+  #combat-victory-overlay.open { display: flex; }
+  .victory-sigil {
+    font-family: var(--ff-heading); font-size: 2rem;
+    color: var(--text-accent); opacity: 0.5; margin-bottom: 0.8rem;
+  }
+  .victory-title {
+    font-family: var(--ff-title); font-size: 2rem;
+    color: var(--text-accent); margin-bottom: 0.4rem;
+    letter-spacing: 1px;
+  }
+  .victory-subtitle {
+    font-family: var(--ff-heading); font-size: 0.5rem;
+    letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--text-secondary); margin-bottom: 1.4rem;
+  }
+  .victory-rewards {
+    width: 100%; max-width: 280px; margin-bottom: 1.4rem;
+  }
+  .victory-reward-row {
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--border); padding: 0.45rem 0;
+    font-family: var(--ff-heading); font-size: 0.6rem;
+    letter-spacing: 0.06em; color: var(--text-secondary);
+  }
+  .victory-reward-row:last-child { border-bottom: 1px solid var(--border); }
+  .victory-reward-val { color: var(--viridian-bright); }
+  .victory-leave-btn {
+    font-family: var(--ff-heading); font-size: 0.52rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 0.8rem 2.5rem; border: 1px solid var(--border-bright);
+    background: none; color: var(--text-accent); cursor: pointer;
+  }
+
+  </style>
 </head>
 <body>
 
@@ -4011,6 +4121,13 @@
   </div>
 
   <div id="combat-target-prompt">Tap an enemy to target — or press Pass to cancel</div>
+  <div id="combat-victory-overlay">
+    <div class="victory-sigil">◈</div>
+    <div class="victory-title">Victory</div>
+    <div class="victory-subtitle" id="victory-subtitle">The passage is clear</div>
+    <div class="victory-rewards" id="victory-rewards"></div>
+    <button class="victory-leave-btn" onclick="closeCombatVictory()">Return to the Lair</button>
+  </div>
   <div id="combat-defeat-overlay">
     <div class="defeat-sigil">✕</div>
     <div class="defeat-title" id="defeat-title">Fallen</div>
@@ -4508,8 +4625,9 @@ randomMapMarkers[id] = marker;
           ${extraText ? `<p class="entry-body" style="margin-top:0.3rem;font-style:italic;">${extraText}</p>` : ''}`;
         feed.insertBefore(card, feed.firstChild);
         switchTab('journal');
-        // Brief pause so the player can read the result before the next check
-        await new Promise(r => setTimeout(r, 1600));
+        // Blocking result screen — player must tap to continue
+        await showSkillCheckResult({ pass, name: best.name, roll, statVal: best.statVal,
+          statLabel: STAT_LABEL[stat]||stat, total, dc, extraText, col });
       }
 
       if (!pass) { allPassed = false; break; }
@@ -6067,10 +6185,13 @@ randomMapMarkers[id] = marker;
     const ORDER = ['journal','field','company','lair','arcana','codex'];
     const idx = ORDER.indexOf(tab);
     if (idx >= 0) document.querySelectorAll('.tab')[idx].classList.add('active');
-    // Special tabs handled separately (not in ORDER array)
+    // Combat tab
     if (tab === 'combat') {
       document.getElementById('tab-combat')?.classList.add('active');
       document.getElementById('tab-combat')?.classList.remove('pulsing');
+    } else if (_CS) {
+      // Combat is ongoing — keep combat tab pulsing to signal player can return
+      document.getElementById('tab-combat')?.classList.add('pulsing');
     }
     if (tab === 'recruit') {
       document.getElementById('tab-recruit')?.classList.add('active');
@@ -7749,8 +7870,10 @@ async function refreshFieldEventCards() {
         if (!ev) continue;
         // Skip if already seen this session
         if (_shownDmEvents.has(evtId)) continue;
-        // If already read (resolved/declined) — show in journal as completed but don't re-show modal
-        if (ev.read === true && ev.repeatable !== true) {
+        // If already resolved/declined — show in journal as historical entry, skip modal
+        const isResolved = ev.read === true || ev.read === 'resolved' || ev.read === 'declined'
+          || ev.read === 'combat' || ev.read === 'failed';
+        if (isResolved && ev.repeatable !== true) {
           appendJournalEntryCompleted(ev, evtId);
           continue;
         }
@@ -9403,8 +9526,10 @@ async function refreshFieldEventCards() {
       });
 
       document.getElementById('combat-skill-grid').innerHTML = '';
-      document.getElementById('combat-actor-label').textContent = 'Victory — the passage is clear.';
+      document.getElementById('combat-actor-label').textContent = '';
       persistState().catch(() => {});
+      // Show victory overlay
+      showCombatVictory({ loot, totalXp });
       _CS = null;
 
     } else if (aliveAllies.length === 0 || (playerCbt && playerCbt.dead)) {
@@ -9415,9 +9540,9 @@ async function refreshFieldEventCards() {
       if (playerDied || fullRout) {
         combatLog('✗ The company falls.', 'hit');
         document.getElementById('combat-skill-grid').innerHTML = '';
-        document.getElementById('combat-actor-label').textContent = 'Defeated.';
-        if (playerDied) handlePlayerDeath();
+        document.getElementById('combat-actor-label').textContent = '';
         _CS = null;
+        if (playerDied) handlePlayerDeath(); // shows defeat overlay itself
       }
     }
   }
@@ -9672,8 +9797,13 @@ async function refreshFieldEventCards() {
     if (!entry) return;
     entry.style.opacity = '0.42';
     entry.style.pointerEvents = 'none';
+    // Remove all action buttons from DOM so they cannot be re-tapped
+    entry.querySelectorAll('.btn-action, .entry-actions button').forEach(b => b.remove());
+    const actDiv = entry.querySelector('.entry-actions');
+    if (actDiv) actDiv.remove();
+    // Add status label
     const lbl = document.createElement('div');
-    lbl.style.cssText = `font-family:var(--ff-heading);font-size:0.55rem;color:${color||'var(--text-secondary)'};letter-spacing:0.12em;text-transform:uppercase;margin-top:0.4rem;`;
+    lbl.style.cssText = `font-family:var(--ff-heading);font-size:0.55rem;color:${color||'var(--text-secondary)'};letter-spacing:0.12em;text-transform:uppercase;margin-top:0.4rem;border-top:1px solid var(--border);padding-top:0.35rem;`;
     lbl.textContent = label || 'Resolved';
     entry.appendChild(lbl);
   }
@@ -9749,6 +9879,92 @@ async function refreshFieldEventCards() {
   }
 
 
+
+  // ══════════════════════════════════════════
+  // SKILL CHECK RESULT OVERLAY
+  // ══════════════════════════════════════════
+  function showSkillCheckResult(opts) {
+    return new Promise(resolve => {
+      const { pass, name, roll, statVal, statLabel, total, dc, extraText, col } = opts;
+
+      // Populate
+      const verdictEl = document.getElementById('sc-verdict');
+      verdictEl.textContent = pass ? 'Success' : 'Failure';
+      verdictEl.style.color = col || (pass ? 'var(--viridian-bright)' : 'var(--crimson-bright)');
+
+      document.getElementById('sc-stat-label').textContent =
+        name + ' · ' + statLabel + ' Check · DC ' + dc;
+
+      const diceEl = document.getElementById('sc-dice-val');
+      diceEl.textContent = roll;
+      diceEl.style.borderColor = col || (pass ? 'var(--viridian-bright)' : 'var(--crimson-bright)');
+      diceEl.style.color = col || (pass ? 'var(--viridian-bright)' : 'var(--crimson-bright)');
+
+      document.getElementById('sc-roll-detail-line').innerHTML =
+        roll + ' <span style="color:var(--text-secondary)">+ ' + statVal + ' ' + statLabel + '</span>';
+      document.getElementById('sc-roll-total').innerHTML =
+        '= <strong>' + total + '</strong> vs DC ' + dc;
+      document.getElementById('sc-roll-total').style.color =
+        col || (pass ? 'var(--viridian-bright)' : 'var(--crimson-bright)');
+
+      const extraEl = document.getElementById('sc-extra');
+      if (extraText) {
+        extraEl.textContent = extraText;
+        extraEl.style.display = '';
+      } else {
+        extraEl.style.display = 'none';
+      }
+
+      // Wire continue button
+      const btn = document.getElementById('sc-continue-btn');
+      btn.textContent = pass ? 'Continue' : 'Accept the outcome';
+      btn.style.borderColor = col || 'var(--border)';
+      const handler = () => {
+        btn.removeEventListener('click', handler);
+        document.getElementById('skill-check-overlay').classList.remove('open');
+        resolve();
+      };
+      btn.addEventListener('click', handler);
+
+      document.getElementById('skill-check-overlay').classList.add('open');
+    });
+  }
+
+  // ══════════════════════════════════════════
+  // COMBAT VICTORY OVERLAY
+  // ══════════════════════════════════════════
+  function showCombatVictory({ loot, totalXp }) {
+    const overlay = document.getElementById('combat-victory-overlay');
+    if (!overlay) { closeCombat(); return; }
+
+    // Build reward rows
+    const rewards = [];
+    if (loot && loot.length) {
+      loot.forEach(l => rewards.push({ label: 'Loot', val: l }));
+    }
+    if (totalXp) {
+      rewards.push({ label: 'Experience', val: '+' + totalXp + ' XP' });
+    }
+    if (!rewards.length) {
+      rewards.push({ label: 'The encounter is over.', val: '' });
+    }
+
+    document.getElementById('victory-rewards').innerHTML = rewards.map(r =>
+      `<div class="victory-reward-row">
+        <span>${r.label}</span>
+        <span class="victory-reward-val">${r.val}</span>
+      </div>`
+    ).join('');
+
+    overlay.classList.add('open');
+  }
+
+  function closeCombatVictory() {
+    document.getElementById('combat-victory-overlay')?.classList.remove('open');
+    closeCombat();
+  }
+
+
 </script>
 
 <div id="incoming-exchange-modal">
@@ -9790,6 +10006,23 @@ async function refreshFieldEventCards() {
   <span class="broadcast-icon">◈</span>
   <span class="broadcast-text" id="broadcast-msg-text"></span>
   <button class="broadcast-dismiss" onclick="dismissBroadcast()">Dismiss</button>
+</div>
+
+<!-- SKILL CHECK RESULT OVERLAY -->
+<div id="skill-check-overlay">
+  <div class="sc-result-card">
+    <div class="sc-result-verdict" id="sc-verdict">—</div>
+    <div class="sc-result-stat" id="sc-stat-label">—</div>
+    <div class="sc-result-roll">
+      <div class="sc-dice-val" id="sc-dice-val">—</div>
+      <div class="sc-roll-detail">
+        <div id="sc-roll-detail-line">— rolls — + — = —</div>
+        <div class="sc-roll-total" id="sc-roll-total">vs DC —</div>
+      </div>
+    </div>
+    <div class="sc-result-extra" id="sc-extra" style="display:none;"></div>
+    <button class="sc-continue-btn" id="sc-continue-btn">Continue</button>
+  </div>
 </div>
 </body>
 </html>
