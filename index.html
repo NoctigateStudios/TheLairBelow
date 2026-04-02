@@ -400,10 +400,7 @@
   }
 
   /* Regular tab panels scroll normally */
-  .tab-panel.active {
-    flex: 1;
-    overflow-y: auto;
-  }
+  
 
   /* Tabs */
   #tabs {
@@ -701,20 +698,8 @@
 
   /* Tab panels */
   .tab-panel { display: none; padding: 1rem; }
-  .tab-panel.active { display: block; }
-  /* Combat panel overrides: full height, flex column, no padding */
-  /* Combat panel — position:fixed so it always fills the full screen regardless of flex chain */
-  #panel-combat { padding: 0; display: none; }
-  #panel-combat.active {
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    z-index: 300;
-    background: var(--void);
-    max-width: 430px;
-    margin: 0 auto;
-  }
+  .tab-panel.active { display: flex; flex-direction: column; flex: 1; overflow-y: auto; }
+  /* panel-combat rules in COMBAT REDESIGN section below */
 
   /* ═══════════════════════════════════════
      JOURNAL / NARRATIVE PANEL
