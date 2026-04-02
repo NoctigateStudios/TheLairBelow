@@ -2674,7 +2674,7 @@
 </style>
 <style>
   /* ═══════════════════════════════════════════════════
-     HOLISTIC VISUAL OVERHAUL — v0.7.35
+     HOLISTIC VISUAL OVERHAUL — v0.7.36
      Principles: editorial, handcrafted, ruled-paper feel
      No glowing widgets; type and line as primary language
   ═══════════════════════════════════════════════════ */
@@ -4390,8 +4390,9 @@ randomMapMarkers[id] = marker;
         if (!randomEvts[id]) { randomMapMarkers[id].remove(); delete randomMapMarkers[id]; }
       });
 
-      // Also update the mission card list below the map (refreshFieldEventCards loads inbox too)
+      // Also update the mission card list and place inbox event markers on map
       refreshFieldEventCards();
+      placeInboxEventMarkers(lat, lng);
 
     } catch(e) {}
   }
@@ -4417,7 +4418,7 @@ randomMapMarkers[id] = marker;
   }
 
   // Full resolution pipeline: skill checks → combat → reward → cleanup
-  async function runEventResolution(ev, evId) {
+  async async function runEventResolution(ev, evId) {
     // 1. Skill checks
     if (ev.skillChecks && ev.skillChecks.length) {
       const passed = await runSkillChecks(ev.skillChecks);
@@ -4527,25 +4528,25 @@ randomMapMarkers[id] = marker;
     persistState().catch(() => {});
   }
 
-  async function deleteWorldEventAfterResolve(ev, evId) {
+  async async function deleteWorldEventAfterResolve(ev, evId) {
     if (!ev) return;
     try {
-      if (ev.src === 'inbox') {
-        // Personal DM inbox event — delete from events/{playerId}/{evtId}
+      if (ev.src === 'inbox' || ev.src === 'player') {
+        // Personal inbox event — mark read (don't delete, preserve history)
         const myId = getOrCreatePlayerId();
         if (ev.id) {
-          await fetch(`${FB_URL}/events/${myId}/${ev.id}.json`, { method: 'DELETE' }).catch(() => {});
+          await fetch(`${FB_URL}/events/${myId}/${ev.id}/read.json`, {
+            method:'PUT', headers:{'Content-Type':'application/json'}, body:'"resolved"'
+          }).catch(() => {});
         }
       } else if (ev.id) {
-        // Shared world event (dm or random path)
+        // Shared world event — delete from Firebase (shared events don't need history)
         const src = ev.src || 'random';
-        await fetch(`${FB_URL}/world/events/${src}/${ev.id}.json`, { method: 'DELETE' });
-        if (dmMapMarkers[ev.id]) { dmMapMarkers[ev.id].remove(); delete dmMapMarkers[ev.id]; }
+        await fetch(`${FB_URL}/world/events/${src}/${ev.id}.json`, { method: 'DELETE' }).catch(() => {});
+        removeEventMarkerById(ev.id);
       }
-      // Remove card from field panel
-      document.querySelectorAll('[data-evid]').forEach(el => {
-        if (_worldEventStore.get(el.dataset.evid)?.id === ev.id) el.remove();
-      });
+      // Remove from active field list (not from journal)
+      removeEventFromFieldList(ev.id);
       if (evId) _worldEventStore.delete(evId);
     } catch(e) {}
   }
@@ -6077,7 +6078,7 @@ randomMapMarkers[id] = marker;
     }
     const panel = document.getElementById('panel-' + tab);
     if (panel) panel.classList.add('active');
-    if (tab === 'field' && map) setTimeout(() => map.invalidateSize(), 50);
+    if (tab === 'field' && map) { setTimeout(() => map.invalidateSize(), 50); placeInboxEventMarkers(playerLat||0, playerLng||0); }
     if (tab === 'codex') renderCodexList();
     if (tab === 'arcana') { renderSkillResearch(); renderTarotSpread(); }
   }
@@ -6582,10 +6583,10 @@ async function refreshFieldEventCards() {
       ...Object.entries((data?.random || {})).map(([id,ev]) => ({...ev, id, src:'random'})),
     ].filter(ev => ev && ev.title);
 
-    // Personal inbox DM events — unread only
+    // Personal inbox DM events — all active (not yet resolved or declined)
     const inboxEvts = inboxData
       ? Object.entries(inboxData)
-          .filter(([id, ev]) => ev && ev.title && ev.read !== true)
+          .filter(([id, ev]) => ev && ev.title && ev.read !== 'resolved' && ev.read !== 'declined' && ev.read !== 'combat' && ev.read !== 'failed' && ev.read !== true)
           .map(([id, ev]) => ({
             ...ev, id, src: 'inbox',
             lat: ev.lat ?? ev.location?.lat,
@@ -6667,6 +6668,7 @@ async function refreshFieldEventCards() {
     const when   = new Date(ev.createdAt || Date.now()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
     const entry  = document.createElement('div');
     entry.className = `journal-entry ${cls}`;
+    entry.dataset.evtid = evtId || '';
     const rewardLine = ev.reward
       ? `<div style="font-family:var(--ff-heading);font-size: 0.59rem;letter-spacing:0.08em;color:var(--gold-dim);margin-top:0.4rem;">↳ ${ev.reward}</div>`
       : '';
@@ -7747,18 +7749,16 @@ async function refreshFieldEventCards() {
         if (!ev) continue;
         // Skip if already seen this session
         if (_shownDmEvents.has(evtId)) continue;
-        // Skip if already read in Firebase AND not marked repeatable
-        if (ev.read === true && ev.repeatable !== true) continue;
+        // If already read (resolved/declined) — show in journal as completed but don't re-show modal
+        if (ev.read === true && ev.repeatable !== true) {
+          appendJournalEntryCompleted(ev, evtId);
+          continue;
+        }
         _shownDmEvents.add(evtId);
         _dmEventQueue.push({ evtId, ev });
-        // Persist as journal entry
+        // Add to journal — stays actionable until resolved or declined
         appendJournalEntry(ev, evtId);
-        // Mark as read in Firebase (unless repeatable — those stay unread so they re-show next session)
-        if (ev.repeatable !== true) {
-          fetch(`${FB_URL}/events/${myId}/${evtId}/read.json`, {
-            method:'PUT', headers:{'Content-Type':'application/json'}, body:'true'
-          }).catch(()=>{});
-        }
+        // DO NOT mark read here — only mark read when player resolves or declines
       }
       drainDmEventQueue();
     } catch(e) {}
@@ -7793,15 +7793,22 @@ async function refreshFieldEventCards() {
 
         if (!applyReward) {
           closeDmEventModal();
+          if (evtId) markEventReadInFirebase(evtId, 'declined');
+          removeEventFromFieldList(evtId);
+          removeEventMarkerById(evtId);
+          const existingEntry = Array.from(document.querySelectorAll('.journal-entry'))
+            .find(el => el.dataset.evtid === evtId);
+          if (existingEntry) markJournalEntryResolved(existingEntry, 'Withdrawn');
           return;
         }
 
-        // Run skill checks first (closes modal, shows results in journal)
+        // Run skill checks first
         if (ev.skillChecks && ev.skillChecks.length) {
           closeDmEventModal();
           const passed = await runSkillChecks(ev.skillChecks);
           if (!passed) {
             applyCheckFailurePenalty(ev);
+            if (evtId) { markEventReadInFirebase(evtId, 'failed'); removeEventFromFieldList(evtId); removeEventMarkerById(evtId); }
             return;
           }
         } else {
@@ -7810,6 +7817,7 @@ async function refreshFieldEventCards() {
 
         // Trigger combat if enemies defined
         if (ev.enemies && ev.enemies.length) {
+          if (evtId) { markEventReadInFirebase(evtId, 'combat'); removeEventFromFieldList(evtId); removeEventMarkerById(evtId); }
           showCombat(ev).catch(err => {
             toast('Combat failed to load: ' + (err.message || err));
             switchTab('field');
@@ -7817,8 +7825,9 @@ async function refreshFieldEventCards() {
           return;
         }
 
-        // No checks, no combat — just apply reward
+        // No checks, no combat — apply reward and mark resolved
         if (ev.rewardRes) applyDmEventReward(ev);
+        if (evtId) { markEventReadInFirebase(evtId, 'resolved'); removeEventFromFieldList(evtId); removeEventMarkerById(evtId); }
       };
       actionsEl.appendChild(btn);
     };
@@ -7847,26 +7856,35 @@ async function refreshFieldEventCards() {
       actionsEl.appendChild(btn);
     }
 
+    // Stamp evtId on modal for resolution callbacks
+    document.getElementById('dm-event-modal').dataset.evtid = evtId || '';
     document.getElementById('dm-event-modal').classList.add('open');
   }
 
-  async function resolveJournalEvent(jid, btn, acceptReward) {
+  async async function resolveJournalEvent(jid, btn, acceptReward) {
     const ev = _worldEventStore.get(jid);
     const entry = btn?.closest('.journal-entry');
 
-    // Decline path — just mark and delete
+    // Decline path — mark read (not delete), dim in journal, remove from map/field list
     if (!acceptReward) {
       if (entry) {
-        entry.style.opacity = '0.35';
+        entry.style.opacity = '0.38';
         entry.style.pointerEvents = 'none';
         const lbl = document.createElement('div');
-        lbl.style.cssText = 'font-family:var(--ff-heading);font-size: 0.47rem;color:var(--text-secondary);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.4rem;';
-        lbl.textContent = '— Withdrawn —';
+        lbl.style.cssText = 'font-family:var(--ff-heading);font-size:0.55rem;color:var(--text-secondary);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.4rem;';
+        lbl.textContent = 'Withdrawn';
         entry.appendChild(lbl);
       }
       if (ev?._evtId) {
         const myId = getOrCreatePlayerId();
-        fetch(`${FB_URL}/events/${myId}/${ev._evtId}.json`, { method: 'DELETE' }).catch(() => {});
+        // Mark as read so it doesn't re-trigger on next poll
+        fetch(`${FB_URL}/events/${myId}/${ev._evtId}/read.json`, {
+          method:'PUT', headers:{'Content-Type':'application/json'}, body:'"declined"'
+        }).catch(()=>{});
+        // Remove from field event list
+        removeEventFromFieldList(ev._evtId);
+        // Remove from map if it has a marker
+        removeEventMarkerById(ev._evtId);
       }
       return;
     }
@@ -7881,36 +7899,20 @@ async function refreshFieldEventCards() {
       const passed = await runSkillChecks(ev.skillChecks);
       if (!passed) {
         applyCheckFailurePenalty(ev);
-        if (entry) {
-          entry.style.opacity = '0.35';
-          entry.style.pointerEvents = 'none';
-          const lbl = document.createElement('div');
-          lbl.style.cssText = 'font-family:var(--ff-heading);font-size: 0.47rem;color:var(--crimson-bright);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.4rem;';
-          lbl.textContent = '— Check Failed —';
-          entry.appendChild(lbl);
-        }
-        if (ev._evtId) {
-          const myId = getOrCreatePlayerId();
-          fetch(`${FB_URL}/events/${myId}/${ev._evtId}.json`, { method: 'DELETE' }).catch(() => {});
-        }
+        markJournalEntryResolved(entry, 'Check Failed', 'var(--crimson-bright)');
+        markEventReadInFirebase(ev._evtId, 'failed');
+        removeEventFromFieldList(ev._evtId);
+        removeEventMarkerById(ev._evtId);
         return;
       }
     }
 
     // Trigger combat if enemies defined
     if (ev.enemies && ev.enemies.length) {
-      if (entry) {
-        entry.style.opacity = '0.35';
-        entry.style.pointerEvents = 'none';
-        const lbl = document.createElement('div');
-        lbl.style.cssText = 'font-family:var(--ff-heading);font-size: 0.47rem;color:var(--crimson-bright);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.4rem;';
-        lbl.textContent = '— Combat Initiated —';
-        entry.appendChild(lbl);
-      }
-      if (ev._evtId) {
-        const myId = getOrCreatePlayerId();
-        fetch(`${FB_URL}/events/${myId}/${ev._evtId}.json`, { method: 'DELETE' }).catch(() => {});
-      }
+      markJournalEntryResolved(entry, 'Combat Initiated', 'var(--crimson-bright)');
+      markEventReadInFirebase(ev._evtId, 'combat');
+      removeEventFromFieldList(ev._evtId);
+      removeEventMarkerById(ev._evtId);
       showCombat(ev).catch(err => {
         toast('Combat failed to load: ' + (err.message || err));
         switchTab('field');
@@ -7920,18 +7922,10 @@ async function refreshFieldEventCards() {
 
     // No combat — apply reward and mark resolved
     if (ev.rewardRes) applyDmEventReward(ev);
-    if (entry) {
-      entry.style.opacity = '0.35';
-      entry.style.pointerEvents = 'none';
-      const lbl = document.createElement('div');
-      lbl.style.cssText = 'font-family:var(--ff-heading);font-size: 0.47rem;color:var(--text-secondary);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.4rem;';
-      lbl.textContent = '— Resolved —';
-      entry.appendChild(lbl);
-    }
-    if (ev._evtId) {
-      const myId = getOrCreatePlayerId();
-      fetch(`${FB_URL}/events/${myId}/${ev._evtId}.json`, { method: 'DELETE' }).catch(() => {});
-    }
+    markJournalEntryResolved(entry, 'Resolved');
+    markEventReadInFirebase(ev._evtId, 'resolved');
+    removeEventFromFieldList(ev._evtId);
+    removeEventMarkerById(ev._evtId);
   }
 
   function applyDmEventReward(ev) {
@@ -9622,6 +9616,137 @@ async function refreshFieldEventCards() {
 
   // Override old showLevelUpModal to do nothing (we use the new one)
   // (checkLevelUp now calls the new version directly)
+
+
+
+  // ── Event system helpers ──
+
+  // Map of inbox event id → leaflet marker
+  let _inboxMapMarkers = {};
+
+  // Place player personal inbox events on the map
+  async function placeInboxEventMarkers(playerLat, playerLng) {
+    if (!map) return;
+    try {
+      const myId = getOrCreatePlayerId();
+      const res = await fetch(`${FB_URL}/events/${myId}.json?cb=` + Date.now());
+      if (!res.ok) return;
+      const all = await res.json();
+      if (!all || all.error) return;
+
+      // Remove stale inbox markers
+      Object.keys(_inboxMapMarkers).forEach(id => {
+        if (!all[id] || all[id].read === 'resolved' || all[id].read === 'declined'
+            || all[id].read === 'combat' || all[id].read === 'failed' || all[id].read === true) {
+          _inboxMapMarkers[id]?.remove();
+          delete _inboxMapMarkers[id];
+        }
+      });
+
+      // Place new active inbox markers
+      for (const [id, ev] of Object.entries(all)) {
+        if (!ev || !ev.title) continue;
+        // Skip resolved/declined
+        if (ev.read === 'resolved' || ev.read === 'declined' || ev.read === 'combat'
+            || ev.read === 'failed' || ev.read === true) continue;
+        if (_inboxMapMarkers[id]) continue; // already placed
+
+        // Determine coordinates
+        const evLat = ev.lat ?? ev.location?.lat;
+        const evLng = ev.lng ?? ev.location?.lng;
+        if (!evLat || !evLng) continue;
+
+        const normEv = { ...ev, id, src: 'player',
+          lat: Number(evLat), lng: Number(evLng) };
+        const marker = L.marker([normEv.lat, normEv.lng], {
+          icon: makeIcon(ev.type || 'story', 'dm')
+        }).addTo(map);
+        marker.bindPopup(makeEventPopup(normEv), { maxWidth: 240 });
+        _inboxMapMarkers[id] = marker;
+      }
+    } catch(e) {}
+  }
+
+  // Mark a journal entry as completed/declined/failed
+  function markJournalEntryResolved(entry, label, color) {
+    if (!entry) return;
+    entry.style.opacity = '0.42';
+    entry.style.pointerEvents = 'none';
+    const lbl = document.createElement('div');
+    lbl.style.cssText = `font-family:var(--ff-heading);font-size:0.55rem;color:${color||'var(--text-secondary)'};letter-spacing:0.12em;text-transform:uppercase;margin-top:0.4rem;`;
+    lbl.textContent = label || 'Resolved';
+    entry.appendChild(lbl);
+  }
+
+  // Mark event read in Firebase with a status value
+  function markEventReadInFirebase(evtId, status) {
+    if (!evtId) return;
+    const myId = getOrCreatePlayerId();
+    fetch(`${FB_URL}/events/${myId}/${evtId}/read.json`, {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(status || true)
+    }).catch(() => {});
+  }
+
+  // Remove event from the field panel card list
+  function removeEventFromFieldList(evtId) {
+    if (!evtId) return;
+    // Match by data-evid or by stored ev.id
+    document.querySelectorAll('.mission-card[data-evid]').forEach(card => {
+      const storedEv = _worldEventStore.get(card.dataset.evid);
+      if (storedEv && (storedEv.id === evtId || storedEv._evtId === evtId)) {
+        card.remove();
+      }
+    });
+    // Also refresh the count label
+    const remaining = document.querySelectorAll('.mission-card[data-evid]').length;
+    const lbl = document.getElementById('field-events-label');
+    if (lbl) {
+      const cur = parseInt(lbl.textContent.match(/\d+/)?.[0] || '0') - 1;
+      if (cur <= 0) lbl.textContent = 'Obligations & Omens';
+      else lbl.textContent = `Obligations & Omens (${cur})`;
+    }
+  }
+
+  // Remove a map marker by event id
+  function removeEventMarkerById(evId) {
+    if (!evId) return;
+    if (dmMapMarkers[evId])       { dmMapMarkers[evId].remove(); delete dmMapMarkers[evId]; }
+    if (randomMapMarkers[evId])   { randomMapMarkers[evId].remove(); delete randomMapMarkers[evId]; }
+    if (_inboxMapMarkers[evId])   { _inboxMapMarkers[evId].remove(); delete _inboxMapMarkers[evId]; }
+  }
+
+  // Append a completed (read) event to journal as greyed-out historical entry
+  function appendJournalEntryCompleted(ev, evtId) {
+    if (_journalEntryIds.has(evtId + '_completed')) return;
+    _journalEntryIds.add(evtId + '_completed');
+    const feed = document.getElementById('journal-feed');
+    if (!feed) return;
+    const SIGILS = { urgent:'!', story:'◈', discovery:'○', neutral:'·' };
+    const sigil = SIGILS[ev.type] || '◈';
+    const when = new Date(ev.createdAt || Date.now()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    const statusText = ev.read === 'declined' ? 'Withdrawn'
+      : ev.read === 'failed' ? 'Check Failed'
+      : ev.read === 'combat' ? 'Combat Resolved'
+      : 'Resolved';
+    const statusColor = ev.read === 'declined' ? 'var(--text-secondary)'
+      : ev.read === 'failed' ? 'var(--crimson-bright)'
+      : 'var(--viridian-bright)';
+
+    const entry = document.createElement('div');
+    entry.className = 'journal-entry ' + (ev.type || 'neutral');
+    entry.style.opacity = '0.4';
+    entry.innerHTML = `
+      <div class="entry-header">
+        <span class="entry-title">${sigil} ${ev.title || 'An Omen Arrives'}</span>
+        <span class="entry-time">${when}</span>
+      </div>
+      <p class="entry-body">${ev.body || ''}</p>
+      <div style="font-family:var(--ff-heading);font-size:0.55rem;color:${statusColor};letter-spacing:0.12em;text-transform:uppercase;margin-top:0.3rem;">${statusText}</div>`;
+    feed.insertBefore(entry, feed.firstChild);
+    const emptyMsg = document.getElementById('journal-empty');
+    if (emptyMsg) emptyMsg.style.display = 'none';
+  }
 
 
 </script>
