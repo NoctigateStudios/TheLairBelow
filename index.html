@@ -4353,13 +4353,18 @@
       const data = await res.json();
       if (!data || data.error) return;
 
-      // DM-placed events
+      // DM-placed events — support both flat lat/lng and nested location.lat/lng
       const dmEvts = data.dm || {};
       Object.entries(dmEvts).forEach(([id, ev]) => {
-        if (!ev || !ev.lat || !ev.lng) return;
+        if (!ev) return;
+        const elat = ev.lat ?? ev.location?.lat;
+        const elng = ev.lng ?? ev.location?.lng;
+        if (!elat || !elng) return;
         if (dmMapMarkers[id]) return; // already on map
-        const marker = L.marker([ev.lat, ev.lng], { icon: makeIcon(ev.type || 'story', 'dm') }).addTo(map);
-        marker.bindPopup(makeEventPopup(ev), { maxWidth: 240, className: '' });
+        // Normalise so popup & activation always finds lat/lng at top level
+        const normEv = { ...ev, lat: elat, lng: elng, id, src: 'dm' };
+        const marker = L.marker([elat, elng], { icon: makeIcon(ev.type || 'story', 'dm') }).addTo(map);
+        marker.bindPopup(makeEventPopup(normEv), { maxWidth: 240, className: '' });
         dmMapMarkers[id] = marker;
       });
       // Remove stale DM markers
@@ -4383,8 +4388,8 @@
         if (!randomEvts[id]) { randomMapMarkers[id].remove(); delete randomMapMarkers[id]; }
       });
 
-      // Also update the mission card list below the map
-      renderFieldEventCards(data);
+      // Also update the mission card list below the map (refreshFieldEventCards loads inbox too)
+      refreshFieldEventCards();
 
     } catch(e) {}
   }
@@ -4407,7 +4412,26 @@
     const ev = _worldEventStore.get(evId);
     if (!ev) { toast('Event data not found — try refreshing the map.'); return; }
     document.querySelector('.leaflet-popup-close-button')?.click();
-    if (ev.type === 'combat') {
+
+    // Route through the full resolution engine (handles checks + combat + reward)
+    runEventResolution(ev, evId);
+  }
+
+  // Full event resolution — skill checks → combat → reward → cleanup
+  async function runEventResolution(ev, evId) {
+    // 1. Skill checks (if any) — run them first, block combat/reward on failure
+    if (ev.skillChecks && ev.skillChecks.length) {
+      const passed = await runSkillChecks(ev.skillChecks, ev);
+      if (!passed) {
+        // Failed checks: apply failure stress/cost and stop here
+        applyCheckFailure(ev);
+        deleteWorldEventAfterResolve(ev, evId);
+        return;
+      }
+    }
+
+    // 2. Combat (if enemies defined)
+    if (ev.enemies && ev.enemies.length) {
       showCombat(ev).catch(err => {
         console.error('Combat error:', err);
         toast('Combat failed to load: ' + (err.message || err));
@@ -4415,6 +4439,8 @@
       }).then(() => deleteWorldEventAfterResolve(ev, evId));
       return;
     }
+
+    // 3. Pure story / gather / recruit
     if (ev.type === 'recruit') {
       showRecruitTab(ev);
       deleteWorldEventAfterResolve(ev, evId);
@@ -4425,28 +4451,112 @@
       deleteWorldEventAfterResolve(ev, evId);
       return;
     }
-    if (ev.type === 'story') {
-      toast(ev.actionText || 'The moment settles into memory. Something has shifted.');
-      deleteWorldEventAfterResolve(ev, evId);
-      return;
-    }
-    toast(ev.actionText || 'You approach. The air thickens.');
+
+    // Story / narrative — apply reward and show outcome
+    if (ev.rewardRes) applyDmEventReward(ev);
+    toast(ev.actionText || 'The moment settles into memory. Something has shifted.');
     deleteWorldEventAfterResolve(ev, evId);
   }
 
+  // ── Skill check runner ─────────────────────────────────────────────────────
+  // Runs each check in sequence, shows animated results in a toast-style overlay.
+  // Returns true if all checks pass (or there are none), false if any fail.
+  async function runSkillChecks(checks, ev) {
+    const STAT_NAMES = {
+      fortitude:'Fortitude', wrath:'Wrath', intuition:'Intuition',
+      empathy:'Empathy', endurance:'Endurance', memory:'Memory',
+      cunning:'Cunning', gnosis:'Gnosis', speed:'Speed'
+    };
+
+    // Build roster: player + acolytes
+    const roster = [];
+    if (_characterData) roster.push({ name: _characterData.name || playerName || 'Seeker', stats: _characterData.stats || {}, isPlayer: true });
+    (_acolytesData || []).forEach(a => roster.push({ name: a.name, stats: a.stats || {}, isPlayer: false }));
+
+    let allPassed = true;
+
+    for (const check of checks) {
+      const stat    = (check.stat || 'cunning').toLowerCase();
+      const dc      = parseInt(check.diff || check.dc || check.difficulty || 10);
+      const successText = check.successText || check.success || '';
+      const failText    = check.failText    || check.failure || '';
+
+      // Pick the party member with the highest value in the required stat
+      let best = { name: 'Seeker', statVal: 10 };
+      roster.forEach(r => {
+        const v = r.stats[stat] || 0;
+        if (v > best.statVal) best = { name: r.name, statVal: v };
+      });
+
+      // Roll d20 + stat
+      const roll   = Math.floor(Math.random() * 20) + 1;
+      const total  = roll + best.statVal;
+      const passed = total >= dc;
+
+      // Show a result card in the journal
+      const feed = document.getElementById('journal-feed');
+      if (feed) {
+        const col   = passed ? 'var(--viridian-bright)' : 'var(--crimson-bright)';
+        const icon  = passed ? '✓' : '✗';
+        const label = passed ? 'SUCCESS' : 'FAILURE';
+        const extra = passed
+          ? (successText ? `<p class="entry-body" style="margin-top:0.3rem;">${successText}</p>` : '')
+          : (failText    ? `<p class="entry-body" style="margin-top:0.3rem;">${failText}</p>`    : '');
+
+        const card = document.createElement('div');
+        card.className = 'journal-entry';
+        card.style.borderLeftColor = col;
+        card.innerHTML = `
+          <div class="entry-header">
+            <span class="entry-title" style="color:${col};">${icon} ${STAT_NAMES[stat]||stat} Check — DC ${dc}</span>
+            <span class="entry-time">${label}</span>
+          </div>
+          <p class="entry-body">
+            ${best.name} rolls <strong>${roll}</strong> + ${best.statVal} ${STAT_NAMES[stat]||stat}
+            = <strong style="color:${col};">${total}</strong>
+            vs DC ${dc}
+          </p>
+          ${extra}`;
+        feed.insertBefore(card, feed.firstChild);
+        switchTab('journal');
+        await new Promise(r => setTimeout(r, 1800)); // brief pause so player reads it
+      }
+
+      if (!passed) { allPassed = false; break; } // stop on first failure
+    }
+    return allPassed;
+  }
+
+  function applyCheckFailure(ev) {
+    // Apply stress to all acolytes on failure
+    const stressDmg = ev.failureStress || 10;
+    (_acolytesData || []).forEach(a => {
+      a.stress = Math.min(100, (a.stress || 0) + stressDmg);
+    });
+    if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
+    toast('✗ The check failed. The acolytes bear the cost.');
+    persistState().catch(() => {});
+  }
+
   async function deleteWorldEventAfterResolve(ev, evId) {
-    // Delete from Firebase so it doesn't respawn
-    if (!ev || !ev.id) return;
-    const src = ev.src || 'random';
+    if (!ev) return;
     try {
-      await fetch(`${FB_URL}/world/events/${src}/${ev.id}.json`, { method: 'DELETE' });
-      // Remove map marker if present
-      if (dmMapMarkers[ev.id]) { dmMapMarkers[ev.id].remove(); delete dmMapMarkers[ev.id]; }
+      if (ev.src === 'inbox') {
+        // Personal inbox event — delete from events/{playerId}/{evtId}
+        const myId = getOrCreatePlayerId();
+        const fbKey = ev.id; // the Firebase key under events/{myId}/
+        if (fbKey) await fetch(`${FB_URL}/events/${myId}/${fbKey}.json`, { method: 'DELETE' }).catch(() => {});
+      } else if (ev.id) {
+        // World event (dm or random)
+        const src = ev.src || 'random';
+        await fetch(`${FB_URL}/world/events/${src}/${ev.id}.json`, { method: 'DELETE' });
+        if (dmMapMarkers[ev.id]) { dmMapMarkers[ev.id].remove(); delete dmMapMarkers[ev.id]; }
+      }
       // Remove card from field panel
-      document.querySelectorAll(`[data-evid]`).forEach(el => {
+      document.querySelectorAll('[data-evid]').forEach(el => {
         if (_worldEventStore.get(el.dataset.evid)?.id === ev.id) el.remove();
       });
-      _worldEventStore.delete(evId);
+      if (evId) _worldEventStore.delete(evId);
     } catch(e) {}
   }
 
@@ -5512,204 +5622,102 @@
     },
   };
 
-  // ─── TAROT EFFECT ENGINE ────────────────────────────────────────────────────
-  // Stat buffs/debuffs are stored with the ORIGINAL base values of each target
-  // so reversal on expiry is exact even across reloads.
-  // The tarotEffects array holds entries of shape:
-  //   { type, stat, value, until, label,           ← common
-  //     resIdx, mult,                               ← rate / grant_essence
-  //     statSnapshots: [{id, originalValue},...] }  ← stat_buff / stat_debuff
-
-  const AFFLICTIONS = ['Paranoid','Abusive','Masochistic','Fearful','Hopeless','Irrational'];
-
-  // Merge custom cards loaded from Firebase on top of built-in TAROT_EFFECTS
-  let _customTarotCards = {};
-  async function loadCustomTarotCards() {
-    try {
-      const res = await fetch(`${FB_URL}/world/tarot.json?cb=` + Date.now());
-      if (res.ok) {
-        const d = await res.json();
-        if (d && !d.error) _customTarotCards = d;
-      }
-    } catch(e) {}
-  }
-
-  function getAllTarotDefs() {
-    // Custom cards from Firebase override built-ins by name
-    return Object.assign({}, TAROT_EFFECTS, _customTarotCards);
-  }
-
-  // ── schedule a stat reversal that survives reloads ──────────────────────────
-  function _scheduleStatReversal(effectEntry) {
-    const remaining = effectEntry.until - Date.now();
-    if (remaining <= 0) { _applyStatReversal(effectEntry); return; }
-    setTimeout(() => { _applyStatReversal(effectEntry); }, remaining);
-  }
-
-  function _applyStatReversal(effectEntry) {
-    const { stat, statSnapshots } = effectEntry;
-    if (!stat) return;
-    // Restore each target to exactly its captured baseline
-    if (statSnapshots && statSnapshots.length) {
-      // Restore acolytes by id
-      (statSnapshots).forEach(snap => {
-        if (snap.id === '__player__') {
-          if (_characterData?.stats) {
-            _characterData.stats[stat] = snap.originalValue;
-          }
-        } else {
-          const a = (_acolytesData||[]).find(x => x.id === snap.id);
-          if (a && a.stats) a.stats[stat] = snap.originalValue;
-        }
-      });
-    } else {
-      // Fallback: subtract delta (legacy saves without snapshots)
-      const delta = effectEntry.value || 0;
-      (_acolytesData||[]).forEach(a => {
-        if (a.stats) a.stats[stat] = Math.max(1, (a.stats[stat]||10) - delta);
-      });
-      if (_characterData?.stats) {
-        _characterData.stats[stat] = Math.max(1, (_characterData.stats[stat]||10) - delta);
-      }
-    }
-    // Remove from active effects list and re-render
-    tarotEffects = tarotEffects.filter(e => e !== effectEntry && !(e.stat === stat && e.until === effectEntry.until));
-    if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
-    refreshCharacterBar();
-    toast(`✦ Tarot effect expired: ${stat} restored to base.`);
-    // Persist the cleaned-up state
-    _saveTarotState();
-    persistState().catch(()=>{});
-  }
-
-  function _saveTarotState() {
-    if (_researchData) {
-      _researchData.tarotEffects = tarotEffects.map(e => ({...e}));
-      if (_currentSpread) {
-        _researchData.tarotSpread = _currentSpread.map(s =>
-          s ? { cardName: s.card.name, reversed: s.reversed } : null
-        );
-      }
-    }
-  }
-
   function applyTarotEffect(card, reversed) {
-    const allDefs = getAllTarotDefs();
-    const def = allDefs[card.name];
-    if (!def) return { label: 'Fate shifts — no effect defined.' };
-
+    const def = TAROT_EFFECTS[card.name];
+    if (!def) return { label: 'Fate shifts.' };
     const eff = reversed ? def.rev : def.up;
-    if (!eff) return { label: 'No effect for this orientation.' };
+    const durationH = eff.dur !== undefined ? eff.dur : (reversed ? 2 : 2);
+    const until = Date.now() + durationH * 3600000;
 
-    const durationH = (eff.dur !== undefined) ? eff.dur : 2;
-    const until = Date.now() + durationH * 3600_000;
-
-    // Remove any existing same-type effect to avoid stacking
-    tarotEffects = tarotEffects.filter(e =>
-      !(e.type === eff.type && e.stat === eff.stat && e.resIdx === eff.resIdx)
-    );
+    // Remove existing effects of same type+resIdx
+    tarotEffects = tarotEffects.filter(e => !(e.type === eff.type && e.resIdx === eff.resIdx));
 
     switch (eff.type) {
-
-      // ── Instant stress damage / heal ───────────────────────────────────────
       case 'stress':
         (_acolytesData||[]).forEach(a => {
-          a.stress = Math.min(100, Math.max(0, (a.stress||0) + (eff.value||0)));
+          a.stress = Math.min(100, Math.max(0, (a.stress||0) + eff.value));
         });
         if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
         break;
 
-      // ── Clear stress ────────────────────────────────────────────────────────
       case 'cleanse':
         (_acolytesData||[]).forEach(a => { a.stress = 0; });
         if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
         toast('✦ All wounds of the mind are lifted.');
         break;
 
-      // ── Remove affliction states ────────────────────────────────────────────
       case 'cleanse_afflictions':
         (_acolytesData||[]).forEach(a => {
-          if (a.states) a.states = a.states.filter(s => !AFFLICTIONS.includes(s));
+          if (a.states) a.states = a.states.filter(s => !['Paranoid','Abusive','Masochistic','Fearful','Hopeless','Irrational'].includes(s));
         });
         if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
-        toast('✦ The scales settle. Afflictions lift.');
         break;
 
-      // ── Clear stress AND afflictions ────────────────────────────────────────
       case 'cleanse_all':
         (_acolytesData||[]).forEach(a => {
           a.stress = 0;
-          if (a.states) a.states = a.states.filter(s => !AFFLICTIONS.includes(s));
+          if (a.states) a.states = a.states.filter(s => !['Paranoid','Abusive','Masochistic','Fearful','Hopeless','Irrational'].includes(s));
         });
         if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
-        toast('✦ Transformation complete. All wounds are undone.');
         break;
 
-      // ── Instant essence grant / drain ───────────────────────────────────────
       case 'grant_essence':
         if (eff.value !== undefined && eff.resIdx !== undefined) {
           values[eff.resIdx] = Math.max(0, (values[eff.resIdx]||0) + eff.value);
-          document.querySelectorAll('.resource-pill .res-value')
-            .forEach((el, i) => { el.textContent = Math.floor(values[i]); });
+          document.querySelectorAll('.resource-pill .res-value').forEach((el,i) => { el.textContent = Math.floor(values[i]); });
         }
         break;
 
-      // ── Timed stat buff / debuff with snapshot-based reversal ───────────────
       case 'stat_buff':
-      case 'stat_debuff': {
-        if (!eff.stat) break;
-        const delta = eff.value || 0;
-
-        // Snapshot original values BEFORE applying
-        const snapshots = [];
-        (_acolytesData||[]).forEach(a => {
-          if (!a.stats) a.stats = {};
-          const base = a.stats[eff.stat] ?? 10;
-          snapshots.push({ id: a.id, originalValue: base });
-          a.stats[eff.stat] = Math.max(1, base + delta);
-        });
-        if (_characterData?.stats) {
-          const base = _characterData.stats[eff.stat] ?? 10;
-          snapshots.push({ id: '__player__', originalValue: base });
-          _characterData.stats[eff.stat] = Math.max(1, base + delta);
+      case 'stat_debuff':
+        if (eff.stat && eff.value) {
+          (_acolytesData||[]).forEach(a => {
+            if (!a.stats) a.stats = {};
+            a.stats[eff.stat] = Math.max(1, (a.stats[eff.stat]||10) + eff.value);
+          });
+          if (_characterData?.stats) {
+            _characterData.stats[eff.stat] = Math.max(1, (_characterData.stats[eff.stat]||10) + eff.value);
+          }
+          if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
+          // Schedule reversal
+          if (durationH > 0) {
+            setTimeout(() => {
+              (_acolytesData||[]).forEach(a => {
+                if (a.stats) a.stats[eff.stat] = Math.max(1, (a.stats[eff.stat]||10) - eff.value);
+              });
+              if (_characterData?.stats) {
+                _characterData.stats[eff.stat] = Math.max(1, (_characterData.stats[eff.stat]||10) - eff.value);
+              }
+              toast(`Tarot effect expired: ${eff.stat} returns to base.`);
+              persistState();
+            }, durationH * 3600000);
+          }
         }
-
-        if (_acolytesData?.length) renderAcolyteCards(_acolytesData);
-        refreshCharacterBar();
-
-        const entry = { ...eff, until, statSnapshots: snapshots };
-        tarotEffects.push(entry);
-
-        // Schedule reversal — will fire at expiry OR be re-scheduled on reload
-        if (durationH > 0) _scheduleStatReversal(entry);
+        tarotEffects.push({ ...eff, until });
         break;
-      }
 
-      // ── XP grant to all ─────────────────────────────────────────────────────
-      case 'level_bonus': {
-        const xpAmt = eff.value || 50;
-        (_acolytesData||[]).forEach(a => { a.xp = (a.xp||0) + xpAmt; });
-        if (_characterData) { _characterData.xp = (_characterData.xp||0) + xpAmt; checkLevelUp(); }
-        toast(`✦ +${xpAmt} XP granted to all.`);
+      case 'level_bonus':
+        (_acolytesData||[]).forEach(a => { a.xp = (a.xp||0) + 50; });
+        if (_characterData) { _characterData.xp = (_characterData.xp||0) + 50; checkLevelUp(); }
         break;
-      }
 
-      // ── Unlock a rite temporarily ───────────────────────────────────────────
       case 'unlock_rite':
-        toast(`✦ ${eff.riteKey || 'Rite'} unlocked for ${durationH}h — no Altar required.`);
-        if (durationH > 0) tarotEffects.push({ ...eff, until });
+        toast(`✦ ${eff.riteKey} rite is available without prerequisites for ${durationH}h.`);
+        tarotEffects.push({ ...eff, until });
         break;
 
-      // ── Rate multipliers (allRates / rate / research) ───────────────────────
-      // These are handled by effectiveRate() / researchRateBonus() reading
-      // the tarotEffects array, so we just push them in.
       default:
         if (durationH > 0) tarotEffects.push({ ...eff, until });
         break;
     }
 
-    _saveTarotState();
-    persistState().catch(()=>{});
+    // Save tarot effects so they persist
+    if (_researchData) {
+      _researchData.tarotEffects = tarotEffects.map(e=>({...e}));
+      // Save spread positions for restore on reload
+      _researchData.tarotSpread = _currentSpread.map(s => s ? { cardName: s.card.name, reversed: s.reversed } : null);
+    }
+    persistState();
     return eff;
   }
 
@@ -6071,6 +6079,23 @@
     if (tab === 'field' && map) setTimeout(() => map.invalidateSize(), 50);
     if (tab === 'codex') renderCodexList();
     if (tab === 'arcana') { renderSkillResearch(); renderTarotSpread(); }
+  }
+
+  // ── Navigate map to an event's coordinates ─────────────────────────────────
+  function flyToEventLocation(lat, lng) {
+    switchTab('field');
+    // Wait for the panel to become visible before flying
+    setTimeout(() => {
+      if (!map) return;
+      map.invalidateSize();
+      map.flyTo([lat, lng], 16, { animate: true, duration: 1.2 });
+      // Drop a temporary highlight ring so the player knows what to look at
+      const ring = L.circleMarker([lat, lng], {
+        radius: 18, color: '#c9a84c', weight: 2,
+        fillColor: '#c9a84c', fillOpacity: 0.08
+      }).addTo(map);
+      setTimeout(() => ring.remove(), 8000);
+    }, 120);
   }
 
   // Codex and long-press are initialised directly in enterGame above
@@ -6495,16 +6520,20 @@
 
   async function refreshFieldEventCards() {
     try {
-      const res = await fetch(`${FB_URL}/world/events.json?cb=` + Date.now());
-      if (!res.ok) return;
-      const data = await res.json();
-      if (!data || data.error) return;
-      _cachedWorldEvents = data;
-      renderFieldEventCards(data);
+      const myId = getOrCreatePlayerId();
+      // Load world events (random + world-dm) AND player's personal DM inbox in parallel
+      const [worldRes, inboxRes] = await Promise.all([
+        fetch(`${FB_URL}/world/events.json?cb=` + Date.now()),
+        fetch(`${FB_URL}/events/${myId}.json?cb=`  + Date.now()),
+      ]);
+      const worldData = worldRes.ok ? await worldRes.json() : null;
+      const inboxData = inboxRes.ok ? await inboxRes.json() : null;
+      _cachedWorldEvents = worldData;
+      renderFieldEventCards(worldData, inboxData);
     } catch(e) {}
   }
 
-  function renderFieldEventCards(data) {
+  function renderFieldEventCards(data, inboxData) {
     const container = document.getElementById('field-events-list');
     const el = document.getElementById('field-events-list');
     if (!el) return;
@@ -6515,10 +6544,26 @@
       recruit: 'var(--amber-bright)',
     };
     const TYPE_SIGIL = { combat:'⚠', story:'✦', gather:'☽', recruit:'⬡' };
-    const allEvts = [
-      ...Object.entries(data.dm     || {}).map(([id,ev]) => ({...ev, id, src:'dm'})),
-      ...Object.entries(data.random || {}).map(([id,ev]) => ({...ev, id, src:'random'})),
+
+    // World events (placed on shared world map)
+    const worldEvts = [
+      ...Object.entries((data?.dm     || {})).map(([id,ev]) => ({...ev, id, src:'dm'})),
+      ...Object.entries((data?.random || {})).map(([id,ev]) => ({...ev, id, src:'random'})),
     ].filter(ev => ev && ev.title);
+
+    // Personal inbox events (DM sent directly to this player)
+    // Show only unread ones (read:false or not yet read this session)
+    const inboxEvts = inboxData
+      ? Object.entries(inboxData)
+          .filter(([id, ev]) => ev && ev.title && ev.read !== true)
+          .map(([id, ev]) => ({...ev, id, src:'inbox',
+            // Normalise location
+            lat: ev.lat ?? ev.location?.lat,
+            lng: ev.lng ?? ev.location?.lng,
+          }))
+      : [];
+
+    const allEvts = [...worldEvts, ...inboxEvts];
 
     if (!allEvts.length) {
       el.innerHTML = '<div style="font-family:var(--ff-body);font-style:italic;font-size: 0.82rem;color:var(--text-secondary);padding:0.5rem 0;">The field is quiet. The ether holds its breath.</div>';
@@ -6532,13 +6577,26 @@
       const type  = ev.type || 'story';
       const color = TYPE_COLOR[type] || 'var(--gold)';
       const sigil = TYPE_SIGIL[type] || '✦';
-      const badge = ev.src === 'dm'
+      // Badge: inbox DM events get a purple DM badge
+      const badge = (ev.src === 'dm' || ev.src === 'inbox')
         ? `<span class="mission-badge" style="color:var(--dm-bright,#a855f7);font-size: 0.49rem;">DM</span>`
         : `<span class="mission-badge ${type}">${type}</span>`;
       const rewardLine = ev.reward
         ? `<span style="color:var(--gold-dim);font-family:var(--ff-heading);font-size: 0.49rem;letter-spacing:0.06em;">↳ ${ev.reward}</span>`
         : '';
-      // Store event object — data-evid avoids onclick stripping by mobile browsers
+      const checkLine = ev.skillChecks?.length
+        ? `<span style="color:var(--viridian-bright);font-family:var(--ff-heading);font-size: 0.49rem;letter-spacing:0.06em;">⌛ ${ev.skillChecks.length} check${ev.skillChecks.length>1?'s':''}</span>`
+        : '';
+      const combatLine = ev.enemies?.length
+        ? `<span style="color:var(--crimson-bright);font-family:var(--ff-heading);font-size: 0.49rem;letter-spacing:0.06em;">⚔ Combat</span>`
+        : '';
+      // Location coords — normalised flat
+      const evLat = ev.lat ?? ev.location?.lat;
+      const evLng = ev.lng ?? ev.location?.lng;
+      const coordLine = evLat
+        ? `<span style="font-family:var(--ff-heading);font-size:0.49rem;color:var(--gold-dim);cursor:pointer;" onclick="flyToEventLocation(${evLat},${evLng})">◎ ${Number(evLat).toFixed(4)}, ${Number(evLng).toFixed(4)}</span>`
+        : '';
+
       const evId = 'ev_' + Math.random().toString(36).slice(2,9);
       _worldEventStore.set(evId, ev);
       return `<div class="mission-card" style="--mission-color:${color}" data-evid="${evId}">
@@ -6548,13 +6606,12 @@
         </div>
         <p class="mission-desc">${ev.desc || ''}</p>
         <div class="mission-meta">
-          ${rewardLine}
-          ${ev.src === 'dm' && ev.lat ? `<span>◎ ${Number(ev.lat).toFixed(4)}, ${Number(ev.lng).toFixed(4)}</span>` : ''}
+          ${rewardLine}${checkLine}${combatLine}${coordLine}
         </div>
       </div>`;
     }).join('');
 
-    // Wire click listeners directly on each card (delegation unreliable on mobile)
+    // Wire click listeners
     container.querySelectorAll('[data-evid]').forEach(card => {
       card.addEventListener('click', () => activateWorldEvent(card.dataset.evid));
     });
@@ -6595,7 +6652,7 @@
       <div class="entry-actions">
         ${ev.btn1 ? (() => { const jid='j_'+Math.random().toString(36).slice(2,8); _worldEventStore.set(jid,ev); return `<button class="btn-action primary" onclick="resolveJournalEvent('${jid}',this,true)">${ev.btn1}</button>`; })() : ''}
         ${ev.btn2 ? (() => { const jid2='j_'+Math.random().toString(36).slice(2,8); _worldEventStore.set(jid2,ev); return `<button class="btn-action" onclick="resolveJournalEvent('${jid2}',this,false)">${ev.btn2}</button>`; })() : ''}
-        ${ev.location?.lat ? `<button class="btn-action" onclick="switchTab('field')">◎ Go to Location</button>` : ''}
+        ${ev.location?.lat ? `<button class="btn-action" onclick="flyToEventLocation(${ev.location.lat},${ev.location.lng})">◎ Go to Location</button>` : (ev.lat ? `<button class="btn-action" onclick="flyToEventLocation(${ev.lat},${ev.lng})">◎ Go to Location</button>` : '')}
       </div>`;
     // Prepend so newest is at top, but after the planetary hour widget
     feed.insertBefore(entry, feed.firstChild);
@@ -7702,9 +7759,38 @@
       const btn = document.createElement('button');
       btn.className = 'dm-event-btn' + (primary ? ' primary' : '');
       btn.textContent = label;
-      btn.onclick = () => {
-        if (applyReward && ev.rewardRes) applyDmEventReward(ev);
-        closeDmEventModal();
+      btn.onclick = async () => {
+        // Disable all buttons immediately
+        actionsEl.querySelectorAll('.dm-event-btn').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
+
+        if (!applyReward) {
+          closeDmEventModal();
+          return;
+        }
+
+        // Run skill checks first
+        if (ev.skillChecks && ev.skillChecks.length) {
+          closeDmEventModal();
+          const passed = await runSkillChecks(ev.skillChecks, ev);
+          if (!passed) {
+            applyCheckFailure(ev);
+            return;
+          }
+        } else {
+          closeDmEventModal();
+        }
+
+        // Trigger combat if enemies defined
+        if (ev.enemies && ev.enemies.length) {
+          showCombat(ev).catch(err => {
+            toast('Combat failed to load: ' + (err.message || err));
+            switchTab('field');
+          });
+          return;
+        }
+
+        // No combat — just reward
+        if (ev.rewardRes) applyDmEventReward(ev);
       };
       actionsEl.appendChild(btn);
     };
@@ -7722,35 +7808,110 @@
       actionsEl.parentElement.insertBefore(rwd, actionsEl);
     }
 
-    // If event has a location, add a "Go to Map" button
+    // If event has a location, add a "Go to Map" button that flies to the pin
     if (ev.location?.lat && ev.location?.lng) {
       const btn = document.createElement('button');
       btn.className = 'dm-event-btn';
-      btn.textContent = '◎ Mark on Map';
-      btn.onclick = () => { closeDmEventModal(); switchTab('field'); };
+      btn.textContent = '◎ Go to Location';
+      btn.onclick = () => { closeDmEventModal(); flyToEventLocation(ev.location.lat, ev.location.lng); };
+      actionsEl.appendChild(btn);
+    } else if (ev.lat && ev.lng) {
+      const btn = document.createElement('button');
+      btn.className = 'dm-event-btn';
+      btn.textContent = '◎ Go to Location';
+      btn.onclick = () => { closeDmEventModal(); flyToEventLocation(ev.lat, ev.lng); };
       actionsEl.appendChild(btn);
     }
 
     document.getElementById('dm-event-modal').classList.add('open');
   }
 
-  function resolveJournalEvent(jid, btn, acceptReward) {
+  async function resolveJournalEvent(jid, btn, acceptReward) {
     const ev = _worldEventStore.get(jid);
     const entry = btn?.closest('.journal-entry');
+
+    if (!acceptReward) {
+      // Player declined — just mark and delete
+      if (entry) {
+        entry.style.opacity = '0.35';
+        entry.style.pointerEvents = 'none';
+        const resolved = document.createElement('div');
+        resolved.style.cssText = 'font-family:var(--ff-heading);font-size: 0.47rem;color:var(--text-secondary);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.4rem;';
+        resolved.textContent = '— Withdrawn —';
+        entry.appendChild(resolved);
+      }
+      if (ev?._evtId) {
+        const myId = getOrCreatePlayerId();
+        fetch(`${FB_URL}/events/${myId}/${ev._evtId}.json`, { method: 'DELETE' }).catch(() => {});
+      }
+      return;
+    }
+
+    // Disable buttons immediately to prevent double-tap
+    if (entry) {
+      entry.style.pointerEvents = 'none';
+      entry.querySelectorAll('.btn-action').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
+    }
+
+    if (!ev) {
+      toast('Event data lost — please refresh.');
+      return;
+    }
+
+    // Run skill checks first
+    if (ev.skillChecks && ev.skillChecks.length) {
+      const passed = await runSkillChecks(ev.skillChecks, ev);
+      if (!passed) {
+        applyCheckFailure(ev);
+        // Mark journal entry as resolved
+        if (entry) {
+          entry.style.opacity = '0.35';
+          const resolved = document.createElement('div');
+          resolved.style.cssText = 'font-family:var(--ff-heading);font-size: 0.47rem;color:var(--crimson-bright);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.4rem;';
+          resolved.textContent = '— Check Failed —';
+          entry.appendChild(resolved);
+        }
+        if (ev._evtId) {
+          const myId = getOrCreatePlayerId();
+          fetch(`${FB_URL}/events/${myId}/${ev._evtId}.json`, { method: 'DELETE' }).catch(() => {});
+        }
+        return;
+      }
+    }
+
+    // Trigger combat if enemies are defined
+    if (ev.enemies && ev.enemies.length) {
+      if (entry) {
+        entry.style.opacity = '0.35';
+        const resolved = document.createElement('div');
+        resolved.style.cssText = 'font-family:var(--ff-heading);font-size: 0.47rem;color:var(--crimson-bright);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.4rem;';
+        resolved.textContent = '— Combat Initiated —';
+        entry.appendChild(resolved);
+      }
+      if (ev._evtId) {
+        const myId = getOrCreatePlayerId();
+        fetch(`${FB_URL}/events/${myId}/${ev._evtId}.json`, { method: 'DELETE' }).catch(() => {});
+      }
+      showCombat(ev).catch(err => {
+        toast('Combat failed to load: ' + (err.message || err));
+        switchTab('field');
+      });
+      return;
+    }
+
+    // All clear — apply reward and mark resolved
+    if (ev.rewardRes) applyDmEventReward(ev);
+
     if (entry) {
       entry.style.opacity = '0.35';
-      entry.style.pointerEvents = 'none';
-      // Mark as resolved visually
       const resolved = document.createElement('div');
       resolved.style.cssText = 'font-family:var(--ff-heading);font-size: 0.47rem;color:var(--text-secondary);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.4rem;';
-      resolved.textContent = acceptReward ? '— Resolved —' : '— Withdrawn —';
+      resolved.textContent = '— Resolved —';
       entry.appendChild(resolved);
     }
-    if (ev && acceptReward && ev.rewardRes) applyDmEventReward(ev);
-    // Delete from Firebase so it won't reappear
-    if (ev && ev._evtId) {
+    if (ev._evtId) {
       const myId = getOrCreatePlayerId();
-      fetch(`${FB_URL}/events/${myId}/${ev._evtId}.json`, { method: 'DELETE' }).catch(()=>{});
+      fetch(`${FB_URL}/events/${myId}/${ev._evtId}.json`, { method: 'DELETE' }).catch(() => {});
     }
   }
 
@@ -8922,38 +9083,20 @@
 
 
 
-  // Restore tarot effects from saved research data (reload-safe)
+  // Restore tarot effects from saved research data
   function restoreTarotEffects() {
-    const now = Date.now();
-
     if (_researchData?.tarotEffects) {
-      // Filter out expired effects
-      const live = (_researchData.tarotEffects||[]).filter(e => e.until > now);
-
-      // For stat buffs that are still active: restore the stat mutations
-      // (the save already has modified stats baked in, but we need to
-      //  re-schedule the reversal so it fires at the correct remaining time)
-      live.forEach(e => {
-        if ((e.type === 'stat_buff' || e.type === 'stat_debuff') && e.stat) {
-          // Re-schedule reversal for the remaining duration
-          _scheduleStatReversal(e);
-        }
-      });
-
-      tarotEffects = live;
+      const now = Date.now();
+      tarotEffects = (_researchData.tarotEffects||[]).filter(e => e.until > now);
     }
-
-    // Also load any custom tarot card definitions from Firebase
-    loadCustomTarotCards();
-
     // Restore spread positions from saved state if present
     if (_researchData?.tarotSpread) {
       _currentSpread = _researchData.tarotSpread.map(s => {
         if (!s) return null;
+        // Re-find card object from majorArcana array
         const card = majorArcana.find(c => c.name === s.cardName);
         if (!card) return null;
-        const allDefs = getAllTarotDefs();
-        const effect = allDefs[card.name];
+        const effect = TAROT_EFFECTS[card.name];
         const eff = s.reversed ? effect?.rev : effect?.up;
         return { card, reversed: s.reversed, effect: eff || { label: 'Effect restored.' } };
       });
