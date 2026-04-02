@@ -4361,10 +4361,14 @@
         const elng = ev.lng ?? ev.location?.lng;
         if (!elat || !elng) return;
         if (dmMapMarkers[id]) return; // already on map
-        const normEv = { ...ev, lat: elat, lng: elng, id, src: 'dm' };
-        const marker = L.marker([elat, elng], { icon: makeIcon(ev.type || 'story', 'dm') }).addTo(map);
-        marker.bindPopup(makeEventPopup(normEv), { maxWidth: 240, className: '' });
-        dmMapMarkers[id] = marker;
+        const normEv = { ...ev, lat: elat, lng: elng, id, src: 'random' };
+        const marker = L.marker([elat, elng], {
+        icon: makeIcon(ev.type || 'gather', 'random')
+    }).addTo(map);
+
+marker.bindPopup(makeEventPopup(normEv), { maxWidth: 240, className: '' });
+
+randomMapMarkers[id] = marker;
       });
       // Remove stale DM markers
       Object.keys(dmMapMarkers).forEach(id => {
@@ -4401,8 +4405,8 @@
     _worldEventStore.set(evId, ev);
     const rewardHtml = ev.reward ? `<div style="margin-top:0.4rem;font-family:var(--ff-heading);font-size: 0.64rem;color:#c9a84c;letter-spacing:0.08em;">${ev.reward}</div>` : '';
     // Use data-evid instead of onclick — Leaflet 1.9.x strips onclick from popup HTML
-    return `<div class="popup-title">${ev.title || 'Unknown Event'}</div>
-      <div>${ev.desc || ''}</div>
+    <div class="popup-title">${ev.title || ev.body || 'Unknown Event'}</div>
+    <div>${ev.desc || ev.body || ''}</div>
       ${rewardHtml}
       <button class="popup-btn" data-evid="${evId}">Investigate</button>`;
   }
@@ -6515,20 +6519,53 @@
   // Builds mission-card list from the same Firebase data, so map markers and
   // the card list always stay in sync.
   let _cachedWorldEvents = null;
+async function refreshFieldEventCards() {
+  try {
+    const myId = getOrCreatePlayerId();
 
-  async function refreshFieldEventCards() {
-    try {
-      const myId = getOrCreatePlayerId();
-      const [worldRes, inboxRes] = await Promise.all([
-        fetch(`${FB_URL}/world/events.json?cb=` + Date.now()),
-        fetch(`${FB_URL}/events/${myId}.json?cb=`  + Date.now()),
-      ]);
-      const worldData = worldRes.ok ? await worldRes.json() : null;
-      const inboxData = inboxRes.ok ? await inboxRes.json() : null;
-      if (worldData) _cachedWorldEvents = worldData;
-      renderFieldEventCards(worldData, inboxData);
-    } catch(e) {}
+    const [worldRes, inboxRes] = await Promise.all([
+      fetch(`${FB_URL}/world/events.json?cb=` + Date.now()),
+      fetch(`${FB_URL}/events/${myId}.json?cb=`  + Date.now()),
+    ]);
+
+    const worldData = worldRes.ok ? await worldRes.json() : {};
+    const inboxData = inboxRes.ok ? await inboxRes.json() : {};
+
+    // Normalize WORLD events (same format as map)
+    const normWorld = Object.entries(worldData || {}).map(([id, ev]) => {
+      const lat = Number(ev.lat ?? ev.latitude ?? ev.coords?.lat);
+      const lng = Number(ev.lng ?? ev.longitude ?? ev.coords?.lng);
+
+      return {
+        ...ev,
+        id,
+        src: 'dm',
+        lat,
+        lng,
+        title: ev.title || ev.body || 'Unknown Event',
+        desc: ev.desc || ev.body || ''
+      };
+    }).filter(ev => !isNaN(ev.lat) && !isNaN(ev.lng));
+
+    // Normalize PLAYER inbox events
+    const normInbox = Object.entries(inboxData || {}).map(([id, ev]) => ({
+      ...ev,
+      id,
+      src: 'player',
+      title: ev.title || ev.body || 'Unknown Event',
+      desc: ev.desc || ev.body || ''
+    }));
+
+    // Optional cache
+    _cachedWorldEvents = normWorld;
+
+    // Pass CLEAN data to renderer
+    renderFieldEventCards(normWorld, normInbox);
+
+  } catch (e) {
+    console.error("refreshFieldEventCards error:", e);
   }
+}
 
   function renderFieldEventCards(data, inboxData) {
     const container = document.getElementById('field-events-list');
