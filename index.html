@@ -4519,6 +4519,7 @@
   // INIT
   // ══════════════════════════════════════════
   let _gameStarted = false;
+  let _deletionDetected = false;
 
   // Global state — declared early so all functions can access them
   let playerName = '';
@@ -7225,6 +7226,7 @@ async function refreshFieldEventCards() {
 
   // ── CHARACTER CREATION STATE ──
   let _ccData = { name:'', coven:'', classKey:'', classData:null, stats:{}, traits:[], basePoints:15 };
+  let _ccAllClasses = {}; // full class data loaded during creation
   let _worldTraits = {}; // loaded from Firebase /world/traits
 
   async function loadWorldTraits() {
@@ -7250,15 +7252,44 @@ async function refreshFieldEventCards() {
     try {
       const classes = await fetch(`${FB_URL}/world/classes.json?cb=`+Date.now()).then(r=>r.json());
       if (!classes || classes.error) throw new Error('no classes');
+      // Store all class data for progression viewer
+      _ccAllClasses = classes;
       grid.innerHTML = Object.entries(classes).map(([key, cls]) => {
+        const STAT_EL = {fortitude:'Fire',wrath:'Fire',intuition:'Water',empathy:'Water',endurance:'Earth',memory:'Earth',cunning:'Air',speed:'Air',gnosis:'Aether'};
+        const STAT_COL = {fortitude:'#c43030',wrath:'#c43030',intuition:'#4a7a8b',empathy:'#4a7a8b',endurance:'#8b7355',memory:'#8b7355',cunning:'#6b9ac4',speed:'#6b9ac4',gnosis:'#3d3daa'};
         const statLine = cls.stats
-          ? Object.entries(cls.stats).map(([s,v]) => `<span>${s.slice(0,3).toUpperCase()} ${v}</span>`).join('')
+          ? Object.entries(cls.stats).map(([s,v]) =>
+              `<span style="color:${STAT_COL[s]||'var(--text-secondary)'}">${s.slice(0,3).toUpperCase()} ${v}</span>`).join('')
           : '';
+        // Build progression preview (level 1–5 shown inline)
+        const bonuses = cls.levelUpBonuses
+          ? (Array.isArray(cls.levelUpBonuses) ? cls.levelUpBonuses : Object.values(cls.levelUpBonuses))
+              .sort((a,b)=>a.level-b.level)
+          : [];
+        const progLines = bonuses.slice(0,8).map(b => {
+          const gains = Object.entries(b.statGains||{}).map(([s,v])=>`${s.slice(0,3).toUpperCase()}+${v}`).join(' ');
+          const sk = b.skillKey ? ` · Unlocks: ${b.skillKey}` : '';
+          return `<div style="display:flex;gap:0.5rem;padding:0.2rem 0;border-top:1px solid var(--border);">
+            <span style="font-family:var(--ff-heading);font-size:0.52rem;color:var(--text-accent);min-width:28px;">Lv ${b.level}</span>
+            <span style="font-family:var(--ff-heading);font-size:0.52rem;color:var(--text-secondary);">${gains}${sk}</span>
+          </div>`;
+        }).join('');
+        const specs = cls.specializations
+          ? (Array.isArray(cls.specializations) ? cls.specializations : Object.values(cls.specializations))
+          : [];
+        const specLines = specs.map(s =>
+          `<div style="padding:0.25rem 0;border-top:1px solid var(--border);">
+            <span style="font-family:var(--ff-heading);font-size:0.52rem;color:var(--viridian-bright);">Path · Lv${s.level}: ${s.name}</span>
+            ${s.desc ? `<div style="font-family:var(--ff-body);font-style:italic;font-size:0.78rem;color:var(--text-secondary);line-height:1.4;">${s.desc}</div>` : ''}
+          </div>`
+        ).join('');
         return `<div class="cc-class-card" id="cc-cls-${key}" onclick="ccPickClass('${key}')">
           <div class="cc-class-name">${cls.name||key}</div>
           <div class="cc-class-role">${cls.role||''}</div>
           <div class="cc-class-stats">${statLine}</div>
-          ${cls.lore ? `<div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);margin-top:0.4rem;line-height:1.5;">${cls.lore}</div>` : ''}
+          ${cls.desc ? `<div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);margin-top:0.4rem;line-height:1.5;">${cls.desc}</div>` : ''}
+          ${bonuses.length ? `<div style="margin-top:0.6rem;"><div style="font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.2rem;">Level Progression</div>${progLines}</div>` : ''}
+          ${specs.length ? `<div style="margin-top:0.5rem;"><div style="font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.2rem;">Specializations</div>${specLines}</div>` : ''}
         </div>`;
       }).join('');
     } catch(e) {
@@ -7318,13 +7349,17 @@ async function refreshFieldEventCards() {
       empathy:'#4a7a8b', endurance:'#8b7355', memory:'#8b7355',
       cunning:'#6b9ac4', speed:'#6b9ac4', gnosis:'#3d3daa'
     };
-    const spent = Object.values(_ccData.stats).reduce((a,b)=>a+b,0)
-      - Object.values(_ccData.classData?.stats||{}).reduce((a,b)=>a+b,0) || 0;
+    const totalStatPoints = Object.values(_ccData.stats).reduce((a,b)=>a+b,0);
+    const baseStatTotal = Object.values(_ccData.classData?.stats||{}).reduce((a,b)=>a+b,0);
+    const spent = Math.max(0, totalStatPoints - baseStatTotal);
     const traitCost = (_ccData.traits||[]).reduce((sum,t) => sum + ((_worldTraits[t]?.cost)||0), 0);
     const remaining = _ccData.basePoints - spent - traitCost;
 
+    const ptColor = remaining < 0 ? 'var(--crimson-bright)' : remaining === 0 ? 'var(--viridian-bright)' : 'var(--gold)';
     document.getElementById('cc-points-label').innerHTML =
-      `<strong style="color:${remaining<0?'var(--crimson-bright)':remaining===0?'var(--viridian-bright)':'var(--text-primary)'}">${remaining}</strong> points remaining`;
+      `Points to spend: <strong style="font-size:1.2em;color:${ptColor}">${remaining}</strong>`
+      + (remaining < 0 ? ' <span style="color:var(--crimson-bright);font-size:0.85em;">— over budget, remove traits or reduce stats</span>' : '')
+      + (remaining === 0 ? ' <span style="color:var(--viridian-bright);font-size:0.85em;">— fully allocated</span>' : '');
 
     document.getElementById('cc-stat-grid').innerHTML = Object.entries(STAT_LABELS).map(([key, label]) => {
       const val = _ccData.stats[key] || 0;
@@ -7362,8 +7397,9 @@ async function refreshFieldEventCards() {
 
   function ccRenderTraits() {
     const traitCost = (_ccData.traits||[]).reduce((sum,t)=>sum+((_worldTraits[t]?.cost)||0),0);
-    document.getElementById('cc-trait-budget').textContent =
-      (_ccData.basePoints - traitCost) + ' pts budget';
+    const totalBudget = _ccData.basePoints - traitCost;
+    const budgetEl = document.getElementById('cc-trait-budget');
+    budgetEl.innerHTML = `<strong style="color:${totalBudget<0?'var(--crimson-bright)':totalBudget<3?'var(--amber-bright)':'var(--viridian-bright)'}">${totalBudget}</strong> points remaining after traits`;
 
     // Fallback traits if none in Firebase
     const traits = Object.keys(_worldTraits).length > 0 ? _worldTraits : {
@@ -7404,9 +7440,11 @@ async function refreshFieldEventCards() {
     if (idx >= 0) {
       _ccData.traits.splice(idx, 1);
     } else {
-      // Check budget — positive-cost traits reduce point budget
-      const newTotal = traitCost + (t.cost||0);
-      if (newTotal > _ccData.basePoints) { toast('Not enough points for this trait.'); return; }
+      // Check: adding this trait must not push total trait cost past basePoints
+      const baseStatTotal = Object.values(_ccData.classData?.stats||{}).reduce((a,b)=>a+b,0);
+      const statSpend = Math.max(0, Object.values(_ccData.stats||{}).reduce((a,b)=>a+b,0) - baseStatTotal);
+      const newTraitTotal = traitCost + (t.cost||0);
+      if (newTraitTotal + statSpend > _ccData.basePoints) { toast('Not enough points. Reduce stats or remove other traits first.'); return; }
       if (!_ccData.traits) _ccData.traits = [];
       _ccData.traits.push(key);
     }
@@ -7603,9 +7641,20 @@ async function refreshFieldEventCards() {
       const check = await fetch(`${FB_URL}/saves/${id}.json`);
       const saved = await check.json();
       if (saved === null) {
-        // Save deleted — stop presence engine, prompt re-setup
+        // If identity modal is open, player is mid-creation — don't interfere
+        const identityOpen = document.getElementById('identity-modal')?.classList.contains('open');
+        if (identityOpen) return;
+        // Otherwise: save was deleted by DM — stop interval, reload once
         if (presenceInterval) { clearInterval(presenceInterval); presenceInterval = null; }
-        toast('Your chronicle has been erased. Please refresh the page.');
+        if (!_deletionDetected) {
+          _deletionDetected = true;
+          toast('Your chronicle has been erased. Reloading…');
+          setTimeout(() => {
+            localStorage.removeItem('llair_name');
+            localStorage.removeItem('llair_coven');
+            window.location.reload();
+          }, 2500);
+        }
         return;
       }
     } catch(e) {}

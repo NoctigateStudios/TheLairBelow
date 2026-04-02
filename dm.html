@@ -901,6 +901,91 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
   </div>
 </div>
 </div>
+
+
+<div id="page-traits" class="page">
+<div class="pg-head">
+  <div class="pg-title">Traits</div>
+  <div class="pg-desc">Define character traits available during character creation. Positive traits cost stat points; negative traits refund them. Traits apply mechanical effects in combat and skill checks.</div>
+</div>
+<div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+  <button class="btn b-rune" onclick="loadTraits()">↻ Refresh</button>
+  <button class="btn b-seal" onclick="openTraitEditor()">+ New Trait</button>
+</div>
+<div id="traits-list"></div>
+
+<div class="panel" id="trait-editor" style="display:none;margin-top:1rem;">
+  <div class="ph" id="trait-ed-title">New Trait</div>
+  <input type="hidden" id="trait-key">
+  <div class="g2">
+    <div class="fld"><label>Trait Key (slug)</label><input type="text" id="trait-key-in" placeholder="paranoid"></div>
+    <div class="fld"><label>Display Name</label><input type="text" id="trait-name" placeholder="Paranoid"></div>
+  </div>
+  <div class="fld"><label>Description (shown to player)</label><textarea id="trait-desc" placeholder="Stress accumulates 20% faster, but you detect ambushes before allies."></textarea></div>
+  <div class="fld">
+    <label>Point Cost <span style="color:var(--ash);font-size:0.85em;">(positive = costs points, negative = refunds points)</span></label>
+    <input type="number" id="trait-cost" value="0" min="-5" max="5">
+  </div>
+  <div class="fld"><label>Negative Trait <span style="color:var(--ash);font-size:0.85em;">(shown in red during creation)</span></label>
+    <select id="trait-negative"><option value="false">No (beneficial)</option><option value="true">Yes (detrimental)</option></select>
+  </div>
+  <div class="ph" style="margin-top:0.8rem;">Mechanical Effects</div>
+  <div class="pg-desc" style="margin-bottom:0.6rem;">Stats to modify when this trait is applied. Use numeric values (+/-). Leave blank for no effect.</div>
+  <div class="g4" id="trait-effects-grid">
+    <div class="fld"><label>Fortitude</label><input type="number" id="te-fortitude" placeholder="0"></div>
+    <div class="fld"><label>Wrath</label><input type="number" id="te-wrath" placeholder="0"></div>
+    <div class="fld"><label>Intuition</label><input type="number" id="te-intuition" placeholder="0"></div>
+    <div class="fld"><label>Empathy</label><input type="number" id="te-empathy" placeholder="0"></div>
+    <div class="fld"><label>Endurance</label><input type="number" id="te-endurance" placeholder="0"></div>
+    <div class="fld"><label>Memory</label><input type="number" id="te-memory" placeholder="0"></div>
+    <div class="fld"><label>Cunning</label><input type="number" id="te-cunning" placeholder="0"></div>
+    <div class="fld"><label>Speed</label><input type="number" id="te-speed" placeholder="0"></div>
+    <div class="fld"><label>Gnosis</label><input type="number" id="te-gnosis" placeholder="0"></div>
+  </div>
+  <div class="fld"><label>Special Flags <span style="color:var(--ash);font-size:0.85em;">(comma-separated: stressRate:1.2, ambushDetect:true, lowHpDmg:1.1)</span></label>
+    <input type="text" id="trait-flags" placeholder="stressRate:1.2"></div>
+  <div style="display:flex;gap:0.5rem;margin-top:0.8rem;">
+    <button class="btn b-ward" onclick="saveTrait()">✓ Save Trait</button>
+    <button class="btn b-seal" onclick="deleteTrait(document.getElementById('trait-key').value)">✕ Delete</button>
+    <button class="btn" onclick="document.getElementById('trait-editor').style.display='none'">Cancel</button>
+  </div>
+</div>
+</div>
+
+
+<div id="page-questlines" class="page">
+<div class="pg-head">
+  <div class="pg-title">Questlines</div>
+  <div class="pg-desc">Define multi-step story questlines with branching choices. Each node can have choices that lead to other nodes, apply rewards, trigger combat, or end the questline.</div>
+</div>
+<div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+  <button class="btn b-rune" onclick="loadQuestlines()">↻ Refresh</button>
+  <button class="btn b-seal" onclick="openQuestEditor()">+ New Questline</button>
+</div>
+<div id="questlines-list"></div>
+
+<div class="panel" id="quest-editor" style="display:none;margin-top:1rem;">
+  <div class="ph" id="quest-ed-title">New Questline</div>
+  <input type="hidden" id="quest-key">
+  <div class="g2">
+    <div class="fld"><label>Quest Key</label><input type="text" id="quest-key-in" placeholder="the-iron-testament"></div>
+    <div class="fld"><label>Title</label><input type="text" id="quest-title" placeholder="The Iron Testament"></div>
+  </div>
+  <div class="fld"><label>Description</label><textarea id="quest-desc"></textarea></div>
+  <div class="fld"><label>Starting Node ID</label><input type="text" id="quest-start" value="start" placeholder="start"></div>
+
+  <div class="ph" style="margin-top:1rem;">Nodes <span style="font-size:0.85em;color:var(--ash);">(each node is a story beat)</span></div>
+  <div id="quest-nodes-list" style="margin-bottom:0.6rem;"></div>
+  <button class="btn b-rune" onclick="addQuestNode()">+ Add Node</button>
+
+  <div style="display:flex;gap:0.5rem;margin-top:1rem;">
+    <button class="btn b-ward" onclick="saveQuestline()">✓ Save Questline</button>
+    <button class="btn b-seal" onclick="deleteQuestline(document.getElementById('quest-key').value)">✕ Delete</button>
+    <button class="btn" onclick="document.getElementById('quest-editor').style.display='none'">Cancel</button>
+  </div>
+</div>
+</div>
+
 </main>
 </div>
 <div id="dm-console"><div class="con-bar"><span class="con-lbl">Arcane Log</span><button class="con-clr" onclick="document.getElementById('dm-log').innerHTML=''">clear</button></div><div id="dm-log"></div></div>
@@ -3361,89 +3446,5 @@ async function hardDeleteCharacter() {
 }
 
 </script>
-
-<div id="page-traits" class="page">
-<div class="pg-head">
-  <div class="pg-title">Traits</div>
-  <div class="pg-desc">Define character traits available during character creation. Positive traits cost stat points; negative traits refund them. Traits apply mechanical effects in combat and skill checks.</div>
-</div>
-<div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
-  <button class="btn b-rune" onclick="loadTraits()">↻ Refresh</button>
-  <button class="btn b-seal" onclick="openTraitEditor()">+ New Trait</button>
-</div>
-<div id="traits-list"></div>
-
-<div class="panel" id="trait-editor" style="display:none;margin-top:1rem;">
-  <div class="ph" id="trait-ed-title">New Trait</div>
-  <input type="hidden" id="trait-key">
-  <div class="g2">
-    <div class="fld"><label>Trait Key (slug)</label><input type="text" id="trait-key-in" placeholder="paranoid"></div>
-    <div class="fld"><label>Display Name</label><input type="text" id="trait-name" placeholder="Paranoid"></div>
-  </div>
-  <div class="fld"><label>Description (shown to player)</label><textarea id="trait-desc" placeholder="Stress accumulates 20% faster, but you detect ambushes before allies."></textarea></div>
-  <div class="fld">
-    <label>Point Cost <span style="color:var(--ash);font-size:0.85em;">(positive = costs points, negative = refunds points)</span></label>
-    <input type="number" id="trait-cost" value="0" min="-5" max="5">
-  </div>
-  <div class="fld"><label>Negative Trait <span style="color:var(--ash);font-size:0.85em;">(shown in red during creation)</span></label>
-    <select id="trait-negative"><option value="false">No (beneficial)</option><option value="true">Yes (detrimental)</option></select>
-  </div>
-  <div class="ph" style="margin-top:0.8rem;">Mechanical Effects</div>
-  <div class="pg-desc" style="margin-bottom:0.6rem;">Stats to modify when this trait is applied. Use numeric values (+/-). Leave blank for no effect.</div>
-  <div class="g4" id="trait-effects-grid">
-    <div class="fld"><label>Fortitude</label><input type="number" id="te-fortitude" placeholder="0"></div>
-    <div class="fld"><label>Wrath</label><input type="number" id="te-wrath" placeholder="0"></div>
-    <div class="fld"><label>Intuition</label><input type="number" id="te-intuition" placeholder="0"></div>
-    <div class="fld"><label>Empathy</label><input type="number" id="te-empathy" placeholder="0"></div>
-    <div class="fld"><label>Endurance</label><input type="number" id="te-endurance" placeholder="0"></div>
-    <div class="fld"><label>Memory</label><input type="number" id="te-memory" placeholder="0"></div>
-    <div class="fld"><label>Cunning</label><input type="number" id="te-cunning" placeholder="0"></div>
-    <div class="fld"><label>Speed</label><input type="number" id="te-speed" placeholder="0"></div>
-    <div class="fld"><label>Gnosis</label><input type="number" id="te-gnosis" placeholder="0"></div>
-  </div>
-  <div class="fld"><label>Special Flags <span style="color:var(--ash);font-size:0.85em;">(comma-separated: stressRate:1.2, ambushDetect:true, lowHpDmg:1.1)</span></label>
-    <input type="text" id="trait-flags" placeholder="stressRate:1.2"></div>
-  <div style="display:flex;gap:0.5rem;margin-top:0.8rem;">
-    <button class="btn b-ward" onclick="saveTrait()">✓ Save Trait</button>
-    <button class="btn b-seal" onclick="deleteTrait(document.getElementById('trait-key').value)">✕ Delete</button>
-    <button class="btn" onclick="document.getElementById('trait-editor').style.display='none'">Cancel</button>
-  </div>
-</div>
-</div>
-
-
-<div id="page-questlines" class="page">
-<div class="pg-head">
-  <div class="pg-title">Questlines</div>
-  <div class="pg-desc">Define multi-step story questlines with branching choices. Each node can have choices that lead to other nodes, apply rewards, trigger combat, or end the questline.</div>
-</div>
-<div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
-  <button class="btn b-rune" onclick="loadQuestlines()">↻ Refresh</button>
-  <button class="btn b-seal" onclick="openQuestEditor()">+ New Questline</button>
-</div>
-<div id="questlines-list"></div>
-
-<div class="panel" id="quest-editor" style="display:none;margin-top:1rem;">
-  <div class="ph" id="quest-ed-title">New Questline</div>
-  <input type="hidden" id="quest-key">
-  <div class="g2">
-    <div class="fld"><label>Quest Key</label><input type="text" id="quest-key-in" placeholder="the-iron-testament"></div>
-    <div class="fld"><label>Title</label><input type="text" id="quest-title" placeholder="The Iron Testament"></div>
-  </div>
-  <div class="fld"><label>Description</label><textarea id="quest-desc"></textarea></div>
-  <div class="fld"><label>Starting Node ID</label><input type="text" id="quest-start" value="start" placeholder="start"></div>
-
-  <div class="ph" style="margin-top:1rem;">Nodes <span style="font-size:0.85em;color:var(--ash);">(each node is a story beat)</span></div>
-  <div id="quest-nodes-list" style="margin-bottom:0.6rem;"></div>
-  <button class="btn b-rune" onclick="addQuestNode()">+ Add Node</button>
-
-  <div style="display:flex;gap:0.5rem;margin-top:1rem;">
-    <button class="btn b-ward" onclick="saveQuestline()">✓ Save Questline</button>
-    <button class="btn b-seal" onclick="deleteQuestline(document.getElementById('quest-key').value)">✕ Delete</button>
-    <button class="btn" onclick="document.getElementById('quest-editor').style.display='none'">Cancel</button>
-  </div>
-</div>
-</div>
-
 </body>
 </html>
