@@ -2674,7 +2674,7 @@
 </style>
 <style>
   /* ═══════════════════════════════════════════════════
-     HOLISTIC VISUAL OVERHAUL — v0.7.37
+     HOLISTIC VISUAL OVERHAUL — v0.7.38
      Principles: editorial, handcrafted, ruled-paper feel
      No glowing widgets; type and line as primary language
   ═══════════════════════════════════════════════════ */
@@ -7593,6 +7593,17 @@ async function refreshFieldEventCards() {
 
   async function publishPresence() {
     const id = getOrCreatePlayerId();
+    // Check if our save has been deleted by DM — if so, show reset prompt
+    try {
+      const check = await fetch(`${FB_URL}/saves/${id}.json`);
+      const saved = await check.json();
+      if (saved === null) {
+        // Save deleted — stop presence engine, prompt re-setup
+        if (presenceInterval) { clearInterval(presenceInterval); presenceInterval = null; }
+        toast('Your chronicle has been erased. Refresh to begin again.');
+        return;
+      }
+    } catch(e) {}
     const name = playerName || localStorage.getItem('llair_name') || 'Unknown Seeker';
     const coven = playerCoven || localStorage.getItem('llair_coven') || 'The Unsanctified';
     const data = {
@@ -7604,7 +7615,7 @@ async function refreshFieldEventCards() {
       await fetch(`${FB_URL}/players/${id}/presence.json`, {
         method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
       });
-    } catch(e) { }
+    } catch(e) {}
   }
 
   async function publishProfile() {

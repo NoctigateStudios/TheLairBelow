@@ -3343,14 +3343,16 @@ async function hardDeleteCharacter() {
   const name = allPlayers[id]?.presence?.name || id.slice(0,8);
   if (!confirm('PERMANENTLY DELETE all data for ' + name + '?\nThis removes their save, events, and presence. Cannot be undone.')) return;
   try {
+    // Delete all player data
     await Promise.all([
       fbDel('saves/'+id),
       fbDel('events/'+id),
       fbDel('broadcasts/'+id),
-      fbDel('players/'+id),
     ]);
+    // Remove presence last — client checks saves/ first, sees null, stops republishing
+    await fbDel('players/'+id);
     log('Hard deleted: '+name,'warn');
-    toast('✕ '+name+' deleted from all records.');
+    toast('✕ '+name+' deleted. Their client will stop on next heartbeat (≤15s).');
     document.getElementById('rst-preview').style.display='none';
     await loadAll();
   } catch(e) { log('Error: '+e.message,'err'); }
