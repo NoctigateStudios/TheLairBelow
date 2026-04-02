@@ -4564,17 +4564,22 @@
           const json = await fbRead(id);
           if (json && applyGameState(json)) {
             toast('Chronicle restored from the ether.');
-          } else if (!json) {
-            // Brand new player — set a default starting lair so buildings show
+          } else {
+            // No save found — could be new player OR deleted by DM
+            // Clear any stale localStorage identity so character creation runs clean
+            localStorage.removeItem('llair_name');
+            localStorage.removeItem('llair_coven');
+            playerName = '';
+            playerCoven = '';
+            // Give default lair so buildings panel isn't blank
             _lairData = { buildings: { 'alchemical-forge':1, 'altar':1, 'dormitorium':1, 'scriptorium':1 } };
             renderLairBuildings(_lairData.buildings);
+            // Open character creation
+            setTimeout(() => document.getElementById('identity-modal').classList.add('open'), 300);
           }
         } catch(e) { console.error('Auto-load failed:', e); }
       }, 800);
       setTimeout(restoreBorrowedAcolytes, 1000);
-      if (!playerName) {
-        setTimeout(() => document.getElementById('identity-modal').classList.add('open'), 1800);
-      }
     } catch(e) {
       console.error('enterGame error:', e);
       alert('Error starting game: ' + e.message);
@@ -7600,7 +7605,7 @@ async function refreshFieldEventCards() {
       if (saved === null) {
         // Save deleted — stop presence engine, prompt re-setup
         if (presenceInterval) { clearInterval(presenceInterval); presenceInterval = null; }
-        toast('Your chronicle has been erased. Refresh to begin again.');
+        toast('Your chronicle has been erased. Please refresh the page.');
         return;
       }
     } catch(e) {}
