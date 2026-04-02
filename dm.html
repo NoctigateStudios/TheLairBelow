@@ -914,24 +914,59 @@ function toast(m){const t=document.getElementById('dm-toast');t.textContent=m;t.
 function nav(n){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
-  document.getElementById('page-'+n).classList.add('active');
-  document.querySelector(`[data-page="${n}"]`)?.classList.add('active');
-  if(['resources','grimoires','acolytes'].includes(n)) populateSels();
-  if(n==='events'){populateSels();loadActiveEvents();}
-  if(n==='exchanges') loadExchanges();
-  if(n==='reset'){populateSels();const s=document.getElementById('rst-sel');if(s&&!s.children.length||s.children.length===1){const ids=Object.keys(allPlayers);ids.forEach(id=>{const nm=allPlayers[id].presence?.name||allPlayers[id].save?.character?.name||id.slice(0,8);const o=document.createElement('option');o.value=id;o.textContent=nm;s.appendChild(o);});}}
-  if(n==='combatsys') loadCombatSystem();
-  if(n==='skillbuilder'){loadAllSkills();if(_combatSystem)populateSkillDmgTypes();else loadCombatSystem().then(populateSkillDmgTypes);}
-  if(n==='broadcast') buildBcGrid();
-  if(n==='aoi'){const p=Object.values(allPlayers).find(x=>x.presence?.lat);if(p){document.getElementById('aoi-lat').value=p.presence.lat?.toFixed(6)||'';document.getElementById('aoi-lng').value=p.presence.lng?.toFixed(6)||'';}}
-  if(n==='worldmap') loadWorldEvents();
-  if(n==='creatures') loadCreatures();
-  if(n==='forge') loadRecipes();
-  if(n==='buildings') loadBldSkl();
-  if(n==='characters') loadClasses();
-  if(n==='tarot') loadTarotPage();
-}
 
+  const page = document.getElementById('page-'+n);
+  if (page) page.classList.add('active');
+
+  document.querySelector(`[data-page="${n}"]`)?.classList.add('active');
+
+  try {
+    if(['resources','grimoires','acolytes'].includes(n)) populateSels?.();
+    if(n==='events'){ populateSels?.(); loadActiveEvents?.(); }
+    if(n==='exchanges') loadExchanges?.();
+
+    if(n==='reset'){
+      populateSels?.();
+      const s=document.getElementById('rst-sel');
+      if (s && (s.children.length === 0 || s.children.length === 1)){
+        const ids=Object.keys(allPlayers||{});
+        ids.forEach(id=>{
+          const nm=allPlayers[id]?.presence?.name || allPlayers[id]?.save?.character?.name || id.slice(0,8);
+          const o=document.createElement('option');
+          o.value=id;
+          o.textContent=nm;
+          s.appendChild(o);
+        });
+      }
+    }
+
+    if(n==='combatsys') loadCombatSystem?.();
+    if(n==='skillbuilder'){
+      loadAllSkills?.();
+      if(_combatSystem) populateSkillDmgTypes?.();
+      else loadCombatSystem?.().then?.(populateSkillDmgTypes);
+    }
+
+    if(n==='broadcast') buildBcGrid?.();
+    if(n==='aoi'){
+      const p=Object.values(allPlayers||{}).find(x=>x.presence?.lat);
+      if(p){
+        document.getElementById('aoi-lat').value=p.presence.lat?.toFixed(6)||'';
+        document.getElementById('aoi-lng').value=p.presence.lng?.toFixed(6)||'';
+      }
+    }
+
+    if(n==='worldmap') loadWorldEvents?.();
+    if(n==='creatures') loadCreatures?.();
+    if(n==='forge') loadRecipes?.();
+    if(n==='buildings') loadBldSkl?.();
+    if(n==='characters') loadClasses?.();
+    if(n==='tarot') loadTarotPage?.();
+
+  } catch(e) {
+    console.error("nav error:", e);
+  }
+}
 async function fbGet(p){const r=await fetch(`${FB}/${p}.json?cb=`+Date.now());if(!r.ok)throw new Error('HTTP '+r.status);const d=await r.json();if(d&&d.error)throw new Error(d.error);return d;}
 async function fbPut(p,d){const r=await fetch(`${FB}/${p}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
 async function fbPatch(p,d){const r=await fetch(`${FB}/${p}.json`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
