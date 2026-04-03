@@ -3785,559 +3785,518 @@
   .ad-tab.active { color:var(--text-accent); border-bottom-color:var(--text-accent); }
 
   /* ═══════════════════════════════════════════════════════
-     COMBAT SYSTEM — REDESIGN
-  ════════════════════════════════════════════════════════ */
+     COMBAT SYSTEM — JRPG v4
+  ═══════════════════════════════════════════════════════ */
 
+  /* ── Panel shell ── */
   #panel-combat {
     display: none; flex-direction: column; padding: 0;
     overflow: hidden; position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    z-index: 300; background: var(--bg, #050407);
+    z-index: 300; background: var(--void);
     max-width: 430px; margin: 0 auto;
   }
   #panel-combat.active { display: flex; }
+  #combat-modal { display: contents; }
 
-  /* Context bar — astro data */
+  /* ── CONTEXT BAR ── */
   #combat-context-bar {
-    display: flex; align-items: center; gap: 0.4rem;
-    padding: 0.4rem 0.8rem; flex-shrink: 0;
-    background: rgba(139,26,26,0.06);
-    border-bottom: 1px solid rgba(139,26,26,0.15);
-    overflow-x: auto; scrollbar-width: none;
+    flex-shrink: 0; display: flex; gap: 0.3rem;
+    padding: 0.28rem 0.75rem; overflow-x: auto;
+    border-bottom: 1px solid var(--border);
+    background: rgba(5,4,7,0.9); scrollbar-width: none;
   }
   #combat-context-bar::-webkit-scrollbar { display: none; }
   .cb-pill {
-    font-family: var(--ff-heading); font-size: 0.52rem;
+    font-family: var(--ff-heading); font-size: 0.4rem;
     letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--text-secondary); white-space: nowrap;
-    padding: 0.15rem 0.5rem;
-    border: 1px solid rgba(139,26,26,0.2);
-    flex-shrink: 0;
+    color: var(--text-secondary); border: 1px solid var(--border);
+    padding: 0.14rem 0.3rem; white-space: nowrap; flex-shrink: 0;
   }
   .cb-encounter-name {
-    font-family: var(--ff-heading); font-size: 0.52rem;
-    letter-spacing: 0.06em; color: var(--crimson-bright);
-    white-space: nowrap; margin-left: auto; flex-shrink: 0;
+    font-family: var(--ff-heading); font-size: 0.4rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--crimson-bright); margin-left: auto; flex-shrink: 0;
+    padding: 0.14rem 0; white-space: nowrap;
   }
 
-  /* Header */
-  #combat-header {
-    flex-shrink: 0;
-    background: linear-gradient(180deg, rgba(139,26,26,0.22) 0%, transparent 100%);
-    border-bottom: 1px solid rgba(139,26,26,0.2);
-    padding: 0.55rem 0.9rem 0.45rem;
+  /* ── BATTLEFIELD — top 55% of screen ── */
+  #combat-battlefield {
+    flex: 1; display: flex; flex-direction: column;
+    overflow: hidden; position: relative;
+    background: linear-gradient(180deg,rgba(139,26,26,0.06) 0%,transparent 40%);
   }
-  #combat-title {
-    font-family: var(--ff-title); font-size: 1.15rem;
-    color: var(--crimson-bright); letter-spacing: 2px;
-    text-shadow: 0 0 24px rgba(196,48,48,0.35);
-    text-align: center; line-height: 1;
+
+  /* Enemy row — compact strip at top */
+  #combat-enemy-row {
+    flex-shrink: 0; display: flex; gap: 0.5rem; align-items: stretch;
+    padding: 0.5rem 0.75rem 0.4rem;
+    border-bottom: 1px solid rgba(139,26,26,0.2);
+  }
+
+  /* Enemy card */
+  .enemy-combatant {
+    flex: 1; display: flex; flex-direction: column;
+    border: 1px solid rgba(139,26,26,0.3);
+    background: rgba(139,26,26,0.05);
+    padding: 0.4rem 0.5rem;
+    cursor: pointer; transition: border-color 0.15s, background 0.15s;
+    position: relative; min-width: 0;
+  }
+  .enemy-combatant.active-turn  { border-color: var(--gold); background: rgba(201,168,76,0.07); }
+  .enemy-combatant.dead-unit    { opacity: 0.25; pointer-events: none; }
+  .enemy-combatant.targeted-unit {
+    animation: pulse-target 0.65s ease-in-out infinite;
+    cursor: crosshair;
+  }
+  @keyframes pulse-target {
+    0%,100% { border-color: var(--crimson-bright); box-shadow: 0 0 8px rgba(196,48,48,0.3); }
+    50%      { border-color: transparent; box-shadow: none; }
+  }
+  .ec-name {
+    font-family: var(--ff-heading); font-size: 0.62rem;
+    letter-spacing: 0.04em; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 0.2rem;
+  }
+  .ec-hp-bar { height: 4px; background: rgba(255,255,255,0.08); overflow: hidden; margin-bottom: 0.15rem; }
+  .ec-hp-fill { height: 100%; background: var(--crimson-bright); transition: width 0.35s; }
+  .ec-stats {
+    font-family: var(--ff-heading); font-size: 0.38rem;
+    letter-spacing: 0.05em; color: var(--text-secondary);
+    display: flex; gap: 0.35rem; flex-wrap: wrap;
+  }
+  .ec-dead-label {
+    font-family: var(--ff-heading); font-size: 0.42rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--crimson-bright); position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+  }
+
+  /* Round + initiative strip */
+  #combat-round-strip {
+    flex-shrink: 0; display: flex; align-items: center;
+    padding: 0.28rem 0.75rem; gap: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.015);
   }
   #combat-phase-bar {
-    font-family: var(--ff-heading); font-size: 0.52rem;
-    letter-spacing: 0.22em; text-transform: uppercase;
-    color: var(--text-secondary); text-align: center;
-    margin: 0.2rem 0 0.35rem;
+    font-family: var(--ff-heading); font-size: 0.46rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--text-secondary); flex-shrink: 0;
   }
   #combat-init-track {
-    display: flex; gap: 0.2rem; overflow-x: auto;
-    justify-content: center; padding: 0.15rem 0;
-    scrollbar-width: none;
+    display: flex; gap: 0.28rem; overflow-x: auto;
+    scrollbar-width: none; flex: 1; justify-content: flex-end;
   }
   #combat-init-track::-webkit-scrollbar { display: none; }
   .init-token {
-    flex-shrink: 0; width: 28px; height: 28px;
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--ff-heading); font-size: 0.6rem;
-    border: 1px solid var(--border); position: relative;
-    transition: all 0.15s;
-  }
-  .init-token.ally  { border-color: rgba(45,122,95,0.4); color: var(--viridian-bright); }
-  .init-token.enemy { border-color: rgba(139,26,26,0.4); color: var(--crimson-bright); }
-  .init-token.active-token {
-    border-color: var(--gold) !important;
-    background: rgba(201,168,76,0.12);
-    box-shadow: 0 0 8px rgba(201,168,76,0.25);
-  }
-  .init-token.dead-token { opacity: 0.25; }
-
-  /* Battlefield */
-  #combat-battlefield {
-    flex: 1 1 0; min-height: 0;
-    overflow-y: auto; padding: 0.5rem 0.7rem;
-  }
-  #combat-battlefield::-webkit-scrollbar { width: 2px; }
-  #combat-battlefield::-webkit-scrollbar-thumb { background: var(--stone); }
-
-  .cbt-section-head {
-    display: flex; align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.3rem;
-  }
-  .cbt-section-label {
-    font-family: var(--ff-heading); font-size: 0.5rem;
-    letter-spacing: 0.22em; text-transform: uppercase;
-    color: var(--text-secondary);
-  }
-  .cbt-section-count {
-    font-family: var(--ff-heading); font-size: 0.48rem;
-    color: var(--text-secondary); letter-spacing: 0.08em;
-  }
-
-  /* Combatant cards */
-  .combatant-card {
+    flex-shrink: 0; width: 26px; height: 26px;
     border: 1px solid var(--border);
-    margin-bottom: 0.4rem;
-    background: rgba(10,8,15,0.7);
-    transition: border-color 0.12s, background 0.12s;
-    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--ff-heading); font-size: 0.65rem;
+    transition: all 0.18s;
   }
-  .combatant-card:last-child { margin-bottom: 0; }
-  .combatant-card.enemy-card { border-color: rgba(139,26,26,0.3); }
-  .combatant-card.ally-card  { border-color: rgba(45,122,95,0.2); }
-  .combatant-card.active-card {
-    border-color: var(--gold) !important;
-    background: rgba(201,168,76,0.05);
-    box-shadow: inset 2px 0 0 var(--gold);
+  .init-token.ally   { border-color: rgba(45,122,95,0.4); color: var(--viridian-bright); }
+  .init-token.enemy  { border-color: rgba(139,26,26,0.4); color: var(--crimson-bright); }
+  .init-token.active-token {
+    border-color: var(--gold); background: rgba(201,168,76,0.12);
+    color: var(--gold); box-shadow: 0 0 6px rgba(201,168,76,0.2);
   }
-  .combatant-card.dead-card  { opacity: 0.3; pointer-events: none; }
-  @keyframes pulse-target {
-    0%,100% { border-color: var(--crimson-bright); }
-    50%      { border-color: transparent; }
-  }
-  .combatant-card.targeted {
-    animation: pulse-target 0.6s ease infinite;
-    background: rgba(196,48,48,0.08);
-  }
+  .init-token.dead-token { opacity: 0.2; }
 
-  .cc-card-inner { display: flex; align-items: flex-start; padding: 0.55rem 0.7rem; gap: 0.6rem; }
-  .cc-icon-col {
-    flex-shrink: 0; width: 32px; height: 32px;
+  /* Ally row — larger cards with portrait feel */
+  #combat-ally-row {
+    flex: 1; display: flex; flex-direction: column;
+    gap: 0; overflow-y: auto; padding: 0.4rem 0.75rem;
+    scrollbar-width: thin; scrollbar-color: var(--stone) transparent;
+  }
+  #combat-ally-row::-webkit-scrollbar { width: 2px; }
+  #combat-ally-row::-webkit-scrollbar-thumb { background: var(--stone); }
+
+  .ally-combatant {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.38rem 0.45rem; border: 1px solid transparent;
+    border-bottom-color: var(--border);
+    transition: background 0.15s, border-color 0.15s;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .ally-combatant:last-child { border-bottom-color: transparent; }
+  .ally-combatant.active-turn  { border-color: var(--gold); background: rgba(201,168,76,0.05); border-bottom-color: var(--gold); }
+  .ally-combatant.dead-unit    { opacity: 0.28; pointer-events: none; }
+
+  /* Ally portrait box */
+  .ac-portrait {
+    flex-shrink: 0; width: 38px; height: 38px;
+    border: 1px solid var(--border);
     display: flex; align-items: center; justify-content: center;
     font-family: var(--ff-heading); font-size: 1rem;
-    border: 1px solid var(--border); color: var(--text-secondary);
+    color: var(--viridian-bright);
   }
-  .enemy-card  .cc-icon-col { color: var(--crimson-bright); border-color: rgba(139,26,26,0.3); }
-  .ally-card   .cc-icon-col { color: var(--viridian-bright); border-color: rgba(45,122,95,0.3); }
-  .active-card .cc-icon-col { color: var(--gold); border-color: rgba(201,168,76,0.4); }
-  .cc-body { flex: 1; min-width: 0; }
+  .active-turn .ac-portrait { border-color: var(--gold); color: var(--gold); }
 
-  .cc-name-row {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 0.3rem;
-  }
-  .cc-name {
-    font-family: var(--ff-heading); font-size: 0.78rem;
+  /* Ally stats block */
+  .ac-body { flex: 1; min-width: 0; }
+  .ac-name {
+    font-family: var(--ff-heading); font-size: 0.72rem;
     letter-spacing: 0.04em; color: var(--text-primary);
+    margin-bottom: 0.18rem;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .dead-card .cc-name { color: var(--text-secondary); }
-  .cc-fallen-tag {
-    font-family: var(--ff-heading); font-size: 0.45rem;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--crimson-bright); margin-left: 0.4rem;
+  .ac-bars { display: flex; flex-direction: column; gap: 0.14rem; }
+  .ac-bar-row { display: flex; align-items: center; gap: 0.28rem; }
+  .ac-bar-lbl {
+    font-family: var(--ff-heading); font-size: 0.38rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-secondary); width: 1.4rem; flex-shrink: 0;
   }
-  .cc-inspect-btn {
-    flex-shrink: 0; background: none; border: none;
-    color: var(--text-secondary); cursor: pointer;
-    font-size: 0.75rem; padding: 0 0.2rem;
-    transition: color 0.1s;
-  }
-  .cc-inspect-btn:hover { color: var(--text-primary); }
-
-  /* HP/MP/Stress bars */
-  .cc-bars { display: flex; flex-direction: column; gap: 0.2rem; margin-bottom: 0.25rem; }
-  .cc-bar-row {
-    display: flex; align-items: center; gap: 0.4rem;
-  }
-  .cc-bar-lbl {
+  .ac-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.06); overflow: hidden; }
+  .ac-bar-fill { height: 100%; transition: width 0.35s; }
+  .hp-fill  { background: var(--viridian-bright); }
+  .mp-fill  { background: var(--indigo-bright); }
+  .str-fill { background: var(--amber-bright); }
+  .ac-bar-val {
     font-family: var(--ff-heading); font-size: 0.42rem;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--text-secondary); width: 24px; flex-shrink: 0;
+    color: var(--text-secondary); width: 2.8rem; text-align: right; flex-shrink: 0;
   }
-  .cc-bar {
-    flex: 1; height: 4px; background: var(--stone);
-    overflow: hidden;
-  }
-  .cc-bar-fill { height: 100%; transition: width 0.3s ease; }
-  .hp-fill-enemy { background: var(--crimson-bright); }
-  .hp-fill-ally  { background: var(--viridian-bright); }
-  .mana-fill     { background: var(--indigo-bright); }
-  .stress-fill-c { background: var(--amber-bright); }
-  .cc-bar-val {
-    font-family: var(--ff-heading); font-size: 0.52rem;
-    color: var(--text-secondary); white-space: nowrap;
-    min-width: 36px; text-align: right;
-  }
+  .hp-fill-low  { background: var(--amber-bright); }
+  .hp-fill-crit { background: var(--crimson-bright); }
 
-  /* Stat line */
-  .cc-statline {
-    display: flex; flex-wrap: wrap; gap: 0.3rem 0.6rem;
-    font-family: var(--ff-heading); font-size: 0.45rem;
-    letter-spacing: 0.06em; color: var(--text-secondary);
+  /* Ally right: effects + inspect */
+  .ac-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem; flex-shrink: 0; }
+  .ac-inspect-btn {
+    background: none; border: none; color: var(--text-secondary);
+    font-size: 0.72rem; cursor: pointer; padding: 0; line-height: 1;
   }
-  .stat-hi  { color: var(--gold); }
-  .stat-danger { color: var(--crimson-bright); }
-
-  /* Status effect pips */
-  .cc-effects { display: flex; flex-wrap: wrap; gap: 0.2rem; margin-top: 0.2rem; }
+  .ac-inspect-btn:active { color: var(--text-primary); }
+  .ac-effects { display: flex; flex-wrap: wrap; gap: 0.12rem; justify-content: flex-end; }
   .effect-pip {
-    font-family: var(--ff-heading); font-size: 0.4rem;
-    letter-spacing: 0.05em; text-transform: uppercase;
-    padding: 0.1rem 0.3rem; border: 1px solid;
+    font-family: var(--ff-heading); font-size: 0.36rem;
+    padding: 0.07rem 0.22rem; border: 1px solid var(--border); color: var(--text-secondary);
   }
   .effect-pip.poison { color: var(--viridian-bright); border-color: rgba(45,122,95,0.4); }
   .effect-pip.burn   { color: var(--crimson-bright);  border-color: rgba(139,26,26,0.4); }
   .effect-pip.blight { color: var(--mist);            border-color: rgba(107,92,128,0.4); }
   .effect-pip.buff   { color: var(--gold);            border-color: rgba(201,168,76,0.4); }
 
-  /* Active turn indicator */
-  .cc-active-indicator {
-    height: 2px; background: var(--gold);
-    margin-bottom: 0; animation: active-glow 1.2s ease infinite;
-  }
-  @keyframes active-glow {
-    0%,100% { opacity: 1; }
-    50%      { opacity: 0.4; }
-  }
-
-  /* Combat log */
+  /* ── COMBAT LOG — collapsible strip ── */
   #combat-log-wrap {
-    flex-shrink: 0;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
+    flex-shrink: 0; border-top: 1px solid var(--border);
+    background: rgba(255,255,255,0.012);
   }
   #combat-log-toggle {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0.35rem 0.8rem; cursor: pointer;
-    background: rgba(5,4,7,0.6);
+    padding: 0.28rem 0.75rem; cursor: pointer; user-select: none;
+    font-family: var(--ff-heading); font-size: 0.38rem;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-secondary);
   }
-  #combat-log-label {
-    font-family: var(--ff-heading); font-size: 0.48rem;
-    letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-secondary);
-  }
-  #combat-log-chevron {
-    font-size: 0.5rem; color: var(--text-secondary);
-    transition: transform 0.2s;
-  }
-  #combat-log-wrap.collapsed #combat-log-chevron { transform: rotate(180deg); }
-  #combat-log-wrap.collapsed #combat-log-panel { display: none; }
+  #combat-log-chevron { transition: transform 0.2s; font-size: 0.45rem; }
+  #combat-log-wrap.log-open #combat-log-chevron { transform: rotate(180deg); }
   #combat-log-panel {
-    height: 90px; overflow-y: auto;
-    padding: 0.4rem 0.8rem;
-    background: rgba(5,4,7,0.4);
+    display: none; max-height: 68px; overflow-y: auto;
+    padding: 0 0.75rem 0.3rem;
+    scrollbar-width: thin; scrollbar-color: var(--stone) transparent;
   }
+  #combat-log-wrap.log-open #combat-log-panel { display: block; }
   #combat-log-panel::-webkit-scrollbar { width: 2px; }
   #combat-log-panel::-webkit-scrollbar-thumb { background: var(--stone); }
-  .log-line {
-    font-family: var(--ff-body); font-style: italic;
-    font-size: 0.82rem; line-height: 1.55; color: var(--text-secondary);
-    padding: 0.05rem 0;
-  }
-  .log-line.crit   { color: var(--gold); font-style: normal; font-family: var(--ff-heading); font-size: 0.7rem; letter-spacing: 0.04em; }
-  .log-line.hit    { color: var(--crimson-bright); }
-  .log-line.heal   { color: var(--viridian-bright); }
-  .log-line.miss   { color: var(--mist); }
-  .log-line.system { color: var(--text-secondary); font-size: 0.7rem; font-style: normal; letter-spacing: 0.04em; font-family: var(--ff-heading); }
-  .log-line.effect { color: var(--amber-bright); }
+  .log-line { font-family:var(--ff-body);font-style:italic;font-size:0.73rem;color:var(--text-secondary);line-height:1.45;padding:0.06rem 0; }
+  .log-line.crit   { color:var(--gold);font-style:normal;font-family:var(--ff-heading);letter-spacing:0.04em; }
+  .log-line.hit    { color:var(--crimson-bright); }
+  .log-line.heal   { color:var(--viridian-bright); }
+  .log-line.miss   { color:var(--mist); }
+  .log-line.system { color:var(--text-secondary);font-size:0.65rem;font-style:normal; }
+  .log-line.effect { color:var(--amber-bright); }
   .log-round-sep {
-    font-family: var(--ff-heading); font-size: 0.45rem;
-    letter-spacing: 0.2em; text-transform: uppercase;
-    color: var(--border); text-align: center;
-    margin: 0.3rem 0; border-top: 1px solid var(--border); padding-top: 0.2rem;
+    font-family:var(--ff-heading);font-size:0.38rem;letter-spacing:0.2em;
+    text-transform:uppercase;color:var(--stone);text-align:center;
+    padding:0.18rem 0;border-bottom:1px solid var(--border);margin:0.2rem 0;
   }
 
-  /* Action area */
+  /* ── ACTION DOCK — JRPG menu ── */
   #combat-actions {
-    flex-shrink: 0; padding: 0.5rem 0.65rem 0.6rem;
-    background: rgba(5,4,7,0.92);
+    flex-shrink: 0;
+    border-top: 1px solid rgba(201,168,76,0.2);
+    background: rgba(5,4,7,0.97);
+    display: flex; flex-direction: column;
+  }
+
+  /* Active character header strip */
+  #combat-actor-strip {
+    display: flex; align-items: center; gap: 0.55rem;
+    padding: 0.4rem 0.75rem 0.35rem;
+    border-bottom: 1px solid var(--border);
+  }
+  #combat-actor-icon {
+    flex-shrink: 0; width: 32px; height: 32px;
+    border: 1px solid var(--gold); background: rgba(201,168,76,0.08);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--ff-heading); font-size: 0.9rem; color: var(--gold);
+  }
+  #combat-actor-info { flex: 1; min-width: 0; }
+  #combat-actor-name {
+    font-family: var(--ff-heading); font-size: 0.68rem;
+    letter-spacing: 0.05em; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  #combat-actor-substats {
+    font-family: var(--ff-heading); font-size: 0.4rem;
+    letter-spacing: 0.06em; color: var(--text-secondary);
+    display: flex; gap: 0.5rem; margin-top: 0.08rem; flex-wrap: wrap;
+  }
+  #combat-actor-substats .hi   { color: var(--viridian-bright); }
+  #combat-actor-substats .warn { color: var(--amber-bright); }
+  #combat-actor-substats .crit { color: var(--crimson-bright); }
+  #combat-actor-bars { display: flex; flex-direction: column; gap: 0.1rem; width: 80px; flex-shrink: 0; }
+  .actor-bar-row { display: flex; align-items: center; gap: 0.2rem; }
+  .actor-bar-lbl { font-family:var(--ff-heading);font-size:0.36rem;letter-spacing:0.1em;color:var(--text-secondary);width:1.1rem;flex-shrink:0; }
+  .actor-bar { flex:1;height:3px;background:rgba(255,255,255,0.06);overflow:hidden; }
+  .actor-bar-fill { height:100%;transition:width 0.3s; }
+
+  /* Main menu — 4 big buttons */
+  #combat-main-menu {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1px; background: var(--border); border-top: 1px solid var(--border);
+  }
+  .cmb-menu-btn {
+    background: rgba(255,255,255,0.018); border: none;
+    padding: 0.65rem 0.5rem; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 0.18rem;
+    transition: background 0.12s; -webkit-tap-highlight-color: transparent;
+  }
+  .cmb-menu-btn:active, .cmb-menu-btn.selected { background: rgba(255,255,255,0.055); }
+  .cmb-menu-icon {
+    font-family: var(--ff-heading); font-size: 1.1rem;
+    color: var(--gold-dim); transition: color 0.12s;
+  }
+  .cmb-menu-btn.selected .cmb-menu-icon,
+  .cmb-menu-btn:active    .cmb-menu-icon { color: var(--gold); }
+  .cmb-menu-label {
+    font-family: var(--ff-heading); font-size: 0.44rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .cmb-menu-btn.attack-btn .cmb-menu-icon { color: var(--crimson-bright); opacity: 0.7; }
+  .cmb-menu-btn.attack-btn:active .cmb-menu-icon,
+  .cmb-menu-btn.attack-btn.selected .cmb-menu-icon { color: var(--crimson-bright); opacity: 1; }
+
+  /* Sub-menu panel — slides in below main menu */
+  #combat-submenu {
+    display: none; flex-direction: column;
+    border-top: 1px solid var(--border);
+    max-height: 38vh; overflow-y: auto;
+    scrollbar-width: none;
+  }
+  #combat-submenu.open { display: flex; }
+  #combat-submenu::-webkit-scrollbar { display: none; }
+
+  /* Submenu header */
+  .submenu-header {
+    font-family: var(--ff-heading); font-size: 0.42rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--text-secondary); padding: 0.3rem 0.75rem 0.2rem;
+    border-bottom: 1px solid var(--border); flex-shrink: 0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .submenu-close {
+    background: none; border: none; color: var(--text-secondary);
+    font-size: 0.7rem; cursor: pointer; padding: 0;
+  }
+
+  /* Submenu items — full-width rows */
+  .submenu-item {
+    display: flex; align-items: center; gap: 0.55rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    background: none; border-left: none; border-right: none; border-top: none;
+    cursor: pointer; text-align: left; width: 100%;
+    transition: background 0.12s; -webkit-tap-highlight-color: transparent;
+  }
+  .submenu-item:last-child { border-bottom: none; }
+  .submenu-item:active { background: rgba(255,255,255,0.04); }
+  .submenu-item.disabled { opacity: 0.32; pointer-events: none; }
+
+  .si-icon {
+    flex-shrink: 0; width: 30px; height: 30px;
+    border: 1px solid var(--border); display: flex; align-items: center;
+    justify-content: center; font-family: var(--ff-heading); font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+  .submenu-item.attack-type  .si-icon { color: var(--crimson-bright); border-color: rgba(139,26,26,0.35); }
+  .submenu-item.heal-type    .si-icon { color: var(--viridian-bright); border-color: rgba(45,122,95,0.35); }
+  .submenu-item.buff-type    .si-icon { color: var(--amber-bright); border-color: rgba(212,137,10,0.35); }
+  .submenu-item.item-type    .si-icon { color: var(--gold-dim); border-color: rgba(201,168,76,0.25); }
+
+  .si-body { flex: 1; min-width: 0; }
+  .si-name {
+    font-family: var(--ff-heading); font-size: 0.68rem;
+    letter-spacing: 0.04em; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .si-sub {
+    font-family: var(--ff-heading); font-size: 0.44rem;
+    letter-spacing: 0.05em; color: var(--text-secondary);
+    margin-top: 0.08rem;
+  }
+  .si-cost {
+    font-family: var(--ff-heading); font-size: 0.4rem;
+    letter-spacing: 0.06em; color: var(--indigo-bright);
+    flex-shrink: 0;
+  }
+  .si-qty {
+    font-family: var(--ff-heading); font-size: 0.44rem;
+    color: var(--gold-dim); flex-shrink: 0;
+  }
+
+  /* Info panel inside submenu */
+  #combat-info-panel .cov-section {
+    font-family:var(--ff-heading);font-size:0.44rem;letter-spacing:0.18em;
+    text-transform:uppercase;color:var(--text-secondary);
+    border-bottom:1px solid var(--border);padding:0.3rem 0.75rem;
+  }
+  #combat-info-panel .cov-row {
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:0.22rem 0.75rem;border-bottom:1px solid rgba(255,255,255,0.03);
+  }
+  #combat-info-panel .cov-key { font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.04em;color:var(--text-secondary); }
+  #combat-info-panel .cov-val { font-family:var(--ff-heading);font-size:0.58rem;color:var(--text-primary); }
+
+  /* Footer: Pass + Retreat */
+  #combat-footer-btns {
+    display: flex; gap: 1px; background: var(--border);
     border-top: 1px solid var(--border);
   }
-  #combat-actor-label {
-    font-family: var(--ff-heading); font-size: 0.52rem;
-    letter-spacing: 0.18em; text-transform: uppercase;
-    color: var(--text-secondary); margin-bottom: 0.4rem;
-    text-align: center;
+  .combat-pass-btn, .combat-retreat-btn {
+    flex: 1; padding: 0.55rem;
+    font-family: var(--ff-heading); font-size: 0.46rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    cursor: pointer; background: rgba(255,255,255,0.018);
+    border: none; transition: background 0.12s;
+    -webkit-tap-highlight-color: transparent;
   }
-  #combat-skill-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem;
-    margin-bottom: 0.4rem;
-    max-height: 200px; overflow-y: auto;
-  }
-  #combat-skill-grid::-webkit-scrollbar { width: 2px; }
-  #combat-skill-grid::-webkit-scrollbar-thumb { background: var(--stone); }
-
-  /* Skill buttons */
-  .skill-btn-wrap { display: flex; }
-  .skill-btn {
-    flex: 1; background: rgba(10,8,15,0.8);
-    border: 1px solid var(--border); padding: 0.45rem 0.5rem;
-    cursor: pointer; text-align: left; transition: border-color 0.1s;
-    display: flex; flex-direction: column; gap: 0.1rem;
-  }
-  .skill-btn:active { border-color: var(--text-accent); }
-  .skill-btn.attack-btn { border-color: rgba(139,26,26,0.35); }
-  .skill-btn.attack-btn:active { border-color: var(--crimson-bright); }
-  .skill-btn.heal-btn   { border-color: rgba(45,122,95,0.35); }
-  .skill-btn.heal-btn:active { border-color: var(--viridian-bright); }
-  .skill-btn.disabled-btn { opacity: 0.35; pointer-events: none; }
-  .skill-btn-name {
-    font-family: var(--ff-heading); font-size: 0.65rem;
-    letter-spacing: 0.04em; color: var(--text-primary);
-    display: block;
-  }
-  .skill-btn-sub {
-    font-family: var(--ff-heading); font-size: 0.5rem;
-    letter-spacing: 0.04em; color: var(--text-secondary);
-    display: block; text-transform: uppercase;
-  }
-  .skill-btn-cost {
-    font-family: var(--ff-heading); font-size: 0.45rem;
-    letter-spacing: 0.06em; color: var(--indigo-bright);
-    display: block;
-  }
-  .skill-info-btn {
-    flex-shrink: 0; width: 24px;
-    background: rgba(10,8,15,0.8); border: 1px solid var(--border);
-    border-left: none; color: var(--text-secondary);
-    cursor: pointer; font-size: 0.7rem; padding: 0;
-    transition: color 0.1s;
-  }
-  .skill-info-btn:active { color: var(--text-primary); }
-
-  /* Footer buttons */
-  #combat-footer-btns {
-    display: flex; gap: 0.4rem;
-  }
-  .combat-pass-btn {
-    flex: 1; padding: 0.5rem;
-    font-family: var(--ff-heading); font-size: 0.52rem;
-    letter-spacing: 0.15em; text-transform: uppercase;
-    background: none; border: 1px solid var(--border);
-    color: var(--text-secondary); cursor: pointer;
-    transition: border-color 0.1s, color 0.1s;
-  }
-  .combat-pass-btn:active { border-color: var(--text-accent); color: var(--text-primary); }
-  .combat-retreat-btn {
-    flex: 0 0 auto; padding: 0.5rem 0.9rem;
-    font-family: var(--ff-heading); font-size: 0.52rem;
-    letter-spacing: 0.15em; text-transform: uppercase;
-    background: none; border: 1px solid rgba(139,26,26,0.35);
-    color: var(--crimson-bright); cursor: pointer;
-    transition: border-color 0.1s;
-  }
-  .combat-retreat-btn:active { border-color: var(--crimson-bright); }
+  .combat-pass-btn { color: var(--text-secondary); }
+  .combat-pass-btn:active { background: rgba(255,255,255,0.04); color: var(--text-primary); }
+  .combat-retreat-btn { color: var(--crimson-bright); }
+  .combat-retreat-btn:active { background: rgba(139,26,26,0.08); }
 
   /* Target prompt */
   #combat-target-prompt {
-    position: absolute; bottom: 0; left: 0; right: 0;
-    background: rgba(139,26,26,0.15); border-top: 1px solid rgba(139,26,26,0.3);
-    font-family: var(--ff-heading); font-size: 0.52rem;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--crimson-bright); text-align: center;
-    padding: 0.55rem; display: none; z-index: 10;
+    display: none; position: fixed; bottom: 0; left: 0; right: 0;
+    font-family: var(--ff-heading); font-size: 0.48rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--void); background: var(--crimson-bright);
+    text-align: center; padding: 0.55rem;
+    z-index: 500; max-width: 430px; margin: 0 auto;
   }
   #combat-target-prompt.active { display: block; }
 
-  /* Victory overlay */
-  #combat-victory-overlay {
-    display: none; position: absolute; inset: 0; z-index: 50;
-    background: rgba(5,4,7,0.94);
-    flex-direction: column; align-items: center; justify-content: center;
-    padding: 2rem; text-align: center;
-  }
-  #combat-victory-overlay.open { display: flex; }
-  .victory-sigil { font-family: var(--ff-heading); font-size: 1.5rem; color: var(--text-accent); opacity: 0.4; margin-bottom: 0.6rem; }
-  .victory-title { font-family: var(--ff-title); font-size: 1.8rem; color: var(--text-accent); margin-bottom: 0.25rem; }
-  .victory-subtitle { font-family: var(--ff-heading); font-size: 0.52rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 1.2rem; }
-  .victory-rewards { width: 100%; max-width: 280px; margin-bottom: 1.4rem; }
-  .victory-reward-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding: 0.4rem 0; font-family: var(--ff-heading); font-size: 0.58rem; letter-spacing: 0.06em; color: var(--text-secondary); }
-  .victory-reward-row:last-child { border-bottom: 1px solid var(--border); }
-  .victory-reward-val { color: var(--viridian-bright); }
-  .victory-leave-btn { font-family: var(--ff-heading); font-size: 0.52rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 0.75rem 2.2rem; border: 1px solid var(--border-bright); background: none; color: var(--text-accent); cursor: pointer; }
-
-  /* Defeat overlay */
-  #combat-defeat-overlay {
-    display: none; position: absolute; inset: 0; z-index: 50;
-    background: rgba(5,4,7,0.96);
-    flex-direction: column; align-items: center; justify-content: center;
-    padding: 2rem; text-align: center;
-  }
-  #combat-defeat-overlay.open { display: flex; }
-  .defeat-sigil { font-family: var(--ff-heading); font-size: 2.5rem; color: var(--crimson-bright); opacity: 0.3; margin-bottom: 0.7rem; }
-  .defeat-title { font-family: var(--ff-title); font-size: 1.6rem; color: var(--crimson-bright); margin-bottom: 0.3rem; }
-  .defeat-body  { font-family: var(--ff-body); font-style: italic; font-size: 0.95rem; color: var(--text-secondary); line-height: 1.65; margin-bottom: 0.8rem; max-width: 280px; }
-  .defeat-cost  { font-family: var(--ff-heading); font-size: 0.55rem; letter-spacing: 0.08em; color: var(--text-secondary); margin-bottom: 1.4rem; line-height: 1.9; }
-  .defeat-btn   { font-family: var(--ff-heading); font-size: 0.52rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 0.75rem 2.2rem; border: 1px solid rgba(139,26,26,0.4); background: none; color: var(--crimson-bright); cursor: pointer; }
-
-  /* Retreat confirm overlay */
-  #combat-retreat-overlay {
-    display: none; position: absolute; inset: 0; z-index: 60;
-    background: rgba(5,4,7,0.88); align-items: center; justify-content: center;
-  }
-  #combat-retreat-overlay.open { display: flex; }
-  .retreat-card {
-    background: var(--bg, var(--abyss)); border: 1px solid rgba(139,26,26,0.4);
-    padding: 1.5rem; max-width: 300px; width: 90%; text-align: center;
-  }
-  .retreat-title { font-family: var(--ff-heading); font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--crimson-bright); margin-bottom: 0.5rem; }
-  .retreat-body  { font-family: var(--ff-body); font-style: italic; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.2rem; }
-  .retreat-btns  { display: flex; gap: 0.5rem; }
-  .retreat-confirm { flex: 1; padding: 0.6rem; font-family: var(--ff-heading); font-size: 0.5rem; letter-spacing: 0.15em; text-transform: uppercase; border: 1px solid rgba(139,26,26,0.4); background: none; color: var(--crimson-bright); cursor: pointer; }
-  .retreat-cancel  { flex: 1; padding: 0.6rem; font-family: var(--ff-heading); font-size: 0.5rem; letter-spacing: 0.15em; text-transform: uppercase; border: 1px solid var(--border); background: none; color: var(--text-secondary); cursor: pointer; }
-
-  /* Combat modal (legacy) */
-  #combat-modal { display: contents; }
-
-  /* Rank badge */
-  .cc-rank { flex-shrink: 0; font-family: var(--ff-heading); font-size: 0.42rem; letter-spacing: 0.1em; color: var(--text-secondary); padding: 0.1rem 0.25rem; border: 1px solid var(--border); margin-right: 0.3rem; }
-
   /* Inspect overlay */
   #combat-overlay {
-    display: none; position: absolute; inset: 0; z-index: 40;
-    background: rgba(5,4,7,0.88);
+    display: none; position: fixed; inset: 0;
+    background: rgba(5,4,7,0.8); z-index: 600;
     align-items: flex-end; justify-content: center;
   }
   #combat-overlay.open { display: flex; }
   #combat-overlay-content {
-    background: var(--bg, var(--abyss));
-    border-top: 1px solid var(--border);
-    width: 100%; max-width: 430px;
-    max-height: 75vh; overflow-y: auto;
-    padding: 1.1rem 1rem 2rem;
+    background: var(--deep); border-top: 1px solid var(--border-bright);
+    width: 100%; max-width: 430px; max-height: 72vh; overflow-y: auto;
+    padding: 1rem 1rem 1.6rem;
   }
-  .cov-title { font-family: var(--ff-heading); font-size: 0.8rem; letter-spacing: 0.06em; color: var(--text-primary); margin-bottom: 0.5rem; }
-  .cov-close { float: right; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 0.9rem; }
-  .cov-section { font-family: var(--ff-heading); font-size: 0.48rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-secondary); margin: 0.7rem 0 0.25rem; border-top: 1px solid var(--border); padding-top: 0.4rem; }
-  .cov-row { display: flex; justify-content: space-between; align-items: baseline; padding: 0.25rem 0; border-bottom: 1px solid rgba(201,168,76,0.06); font-family: var(--ff-heading); font-size: 0.6rem; }
-  .cov-key { color: var(--text-secondary); letter-spacing: 0.04em; }
-  .cov-val { color: var(--text-primary); }
-  .cov-body { font-family: var(--ff-body); font-style: italic; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; }
+  .cov-title { font-family:var(--ff-heading);font-size:0.78rem;letter-spacing:0.05em;color:var(--text-primary);margin-bottom:0.18rem; }
+  .cov-close { float:right;background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:0.95rem; }
+  .cov-section { font-family:var(--ff-heading);font-size:0.46rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-secondary);border-bottom:1px solid var(--border);padding-bottom:0.18rem;margin:0.65rem 0 0.35rem; }
+  .cov-row { display:flex;justify-content:space-between;align-items:baseline;padding:0.18rem 0;border-bottom:1px solid rgba(255,255,255,0.035); }
+  .cov-key { font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.04em;color:var(--text-secondary); }
+  .cov-val { font-family:var(--ff-heading);font-size:0.58rem;color:var(--text-primary); }
+  .cov-body { font-family:var(--ff-body);font-style:italic;font-size:0.86rem;color:var(--text-secondary);line-height:1.6;margin:0.35rem 0; }
+  .csheet-head { display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem; }
+  .csheet-icon { font-family:var(--ff-heading);font-size:1.1rem;color:var(--text-secondary); }
+  .csheet-name { font-family:var(--ff-heading);font-size:1rem;letter-spacing:0.04em;color:var(--text-primary);flex:1; }
+  .csheet-type { font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-secondary); }
+  .csheet-sep { display:flex;align-items:center;gap:0.5rem;font-family:var(--ff-heading);font-size:0.44rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-secondary);margin:0.65rem 0 0.35rem; }
+  .csheet-sep::after { content:'';flex:1;height:1px;background:var(--border); }
+  .csheet-stat-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:0.25rem 0.4rem;margin-bottom:0.2rem; }
+  .csheet-stat { font-family:var(--ff-heading);font-size:0.6rem;letter-spacing:0.05em;color:var(--text-secondary); }
+  .csheet-stat span { color:var(--text-primary);display:block;font-size:0.92rem; }
+  .csheet-tag { font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.1em;padding:0.12rem 0.38rem;border:1px solid var(--border);color:var(--text-secondary);display:inline-block;margin:0.12rem 0.12rem 0 0; }
+  .csheet-tag.attack { color:var(--crimson-bright);border-color:rgba(196,48,48,0.3); }
+  .csheet-tag.heal   { color:var(--viridian-bright);border-color:rgba(45,122,95,0.3); }
+  .csheet-tag.buff   { color:var(--amber-bright);border-color:rgba(212,137,10,0.3); }
+  .csheet-tag.debuff { color:var(--mist);border-color:rgba(107,92,128,0.3); }
+  .csheet-close { width:100%;margin-top:1rem;padding:0.55rem;font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.18em;text-transform:uppercase;background:none;border:1px solid var(--border);color:var(--text-secondary);cursor:pointer; }
 
-  /* Astrological combat modifiers */
-  #combat-astro-modifier {
-    font-family: var(--ff-heading); font-size: 0.48rem;
-    letter-spacing: 0.1em; color: var(--text-secondary);
-    text-align: center; padding: 0.2rem 0.8rem;
-    background: rgba(61,61,170,0.04);
-    border-bottom: 1px solid rgba(61,61,170,0.12);
-    flex-shrink: 0;
-  }
+  /* Retreat overlay */
+  #combat-retreat-overlay { display:none;position:fixed;inset:0;background:rgba(5,4,7,0.9);z-index:650;align-items:center;justify-content:center; }
+  #combat-retreat-overlay.open { display:flex; }
+  .retreat-card { background:var(--deep);border:1px solid rgba(139,26,26,0.5);padding:1.4rem;max-width:290px;width:88%; }
+  .retreat-title { font-family:var(--ff-heading);font-size:0.68rem;letter-spacing:0.12em;color:var(--crimson-bright);margin-bottom:0.55rem; }
+  .retreat-body  { font-family:var(--ff-body);font-style:italic;font-size:0.86rem;color:var(--text-secondary);line-height:1.6;margin-bottom:0.9rem; }
+  .retreat-btns  { display:flex;gap:0.45rem; }
+  .retreat-confirm { flex:1;padding:0.6rem;font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.14em;cursor:pointer;border:1px solid var(--crimson-bright);background:rgba(139,26,26,0.1);color:var(--crimson-bright); }
+  .retreat-cancel  { flex:1;padding:0.6rem;font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.14em;cursor:pointer;border:1px solid var(--border);background:none;color:var(--text-secondary); }
 
+  /* Victory / Defeat overlays */
+  #combat-victory-overlay { display:none;position:fixed;inset:0;background:rgba(5,4,7,0.96);z-index:700;flex-direction:column;align-items:center;justify-content:center;padding:2rem; }
+  #combat-victory-overlay.open { display:flex; }
+  .victory-sigil { font-family:var(--ff-heading);font-size:2rem;color:var(--gold);margin-bottom:0.55rem;text-shadow:0 0 28px rgba(201,168,76,0.45); }
+  .victory-title { font-family:var(--ff-title);font-size:1.9rem;color:var(--text-accent);letter-spacing:4px;margin-bottom:0.28rem; }
+  .victory-subtitle { font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.2em;color:var(--text-secondary);margin-bottom:1.5rem; }
+  .victory-rewards { width:100%;max-width:270px;margin-bottom:1.3rem; }
+  .victory-reward-row { display:flex;justify-content:space-between;align-items:center;padding:0.38rem 0;border-top:1px solid var(--border);font-family:var(--ff-heading);font-size:0.52rem;letter-spacing:0.05em;color:var(--text-secondary); }
+  .victory-reward-row:last-child { border-bottom:1px solid var(--border); }
+  .victory-reward-val { color:var(--viridian-bright); }
+  .victory-leave-btn { font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;padding:0.72rem 1.8rem;cursor:pointer;border:1px solid var(--gold-dim);background:none;color:var(--gold); }
 
-  
+  #combat-defeat-overlay { display:none;position:fixed;inset:0;background:rgba(5,4,7,0.97);z-index:700;flex-direction:column;align-items:center;justify-content:center;padding:2rem; }
+  #combat-defeat-overlay.open { display:flex; }
+  .defeat-sigil { font-family:var(--ff-heading);font-size:2.4rem;color:var(--crimson-bright);margin-bottom:0.55rem; }
+  .defeat-title { font-family:var(--ff-title);font-size:1.55rem;color:var(--crimson-bright);letter-spacing:3px;margin-bottom:0.38rem; }
+  .defeat-body  { font-family:var(--ff-body);font-style:italic;font-size:0.92rem;color:var(--text-secondary);line-height:1.7;text-align:center;margin-bottom:0.55rem; }
+  .defeat-cost  { font-family:var(--ff-heading);font-size:0.52rem;letter-spacing:0.08em;color:var(--crimson-bright);margin-bottom:1.4rem; }
+  .defeat-btn   { font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.18em;text-transform:uppercase;padding:0.72rem 1.8rem;cursor:pointer;border:1px solid rgba(139,26,26,0.55);background:none;color:var(--crimson-bright); }
 
-  /* ── SKILL CHECK RESULT OVERLAY ── */
-  #skill-check-overlay {
-    display: none; position: fixed; inset: 0; z-index: 700;
-    background: rgba(5,4,7,0.92);
-    align-items: center; justify-content: center; padding: 1.5rem;
-  }
-  #skill-check-overlay.open { display: flex; }
-  .sc-result-card {
-    background: var(--bg, var(--abyss));
-    border: 1px solid var(--border);
-    width: 100%; max-width: 360px; padding: 2rem 1.5rem 1.5rem;
-    text-align: center;
-  }
-  .sc-result-verdict {
-    font-family: var(--ff-title);
-    font-size: 2.8rem;
-    line-height: 1;
-    margin-bottom: 0.5rem;
-  }
-  .sc-result-stat {
-    font-family: var(--ff-heading);
-    font-size: 0.58rem;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    margin-bottom: 1.2rem;
-  }
-  .sc-result-roll {
-    display: flex; align-items: center; justify-content: center;
-    gap: 0.5rem; margin-bottom: 0.8rem;
-  }
-  .sc-dice-val {
-    font-family: var(--ff-heading);
-    font-size: 2.2rem;
-    width: 56px; height: 56px;
-    border: 2px solid;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .sc-roll-detail {
-    text-align: left;
-    font-family: var(--ff-heading);
-    font-size: 0.55rem;
-    letter-spacing: 0.06em;
-    color: var(--text-secondary);
-    line-height: 1.7;
-  }
-  .sc-roll-total {
-    font-size: 0.9rem;
-    color: var(--text-primary);
-  }
-  .sc-result-extra {
-    font-family: var(--ff-body);
-    font-style: italic;
-    font-size: 0.95rem;
-    color: var(--text-secondary);
-    line-height: 1.65;
-    margin: 0.8rem 0 1.2rem;
-    padding-top: 0.7rem;
-    border-top: 1px solid var(--border);
-  }
-  .sc-continue-btn {
-    font-family: var(--ff-heading);
-    font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase;
-    padding: 0.75rem 2rem; border: 1px solid var(--border);
-    background: none; color: var(--text-secondary); cursor: pointer;
-    width: 100%; transition: border-color 0.12s, color 0.12s;
-  }
-  .sc-continue-btn:active { border-color: var(--text-accent); color: var(--text-accent); }
+  /* Skill check overlay */
+  #skill-check-overlay { display:none;position:fixed;inset:0;background:rgba(5,4,7,0.9);z-index:600;align-items:center;justify-content:center;padding:1.5rem; }
+  #skill-check-overlay.open { display:flex; }
+  .sc-result-card { background:var(--deep);border:1px solid var(--border-bright);padding:1.4rem;width:100%;max-width:320px; }
+  .sc-result-verdict { font-family:var(--ff-heading);font-size:0.55rem;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:0.5rem; }
+  .sc-result-stat { font-family:var(--ff-heading);font-size:0.8rem;letter-spacing:0.05em;color:var(--text-primary);margin-bottom:0.3rem; }
+  .sc-result-roll { display:flex;align-items:baseline;gap:0.5rem;margin-bottom:0.5rem; }
+  .sc-dice-val { font-family:var(--ff-title);font-size:2.5rem;line-height:1; }
+  .sc-roll-detail { font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.08em;color:var(--text-secondary); }
+  .sc-roll-total { font-family:var(--ff-heading);font-size:0.55rem;letter-spacing:0.1em;margin-bottom:0.5rem; }
+  .sc-result-extra { font-family:var(--ff-body);font-style:italic;font-size:0.84rem;color:var(--text-secondary);line-height:1.6;border-top:1px solid var(--border);padding-top:0.5rem;margin-bottom:0.8rem; }
+  .sc-continue-btn { width:100%;padding:0.65rem;font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;border:1px solid var(--border-bright);background:none;color:var(--text-accent); }
 
-  /* ── COMBAT VICTORY OVERLAY ── */
-  #combat-victory-overlay {
-    display: none; position: absolute; inset: 0; z-index: 50;
-    background: rgba(5,4,7,0.93);
-    flex-direction: column; align-items: center; justify-content: center;
-    padding: 2rem; text-align: center;
-  }
-  #combat-victory-overlay.open { display: flex; }
-  .victory-sigil {
-    font-family: var(--ff-heading); font-size: 2rem;
-    color: var(--text-accent); opacity: 0.5; margin-bottom: 0.8rem;
-  }
-  .victory-title {
-    font-family: var(--ff-title); font-size: 2rem;
-    color: var(--text-accent); margin-bottom: 0.4rem;
-    letter-spacing: 1px;
-  }
-  .victory-subtitle {
-    font-family: var(--ff-heading); font-size: 0.5rem;
-    letter-spacing: 0.3em; text-transform: uppercase;
-    color: var(--text-secondary); margin-bottom: 1.4rem;
-  }
-  .victory-rewards {
-    width: 100%; max-width: 280px; margin-bottom: 1.4rem;
-  }
-  .victory-reward-row {
-    display: flex; justify-content: space-between; align-items: center;
-    border-top: 1px solid var(--border); padding: 0.45rem 0;
-    font-family: var(--ff-heading); font-size: 0.6rem;
-    letter-spacing: 0.06em; color: var(--text-secondary);
-  }
-  .victory-reward-row:last-child { border-bottom: 1px solid var(--border); }
-  .victory-reward-val { color: var(--viridian-bright); }
-  .victory-leave-btn {
-    font-family: var(--ff-heading); font-size: 0.52rem;
-    letter-spacing: 0.2em; text-transform: uppercase;
-    padding: 0.8rem 2.5rem; border: 1px solid var(--border-bright);
-    background: none; color: var(--text-accent); cursor: pointer;
-  }
+  /* Level-up modal */
+  #levelup-modal { display:none;position:fixed;inset:0;background:rgba(5,4,7,0.96);z-index:800;align-items:center;justify-content:center;padding:1.5rem; }
+  #levelup-modal.open { display:flex; }
+  .levelup-inner { background:var(--deep);border:1px solid var(--gold-dim);padding:1.6rem;width:100%;max-width:320px;max-height:80vh;overflow-y:auto; }
+  .levelup-roman { font-family:var(--ff-title);font-size:2.5rem;color:var(--gold);text-align:center;margin-bottom:0.2rem; }
+  .levelup-title { font-family:var(--ff-heading);font-size:0.65rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--text-secondary);text-align:center;margin-bottom:1.2rem; }
+  .levelup-gains { margin-bottom:1rem; }
+  .levelup-gain-row { display:flex;justify-content:space-between;align-items:center;padding:0.3rem 0;border-bottom:1px solid var(--border);font-family:var(--ff-heading);font-size:0.55rem;letter-spacing:0.05em;color:var(--text-secondary); }
+  .levelup-gain-row span { color:var(--viridian-bright); }
+  .levelup-spec-grid { display:flex;flex-direction:column;gap:0.45rem;margin-bottom:1rem; }
+  .levelup-spec-card { border:1px solid var(--border);border-left:3px solid var(--border);padding:0.7rem;cursor:pointer; }
+  .levelup-spec-card:active,.levelup-spec-card.selected { border-left-color:var(--text-accent); }
+  .levelup-spec-name { font-family:var(--ff-heading);font-size:0.68rem;letter-spacing:0.05em;color:var(--text-primary);margin-bottom:0.15rem; }
+  .levelup-spec-desc { font-family:var(--ff-body);font-style:italic;font-size:0.76rem;color:var(--text-secondary);line-height:1.55; }
+  .levelup-spec-bonus { font-family:var(--ff-heading);font-size:0.46rem;letter-spacing:0.08em;color:var(--viridian-bright);margin-top:0.2rem; }
 
-  
-  /* ── CHARACTER CREATION STEPS ── */
+  /* Astro modifier — hidden compat */
+  #combat-astro-modifier { display:none; }
+  #combat-modal { display:contents; }
+  .cc-rank { display:none; }
+  #combat-context-bar { display:none; }
+
+  /* Legacy selectors used by inspectCombatant */
+  .combatant-card { display:none; }
+
+  CSSEOF
+echo "CSS written: $(wc -c < /home/claude/combat_css.txt) bytes"
+
+    /* ── CHARACTER CREATION STEPS ── */
   .cc-step { width: 100%; }
   #identity-modal {
     max-height: 90vh; overflow-y: auto;
@@ -5122,7 +5081,7 @@
 <!-- COMBAT TAB PANEL — shown as a tab when combat is active -->
 <div id="panel-combat" class="tab-panel">
 
-  <!-- COMBAT CONTEXT BAR — astro data at top -->
+  <!-- CONTEXT BAR -->
   <div id="combat-context-bar">
     <div id="cb-planet" class="cb-pill">—</div>
     <div id="cb-moon" class="cb-pill">—</div>
@@ -5130,44 +5089,80 @@
     <div id="cb-encounter" class="cb-encounter-name">—</div>
   </div>
 
-  <!-- ROUND / PHASE -->
-  <div id="combat-header">
-    <div id="combat-title">Combat</div>
-    <div id="combat-phase-bar">Initialising…</div>
-    <div id="combat-init-track"></div>
-  </div>
-
-  <!-- BATTLEFIELD — split enemies / allies -->
+  <!-- BATTLEFIELD -->
   <div id="combat-battlefield">
-    <div class="cbt-section-head">
-      <span class="cbt-section-label">Enemies</span>
-      <span id="cbt-enemy-count" class="cbt-section-count"></span>
+
+    <!-- Enemy row -->
+    <div id="combat-enemy-row"></div>
+
+    <!-- Round + initiative strip -->
+    <div id="combat-round-strip">
+      <div id="combat-phase-bar">Round 1</div>
+      <div id="combat-init-track"></div>
     </div>
-    <div id="combat-enemies"></div>
-    <div class="cbt-section-head" style="margin-top:0.5rem;">
-      <span class="cbt-section-label">Company</span>
-      <span id="cbt-ally-count" class="cbt-section-count"></span>
-    </div>
-    <div id="combat-allies"></div>
+
+    <!-- Ally row -->
+    <div id="combat-ally-row"></div>
+
   </div>
 
-  <!-- COMBAT LOG — collapsible -->
+  <!-- COMBAT LOG -->
   <div id="combat-log-wrap">
     <div id="combat-log-toggle" onclick="toggleCombatLog()">
-      <span id="combat-log-label">Combat Log</span>
-      <span id="combat-log-chevron">▲</span>
+      <span>Combat Log</span>
+      <span id="combat-log-chevron">▼</span>
     </div>
     <div id="combat-log-panel"></div>
   </div>
 
-  <!-- ACTION AREA -->
+  <!-- ACTION DOCK -->
   <div id="combat-actions">
-    <div id="combat-actor-label">Awaiting…</div>
-    <div id="combat-skill-grid"></div>
+
+    <!-- Active character strip -->
+    <div id="combat-actor-strip">
+      <div id="combat-actor-icon">✦</div>
+      <div id="combat-actor-info">
+        <div id="combat-actor-name">—</div>
+        <div id="combat-actor-substats"></div>
+      </div>
+      <div id="combat-actor-bars"></div>
+    </div>
+
+    <!-- Main menu: 4 buttons -->
+    <div id="combat-main-menu">
+      <button class="cmb-menu-btn attack-btn" id="cmb-attack" onclick="combatMenuAction('attack')">
+        <span class="cmb-menu-icon">⚔</span>
+        <span class="cmb-menu-label">Attack</span>
+      </button>
+      <button class="cmb-menu-btn" id="cmb-skills" onclick="combatMenuAction('skills')">
+        <span class="cmb-menu-icon">✦</span>
+        <span class="cmb-menu-label">Skills</span>
+      </button>
+      <button class="cmb-menu-btn" id="cmb-items" onclick="combatMenuAction('items')">
+        <span class="cmb-menu-icon">⊕</span>
+        <span class="cmb-menu-label">Items</span>
+      </button>
+      <button class="cmb-menu-btn" id="cmb-info" onclick="combatMenuAction('info')">
+        <span class="cmb-menu-icon">ⓘ</span>
+        <span class="cmb-menu-label">Info</span>
+      </button>
+    </div>
+
+    <!-- Sub-menu panel -->
+    <div id="combat-submenu">
+      <div class="submenu-header">
+        <span id="submenu-title">Actions</span>
+        <button class="submenu-close" onclick="closeCombatSubmenu()">✕</button>
+      </div>
+      <div id="submenu-body"></div>
+    </div>
+
+    <!-- Footer -->
     <div id="combat-footer-btns">
       <button class="combat-pass-btn" onclick="combatPass()">Pass Turn</button>
       <button class="combat-retreat-btn" onclick="confirmRetreat()">Retreat</button>
     </div>
+
   </div>
 
   <!-- TARGET PROMPT -->
@@ -5185,15 +5180,15 @@
     </div>
   </div>
 
-  <!-- COMBAT INSPECT OVERLAY -->
+  <!-- INSPECT OVERLAY -->
   <div id="combat-overlay" onclick="closeCombatOverlay()">
     <div id="combat-overlay-content" onclick="event.stopPropagation()">
       <div id="combat-overlay-body"></div>
-      <button style="margin-top:1rem;font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;padding:0.6rem;border:1px solid var(--border);background:none;color:var(--text-secondary);cursor:pointer;width:100%;" onclick="closeCombatOverlay()">Close</button>
+      <button class="csheet-close" onclick="closeCombatOverlay()">Close</button>
     </div>
   </div>
 
-  <!-- VICTORY OVERLAY -->
+  <!-- VICTORY -->
   <div id="combat-victory-overlay">
     <div class="victory-sigil">◈</div>
     <div class="victory-title">Victory</div>
@@ -5202,7 +5197,7 @@
     <button class="victory-leave-btn" onclick="closeCombatVictory()">Return to the Lair</button>
   </div>
 
-  <!-- DEFEAT OVERLAY -->
+  <!-- DEFEAT -->
   <div id="combat-defeat-overlay">
     <div class="defeat-sigil">✕</div>
     <div class="defeat-title" id="defeat-title">Fallen</div>
@@ -5684,7 +5679,7 @@
     // 4. Gather / story — apply reward and toast
     if (ev.rewardRes) applyDmEventReward(ev);
     toast(ev.actionText || 'The moment settles into memory. Something has shifted.');
-    deleteWorldEventAfterResolve(ev, evId, 'resolved');
+    deleteWorldEventAfterResolve(ev, evId);
   }
 
   // ── Skill check runner ─────────────────────────────────────────────────────
@@ -5797,28 +5792,20 @@
     const jKey = 'world_done_' + (ev.id || Math.random().toString(36).slice(2));
     if (_journalEntryIds.has(jKey)) return;
     _journalEntryIds.add(jKey);
-    const SIGILS  = { combat:'⚔', story:'✦', gather:'☽', recruit:'⬡', neutral:'◈' };
-    const sigil   = SIGILS[ev.type] || '◈';
-    const when    = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-    const statusLabel = status === 'defeated'  ? 'Defeated'
-                      : status === 'retreated' ? 'Withdrawn'
-                      : ev.repeatable === true ? 'Completed · Repeatable'
-                      : 'Completed';
-    const statusColor = status === 'defeated'  ? 'var(--crimson-bright)'
-                      : status === 'retreated' ? 'var(--text-secondary)'
-                      : 'var(--viridian-bright)';
-    const repeatBadge = ev.repeatable === true
-      ? `<span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--amber-bright);border:1px solid rgba(212,137,10,0.4);padding:0.08rem 0.3rem;margin-left:0.4rem;">Repeatable</span>`
-      : '';
+    const SIGILS = { combat:'⚔', story:'✦', gather:'☽', recruit:'⬡', neutral:'◈' };
+    const sigil  = SIGILS[ev.type] || '◈';
+    const when   = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    const statusLabel = status==='defeated' ? 'Defeated' : status==='retreated' ? 'Withdrawn' : ev.repeatable ? 'Completed · Repeatable' : 'Completed';
+    const statusColor = status==='defeated' ? 'var(--crimson-bright)' : status==='retreated' ? 'var(--text-secondary)' : 'var(--viridian-bright)';
     const entry = document.createElement('div');
     entry.className = 'journal-entry ' + (ev.type || 'neutral');
     entry.style.opacity = '0.45';
     entry.innerHTML = `
       <div class="entry-header">
-        <span class="entry-title">${sigil} ${ev.title}${repeatBadge}</span>
+        <span class="entry-title">${sigil} ${ev.title}${ev.repeatable ? ' <span style="font-size:0.4rem;color:var(--amber-bright);border:1px solid rgba(212,137,10,0.4);padding:0.06rem 0.28rem;margin-left:0.3rem;">Repeatable</span>' : ''}</span>
         <span class="entry-time">${when}</span>
       </div>
-      ${ev.desc || ev.body ? `<p class="entry-body">${ev.desc || ev.body}</p>` : ''}
+      ${ev.desc||ev.body ? `<p class="entry-body">${ev.desc||ev.body}</p>` : ''}
       <div style="font-family:var(--ff-heading);font-size:0.52rem;color:${statusColor};letter-spacing:0.12em;text-transform:uppercase;margin-top:0.35rem;border-top:1px solid var(--border);padding-top:0.3rem;">${statusLabel}</div>`;
     feed.insertBefore(entry, feed.firstChild);
     const emptyMsg = document.getElementById('journal-empty');
@@ -6417,179 +6404,302 @@
     p.appendChild(el); p.scrollTop=p.scrollHeight;
   }
 
-  function renderCombat(){
-    if(!_CS)return;
-    document.getElementById('combat-title').textContent=_CS.title||'Combat';
-    const active=_CS.combatants[_CS.turnIdx];
-    document.getElementById('combat-phase-bar').textContent='Round '+_CS.round+(active?'  ·  '+active.name+"'s turn":'');
+  // ═══ JRPG COMBAT RENDER FUNCTIONS ═══
+
+  function renderCombat() {
+    if (!_CS) return;
+    const active = _CS.combatants[_CS.turnIdx];
+
+    // Context bar (astro)
     updateCombatContextBar();
-    const track=document.getElementById('combat-init-track');
-    track.innerHTML=_CS.combatants.map((cb,i)=>{
-      const cls=['init-token',cb.side==='enemy'?'enemy':'ally',i===_CS.turnIdx?'active-token':'',cb.dead?'dead-token':''].filter(Boolean).join(' ');
-      return '<div class="'+cls+'" title="'+cb.name+'">'+(cb.icon||'◈')+'</div>';
+
+    // Phase bar
+    const phaseEl = document.getElementById('combat-phase-bar');
+    if (phaseEl) phaseEl.textContent = 'Round ' + _CS.round + (active ? '  ·  ' + active.name + "'s turn" : '');
+
+    // Initiative track
+    const track = document.getElementById('combat-init-track');
+    if (track) track.innerHTML = _CS.combatants.map((cb, i) => {
+      const cls = ['init-token', cb.side === 'enemy' ? 'enemy' : 'ally',
+        i === _CS.turnIdx ? 'active-token' : '', cb.dead ? 'dead-token' : ''].filter(Boolean).join(' ');
+      return `<div class="${cls}" title="${cb.name}">${cb.icon || '◈'}</div>`;
     }).join('');
-    const enemies=_CS.combatants.filter(cb=>cb.side==='enemy');
-    const allies=_CS.combatants.filter(cb=>cb.side==='ally');
-    document.getElementById('combat-enemies').innerHTML=enemies.map(renderCard).join('');
-    document.getElementById('combat-allies').innerHTML=allies.map(renderCard).join('');
-    const eCnt=document.getElementById('cbt-enemy-count');
-    const aCnt=document.getElementById('cbt-ally-count');
-    if(eCnt)eCnt.textContent=enemies.filter(cb=>!cb.dead).length+'/'+enemies.length+' standing';
-    if(aCnt)aCnt.textContent=allies.filter(cb=>!cb.dead).length+'/'+allies.length+' standing';
-    document.querySelectorAll('.combatant-card').forEach(el=>el.classList.remove('active-card'));
-    if(active)document.querySelector('[data-cid="'+active.id+'"]')?.classList.add('active-card');
-    renderActions();
+
+    // Enemy row
+    const enemies = _CS.combatants.filter(cb => cb.side === 'enemy');
+    const allies  = _CS.combatants.filter(cb => cb.side === 'ally');
+    renderEnemyRow(enemies, active);
+    renderAllyRow(allies, active);
+
+    // Action dock
+    renderActionDock(active);
   }
 
-  function updateCombatContextBar() {
-    const ph=(typeof getPlanetaryHour==='function'&&playerLat)?getPlanetaryHour(playerLat,playerLng):null;
-    const pEl=document.getElementById('cb-planet');
-    if(pEl&&ph)pEl.textContent=ph.planet+' Hour';
-    const mEl=document.getElementById('cb-moon');
-    if(mEl)mEl.textContent=getMoonPhaseName();
-    const tEl=document.getElementById('cb-time');
-    if(tEl)tEl.textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-    const eEl=document.getElementById('cb-encounter');
-    if(eEl&&_CS)eEl.textContent=_CS.title||'Encounter';
-  }
-
-  function getMoonPhaseName() {
-    const lunarCycle=29.53058867;
-    const known=new Date(2000,0,6,18,14);
-    const phase=(((Date.now()-known)/(864e5)%lunarCycle)+lunarCycle)%lunarCycle;
-    if(phase<1.85)return'New Moon';
-    if(phase<5.54)return'Waxing Crescent';
-    if(phase<9.22)return'First Quarter';
-    if(phase<12.91)return'Waxing Gibbous';
-    if(phase<16.61)return'Full Moon';
-    if(phase<20.30)return'Waning Gibbous';
-    if(phase<23.99)return'Last Quarter';
-    return'Waning Crescent';
-  }
-
-  function toggleCombatLog(){
-    const w=document.getElementById('combat-log-wrap');
-    if(w)w.classList.toggle('collapsed');
-    const ch=document.getElementById('combat-log-chevron');
-    if(ch)ch.textContent=w?.classList.contains('collapsed')?'▼':'▲';
-  }
-
-  function confirmRetreat(){
-    document.getElementById('combat-retreat-overlay')?.classList.add('open');
-  }
-
-  function closeCombatOverlay(){
-    document.getElementById('combat-overlay')?.classList.remove('open');
-  }
-
-  function renderCard(cb){
-    const hpPct  = Math.max(0, Math.min(100, (cb.hp / cb.maxHp) * 100));
-    const mpPct  = cb.maxMana > 0 ? Math.max(0, Math.min(100, (cb.mana / cb.maxMana) * 100)) : 0;
-    const stPct  = Math.min(100, cb.stress || 0);
-    const hpCls  = cb.side === 'enemy' ? 'hp-fill-enemy' : 'hp-fill-ally';
-    const hpCol  = hpPct < 25 ? 'var(--crimson-bright)' : hpPct < 50 ? 'var(--amber-bright)' : '';
-    const pips   = (cb.effects||[]).map(ef =>
-      `<span class="effect-pip ${ef.type}">${ef.type}${ef.stacks>1?' ×'+ef.stacks:''} ${ef.turns}t</span>`
-    ).join('');
-
-    const statline = cb.side === 'enemy'
-      ? `<span>Dodge ${cb.dodge||0}%</span><span>Arm ${cb.armour||0}</span><span>Init ${Math.round(cb.initiative||0)}</span>`
-      : `<span>Init ${Math.round(cb.initiative||0)}</span><span>Crit ${cb.derived?.crit||0}%</span><span>Dodge ${cb.derived?.dodge||0}%</span>`
-        + ((cb.shield||0)>0 ? `<span class="stat-hi">Shield ${cb.shield}</span>` : '')
-        + ((cb.stress||0)>=80 ? '<span class="stat-danger">High Stress</span>' : '');
-
-    return `<div class="combatant-card ${cb.side}-card${cb.dead?' dead-card':''}" data-cid="${cb.id}" onclick="handleCombatantClick('${cb.id}')">
-      <div class="cc-card-inner">
-        <div class="cc-icon-col">${cb.icon||'◈'}</div>
-        <div class="cc-body">
-          <div class="cc-name-row">
-            <span class="cc-name">${cb.name}${cb.dead?'<span class="cc-fallen-tag">fallen</span>':''}</span>
-            <button class="cc-inspect-btn" onclick="event.stopPropagation();inspectCombatant('${cb.id}')" title="Inspect">ⓘ</button>
-          </div>
-          <div class="cc-bars">
-            <div class="cc-bar-row">
-              <span class="cc-bar-lbl">HP</span>
-              <div class="cc-bar"><div class="cc-bar-fill ${hpCls}" style="width:${hpPct}%;${hpCol?'background:'+hpCol:''}"></div></div>
-              <span class="cc-bar-val" style="${hpCol?'color:'+hpCol:''}">${Math.ceil(cb.hp)}/${cb.maxHp}</span>
-            </div>
-            ${cb.maxMana>0?`<div class="cc-bar-row">
-              <span class="cc-bar-lbl">MP</span>
-              <div class="cc-bar"><div class="cc-bar-fill mana-fill" style="width:${mpPct}%"></div></div>
-              <span class="cc-bar-val">${Math.ceil(cb.mana||0)}/${cb.maxMana}</span>
-            </div>`:''}
-            ${cb.side==='ally'?`<div class="cc-bar-row">
-              <span class="cc-bar-lbl">STR</span>
-              <div class="cc-bar"><div class="cc-bar-fill stress-fill-c" style="width:${stPct}%"></div></div>
-              <span class="cc-bar-val">${Math.round(cb.stress||0)}%</span>
-            </div>`:''}
-          </div>
-          <div class="cc-statline">${statline}</div>
-          ${pips?`<div class="cc-effects">${pips}</div>`:''}
+  function renderEnemyRow(enemies, active) {
+    const row = document.getElementById('combat-enemy-row');
+    if (!row) return;
+    row.innerHTML = enemies.map(cb => {
+      const hpPct = Math.max(0, Math.min(100, (cb.hp / cb.maxHp) * 100));
+      const dead  = cb.dead;
+      const isTurn = active && active.id === cb.id;
+      return `<div class="enemy-combatant${dead ? ' dead-unit' : ''}${isTurn ? ' active-turn' : ''}"
+              data-cid="${cb.id}" onclick="handleCombatantClick('${cb.id}')">
+        ${dead ? '<div class="ec-dead-label">✕</div>' : ''}
+        <div class="ec-name">${cb.icon || '▽'} ${cb.name}</div>
+        <div class="ec-hp-bar"><div class="ec-hp-fill" style="width:${hpPct}%"></div></div>
+        <div class="ec-stats">
+          <span>${Math.ceil(cb.hp)}/${cb.maxHp} HP</span>
+          <span>ARM ${cb.armour || 0}</span>
+          <span>DOD ${cb.dodge || 0}%</span>
         </div>
-      </div>
-    </div>`;
-  }
-
-  function renderActions(){
-    if(!_CS)return;
-    const active=_CS.combatants[_CS.turnIdx];
-    const label=document.getElementById('combat-actor-label');
-    const grid=document.getElementById('combat-skill-grid');
-    if(!active||active.dead){label.textContent='Waiting…';grid.innerHTML='';return;}
-    if(active.side==='enemy'){label.textContent=active.name+' is acting…';grid.innerHTML='';return;}
-    label.textContent=active.name+' — Choose an Action';
-    const skills=getSkillsFor(active);
-    const CAT_COL={attack:'var(--crimson-bright)',heal:'var(--viridian-bright)',buff:'var(--amber-bright)',debuff:'var(--mist)',revive:'var(--indigo-bright)',utility:'var(--gold)'};
-
-    // Skills
-    const skillBtns=skills.map(sk=>{
-      const cat=sk.category||sk.cat||'attack';
-      const col=CAT_COL[cat]||'var(--gold)';
-      const bcls='skill-btn'+(cat==='attack'||cat==='debuff'?' attack-btn':cat==='heal'||cat==='revive'?' heal-btn':'');
-      const mc=sk.cost?.mana||0;
-      const dis=mc>(active.mana||0)?'disabled-btn':'';
-      const dmgLine=sk.damage?.type&&sk.damage.type!=='none'?`${sk.damage.dice||''}${sk.damage.flat?'+'+sk.damage.flat:''} <span style="color:${col}">${sk.damage.type}</span>`:(cat);
-      return `<div class="skill-btn-wrap">
-        <button class="${bcls} ${dis}" onclick="selectSkill('${sk._key}')">
-          <span class="skill-btn-name">${sk.name||sk._key}</span>
-          <span class="skill-btn-sub">${dmgLine}</span>
-          ${mc?`<span class="skill-btn-cost">${mc} mana</span>`:''}
-        </button>
-        <button class="skill-info-btn" onclick="showSkillTooltip('${sk._key}',event)" title="Skill info">ⓘ</button>
       </div>`;
     }).join('');
-
-    // Basic attack always available
-    const basicBtn=`<div class="skill-btn-wrap"><button class="skill-btn" onclick="combatBasicAttack()">
-        <span class="skill-btn-name">Strike</span>
-        <span class="skill-btn-sub">Basic · No cost</span>
-      </button></div>`;
-
-    // Consumable items from player inventory (or acolyte's carried items)
-    const combatItems = active.isPlayer
-      ? Object.entries(inventory||{}).filter(([,qty])=>qty>0)
-      : (active.sourceAcolyte?.inventory||[]).map(i=>[(i.name||i),1]);
-
-    const itemBtns = combatItems.map(([key,qty])=>{
-      const r=RECIPES.find(x=>x.key===key);
-      if(!r) return '';
-      const isConsumable=(r.cat==='consumables')||(r.type||'').toLowerCase().includes('consumable');
-      if(!isConsumable) return '';
-      return `<div class="skill-btn-wrap">
-        <button class="skill-btn heal-btn" onclick="useCombatItem('${key}','${active.id}')">
-          <span class="skill-btn-name">${r.name}</span>
-          <span class="skill-btn-sub">×${qty} · ${r.effect||'Use item'}</span>
-        </button>
-      </div>`;
-    }).filter(Boolean).join('');
-
-    const itemSection = itemBtns
-      ? `<div style="font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-secondary);margin-top:0.5rem;padding-top:0.4rem;border-top:1px solid var(--border);">Items</div>${itemBtns}`
-      : '';
-
-    grid.innerHTML = skillBtns + basicBtn + itemSection;
   }
 
+  function renderAllyRow(allies, active) {
+    const row = document.getElementById('combat-ally-row');
+    if (!row) return;
+    row.innerHTML = allies.map(cb => {
+      const hpPct  = Math.max(0, Math.min(100, (cb.hp / cb.maxHp) * 100));
+      const mpPct  = cb.maxMana > 0 ? Math.max(0, Math.min(100, (cb.mana / cb.maxMana) * 100)) : 0;
+      const stPct  = Math.min(100, cb.stress || 0);
+      const isTurn = active && active.id === cb.id;
+      const hpCls  = hpPct < 25 ? 'hp-fill hp-fill-crit' : hpPct < 50 ? 'hp-fill hp-fill-low' : 'hp-fill';
+      const pips   = (cb.effects || []).map(ef =>
+        `<span class="effect-pip ${ef.type}">${ef.type}${ef.stacks > 1 ? ' ×' + ef.stacks : ''}</span>`
+      ).join('');
+      return `<div class="ally-combatant${cb.dead ? ' dead-unit' : ''}${isTurn ? ' active-turn' : ''}"
+              data-cid="${cb.id}" onclick="handleCombatantClick('${cb.id}')">
+        <div class="ac-portrait">${cb.icon || '✦'}</div>
+        <div class="ac-body">
+          <div class="ac-name">${cb.name}${cb.dead ? ' <span style="font-size:0.4rem;color:var(--crimson-bright);letter-spacing:0.12em">FALLEN</span>' : ''}</div>
+          <div class="ac-bars">
+            <div class="ac-bar-row">
+              <span class="ac-bar-lbl">HP</span>
+              <div class="ac-bar"><div class="${hpCls}" style="width:${hpPct}%"></div></div>
+              <span class="ac-bar-val">${Math.ceil(cb.hp)}/${cb.maxHp}</span>
+            </div>
+            ${cb.maxMana > 0 ? `<div class="ac-bar-row">
+              <span class="ac-bar-lbl">MP</span>
+              <div class="ac-bar"><div class="ac-bar-fill mp-fill" style="width:${mpPct}%"></div></div>
+              <span class="ac-bar-val">${Math.ceil(cb.mana || 0)}/${cb.maxMana}</span>
+            </div>` : ''}
+            ${cb.side === 'ally' ? `<div class="ac-bar-row">
+              <span class="ac-bar-lbl">STR</span>
+              <div class="ac-bar"><div class="ac-bar-fill str-fill" style="width:${stPct}%"></div></div>
+              <span class="ac-bar-val">${Math.round(cb.stress || 0)}%</span>
+            </div>` : ''}
+          </div>
+          ${pips ? `<div class="ac-effects">${pips}</div>` : ''}
+        </div>
+        <div class="ac-right">
+          <button class="ac-inspect-btn" onclick="event.stopPropagation();inspectCombatant('${cb.id}')">ⓘ</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderActionDock(active) {
+    // Clear submenu when turn changes
+    closeCombatSubmenu();
+
+    const iconEl   = document.getElementById('combat-actor-icon');
+    const nameEl   = document.getElementById('combat-actor-name');
+    const subsEl   = document.getElementById('combat-actor-substats');
+    const barsEl   = document.getElementById('combat-actor-bars');
+    const menuEl   = document.getElementById('combat-main-menu');
+
+    if (!active || active.dead) {
+      if (nameEl) nameEl.textContent = 'Waiting…';
+      if (iconEl) iconEl.textContent = '◈';
+      if (subsEl) subsEl.innerHTML = '';
+      if (barsEl) barsEl.innerHTML = '';
+      if (menuEl) menuEl.style.display = 'none';
+      return;
+    }
+
+    if (active.side === 'enemy') {
+      if (iconEl) iconEl.textContent = active.icon || '▽';
+      if (nameEl) nameEl.textContent = active.name + ' is acting…';
+      if (subsEl) subsEl.innerHTML = '';
+      if (barsEl) barsEl.innerHTML = '';
+      if (menuEl) menuEl.style.display = 'none';
+      return;
+    }
+
+    // Player or acolyte turn
+    if (iconEl) iconEl.textContent = active.icon || '✦';
+    if (nameEl) nameEl.textContent = active.name;
+    if (menuEl) menuEl.style.display = '';
+
+    // Sub-stats
+    const d = active.derived || {};
+    if (subsEl) {
+      const hpPct = active.hp / active.maxHp;
+      const hpCls = hpPct < 0.25 ? 'crit' : hpPct < 0.5 ? 'warn' : 'hi';
+      const stCls = (active.stress || 0) >= 80 ? 'crit' : (active.stress || 0) >= 50 ? 'warn' : '';
+      subsEl.innerHTML = `
+        <span>HP <span class="${hpCls}">${Math.ceil(active.hp)}/${active.maxHp}</span></span>
+        ${active.maxMana > 0 ? `<span>MP <span>${Math.ceil(active.mana || 0)}/${active.maxMana}</span></span>` : ''}
+        ${active.side === 'ally' ? `<span>STR <span class="${stCls}">${Math.round(active.stress || 0)}%</span></span>` : ''}
+        <span>CRIT <span>${d.crit || 0}%</span></span>
+        <span>DOD <span>${d.dodge || active.dodge || 0}%</span></span>`;
+    }
+
+    // Compact bars
+    if (barsEl) {
+      const hpPct = Math.max(0, Math.min(100, (active.hp / active.maxHp) * 100));
+      const mpPct = active.maxMana > 0 ? Math.max(0, Math.min(100, (active.mana / active.maxMana) * 100)) : 0;
+      const hpCls = hpPct < 25 ? 'hp-fill hp-fill-crit' : hpPct < 50 ? 'hp-fill hp-fill-low' : 'hp-fill';
+      barsEl.innerHTML = `
+        <div class="actor-bar-row"><span class="actor-bar-lbl">HP</span><div class="actor-bar"><div class="actor-bar-fill ${hpCls}" style="width:${hpPct}%"></div></div></div>
+        ${active.maxMana > 0 ? `<div class="actor-bar-row"><span class="actor-bar-lbl">MP</span><div class="actor-bar"><div class="actor-bar-fill mp-fill" style="width:${mpPct}%"></div></div></div>` : ''}`;
+    }
+  }
+
+  function toggleCombatLog() {
+    const w = document.getElementById('combat-log-wrap');
+    if (!w) return;
+    w.classList.toggle('log-open');
+    const ch = document.getElementById('combat-log-chevron');
+    if (ch) ch.textContent = w.classList.contains('log-open') ? '▲' : '▼';
+  }
+
+  // ─── JRPG Menu Actions ───
+  let _activeMenu = null;
+
+  function combatMenuAction(menu) {
+    if (!_CS) return;
+    const active = _CS.combatants[_CS.turnIdx];
+    if (!active || active.dead || active.side === 'enemy') return;
+
+    // Toggle off if same menu tapped again
+    if (_activeMenu === menu) { closeCombatSubmenu(); return; }
+    _activeMenu = menu;
+
+    // Highlight selected button
+    document.querySelectorAll('.cmb-menu-btn').forEach(b => b.classList.remove('selected'));
+    const btnId = { attack:'cmb-attack', skills:'cmb-skills', items:'cmb-items', info:'cmb-info' }[menu];
+    document.getElementById(btnId)?.classList.add('selected');
+
+    const submenu = document.getElementById('combat-submenu');
+    const title   = document.getElementById('submenu-title');
+    const body    = document.getElementById('submenu-body');
+    submenu.classList.add('open');
+
+    if (menu === 'attack') {
+      title.textContent = 'Attack';
+      // Basic strike + any attack-category skills
+      const skills = getSkillsFor(active).filter(sk => {
+        const cat = sk.category || sk.cat || 'attack';
+        return cat === 'attack' || cat === 'debuff';
+      });
+      body.innerHTML = buildSubmenuItem({
+        icon: '⚔', name: 'Strike', sub: 'Basic · Physical · No cost',
+        type: 'attack', onclick: "closeCombatSubmenu();combatBasicAttack()"
+      }) + skills.map(sk => {
+        const mc = sk.cost?.mana || 0;
+        const dis = mc > (active.mana || 0);
+        const dmg = sk.damage?.type && sk.damage.type !== 'none'
+          ? `${sk.damage.dice || ''}${sk.damage.flat ? '+' + sk.damage.flat : ''} ${sk.damage.type}`
+          : 'attack';
+        return buildSubmenuItem({
+          icon: sk.icon || '✦', name: sk.name || sk._key, sub: dmg,
+          cost: mc ? mc + ' MP' : '', type: 'attack', disabled: dis,
+          onclick: dis ? '' : `closeCombatSubmenu();selectSkill('${sk._key}')`
+        });
+      }).join('');
+
+    } else if (menu === 'skills') {
+      title.textContent = 'Skills';
+      const skills = getSkillsFor(active).filter(sk => {
+        const cat = sk.category || sk.cat || '';
+        return cat === 'heal' || cat === 'buff' || cat === 'revive' || cat === 'utility';
+      });
+      if (!skills.length) {
+        body.innerHTML = `<div style="padding:0.8rem 0.75rem;font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);">No support skills available.</div>`;
+      } else {
+        body.innerHTML = skills.map(sk => {
+          const cat = sk.category || sk.cat || 'buff';
+          const mc  = sk.cost?.mana || 0;
+          const dis = mc > (active.mana || 0);
+          return buildSubmenuItem({
+            icon: cat === 'heal' ? '♥' : cat === 'revive' ? '◈' : '⊞',
+            name: sk.name || sk._key,
+            sub: sk.desc ? sk.desc.slice(0, 48) + (sk.desc.length > 48 ? '…' : '') : cat,
+            cost: mc ? mc + ' MP' : '', type: cat, disabled: dis,
+            onclick: dis ? '' : `closeCombatSubmenu();selectSkill('${sk._key}')`
+          });
+        }).join('');
+      }
+
+    } else if (menu === 'items') {
+      title.textContent = 'Items';
+      // Only show items that THIS combatant actually owns
+      const ownedItems = active.isPlayer
+        ? Object.entries(inventory || {}).filter(([, qty]) => qty > 0)
+        : [];  // acolytes: only show if sourceAcolyte has inventory with qty
+      // For acolytes, check their own inventory keyed by item key with qty
+      const acolItems = !active.isPlayer && active.sourceAcolyte?.inventory
+        ? Object.entries(active.sourceAcolyte.inventory || {}).filter(([, qty]) => qty > 0)
+        : [];
+      const allItems = active.isPlayer ? ownedItems : acolItems;
+
+      const consumables = allItems.map(([key, qty]) => {
+        const r = RECIPES.find(x => x.key === key);
+        if (!r) return null;
+        const isCons = r.cat === 'consumables' || (r.type || '').toLowerCase().includes('consumable');
+        if (!isCons) return null;
+        return { key, qty, r };
+      }).filter(Boolean);
+
+      if (!consumables.length) {
+        body.innerHTML = `<div style="padding:0.8rem 0.75rem;font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);">No usable items carried.</div>`;
+      } else {
+        body.innerHTML = consumables.map(({ key, qty, r }) =>
+          buildSubmenuItem({
+            icon: r.icon || '○', name: r.name,
+            sub: r.effect || 'Use item', qty: '×' + qty, type: 'item',
+            onclick: `closeCombatSubmenu();useCombatItem('${key}','${active.id}')`
+          })
+        ).join('');
+      }
+
+    } else if (menu === 'info') {
+      title.textContent = 'Character Info';
+      inspectCombatant(active.id);
+      closeCombatSubmenu();
+    }
+  }
+
+  function buildSubmenuItem({ icon, name, sub, cost, qty, type, disabled, onclick }) {
+    const typeClass = type === 'attack' || type === 'debuff' ? 'attack-type'
+                    : type === 'heal'   || type === 'revive' ? 'heal-type'
+                    : type === 'buff'   || type === 'utility'? 'buff-type'
+                    : type === 'item'                        ? 'item-type' : '';
+    const dis = disabled ? ' disabled' : '';
+    const click = onclick ? `onclick="${onclick}"` : '';
+    return `<button class="submenu-item ${typeClass}${dis}" ${click}>
+      <div class="si-icon">${icon}</div>
+      <div class="si-body">
+        <div class="si-name">${name}</div>
+        ${sub ? `<div class="si-sub">${sub}</div>` : ''}
+      </div>
+      ${cost ? `<span class="si-cost">${cost}</span>` : ''}
+      ${qty  ? `<span class="si-qty">${qty}</span>` : ''}
+    </button>`;
+  }
+
+  function closeCombatSubmenu() {
+    _activeMenu = null;
+    document.querySelectorAll('.cmb-menu-btn').forEach(b => b.classList.remove('selected'));
+    const sub = document.getElementById('combat-submenu');
+    if (sub) sub.classList.remove('open');
+  }
+
+  // Legacy stubs kept for other code that calls them
+  function renderActions() { renderCombat(); }
+  function renderCard(cb) { return ''; }
   function getSkillsFor(combatant){
     // For player/acolytes, use their saved skills[] array (learned skills only)
     const savedSkills = (combatant.skills||[]);
@@ -7995,8 +8105,7 @@ async function refreshFieldEventCards() {
     };
     const TYPE_SIGIL = { combat:'⚠', story:'✦', gather:'☽', recruit:'⬡' };
 
-    // World events — data may be a flat array (from refreshFieldEventCards)
-    // or the raw Firebase object {dm:{...}, random:{...}} — handle both
+    // World events — data may be flat array or raw {dm,random} Firebase object
     let worldEvts;
     if (Array.isArray(data)) {
       worldEvts = data.filter(ev => ev && ev.title);
@@ -11152,7 +11261,7 @@ async function refreshFieldEventCards() {
         document.getElementById('combat-skill-grid').innerHTML = '';
         document.getElementById('combat-actor-label').textContent = '';
         if (_CS._sourceEvent) {
-          deleteWorldEventAfterResolve(_CS._sourceEvent, _CS._sourceEvId, 'defeated').catch(()=>{});
+          deleteWorldEventAfterResolve(_CS._sourceEvent, _CS._sourceEvId).catch(()=>{});
         }
         _CS = null;
         if (playerDied) handlePlayerDeath(); // shows defeat overlay itself
