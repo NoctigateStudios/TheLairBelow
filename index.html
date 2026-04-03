@@ -5579,6 +5579,7 @@
   // World events loaded from Firebase — split into dm (placed by DM) and random (spawned near player)
   let dmMapMarkers = {};     // evtId -> leaflet marker
   let randomMapMarkers = {}; // evtId -> leaflet marker
+  const _removedEventIds = new Set();
 
   async function loadWorldEvents(lat, lng) {
     try {
@@ -5594,7 +5595,7 @@
         const elat = ev.lat ?? ev.location?.lat;
         const elng = ev.lng ?? ev.location?.lng;
         if (!elat || !elng) return;
-        if (dmMapMarkers[id]) return; // already on map
+        if (dmMapMarkers[id] || _removedEventIds.has(id)) return;
         const normEv = { ...ev, lat: elat, lng: elng, id, src: 'dm' };
         const marker = L.marker([elat, elng], {
           icon: makeIcon(ev.type || 'gather', 'dm')
@@ -5611,12 +5612,13 @@
       const randomEvts = data.random || {};
       Object.entries(randomEvts).forEach(([id, ev]) => {
         if (!ev) return;
-        if (randomMapMarkers[id]) return;
+        if (randomMapMarkers[id] || _removedEventIds.has(id)) return;
         // Offset from player position using stored dlat/dlng, or absolute lat/lng
         const elat = ev.lat !== undefined ? ev.lat : lat + (ev.dlat || 0);
         const elng = ev.lng !== undefined ? ev.lng : lng + (ev.dlng || 0);
+        const normEvR = { ...ev, id, src: 'random', lat: elat, lng: elng };
         const marker = L.marker([elat, elng], { icon: makeIcon(ev.type || 'gather', 'random') }).addTo(map);
-        marker.bindPopup(makeEventPopup(ev), { maxWidth: 240, className: '' });
+        marker.bindPopup(makeEventPopup(normEvR), { maxWidth: 240, className: '' });
         randomMapMarkers[id] = marker;
       });
       Object.keys(randomMapMarkers).forEach(id => {
@@ -5764,11 +5766,9 @@
 
   async function deleteWorldEventAfterResolve(ev, evId, status) {
     if (!ev) return;
-    // status: 'resolved' (default), 'defeated', 'retreated'
     const resolveStatus = status || 'resolved';
     try {
       if (ev.src === 'inbox' || ev.src === 'player') {
-        // Personal inbox event — mark read in Firebase, keep node for history
         const myId = getOrCreatePlayerId();
         if (ev.id) {
           await fetch(`${FB_URL}/events/${myId}/${ev.id}/read.json`, {
@@ -5777,22 +5777,16 @@
         }
       } else if (ev.id) {
         if (ev.repeatable === true) {
-          // Repeatable world event — keep Firebase node, just remove marker locally for now
           removeEventMarkerById(ev.id);
         } else {
-          // One-shot world event — delete from Firebase permanently
           const src = ev.src || 'random';
           await fetch(`${FB_URL}/world/events/${src}/${ev.id}.json`, { method: 'DELETE' }).catch(() => {});
           removeEventMarkerById(ev.id);
         }
       }
-      // Remove from active field list
       removeEventFromFieldList(ev.id);
       if (evId) _worldEventStore.delete(evId);
-
-      // ── Append completed entry to journal ──
       appendWorldEventToJournal(ev, resolveStatus);
-
     } catch(e) {}
   }
 
@@ -5800,16 +5794,12 @@
     if (!ev || !ev.title) return;
     const feed = document.getElementById('journal-feed');
     if (!feed) return;
-
-    // Deduplicate by ev.id so repeated calls don't double-append
     const jKey = 'world_done_' + (ev.id || Math.random().toString(36).slice(2));
     if (_journalEntryIds.has(jKey)) return;
     _journalEntryIds.add(jKey);
-
     const SIGILS  = { combat:'⚔', story:'✦', gather:'☽', recruit:'⬡', neutral:'◈' };
     const sigil   = SIGILS[ev.type] || '◈';
     const when    = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-
     const statusLabel = status === 'defeated'  ? 'Defeated'
                       : status === 'retreated' ? 'Withdrawn'
                       : ev.repeatable === true ? 'Completed · Repeatable'
@@ -5817,13 +5807,9 @@
     const statusColor = status === 'defeated'  ? 'var(--crimson-bright)'
                       : status === 'retreated' ? 'var(--text-secondary)'
                       : 'var(--viridian-bright)';
-
     const repeatBadge = ev.repeatable === true
-      ? `<span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.12em;
-           text-transform:uppercase;color:var(--amber-bright);border:1px solid rgba(212,137,10,0.4);
-           padding:0.08rem 0.3rem;margin-left:0.4rem;">Repeatable</span>`
+      ? `<span style="font-family:var(--ff-heading);font-size:0.4rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--amber-bright);border:1px solid rgba(212,137,10,0.4);padding:0.08rem 0.3rem;margin-left:0.4rem;">Repeatable</span>`
       : '';
-
     const entry = document.createElement('div');
     entry.className = 'journal-entry ' + (ev.type || 'neutral');
     entry.style.opacity = '0.45';
@@ -5833,10 +5819,7 @@
         <span class="entry-time">${when}</span>
       </div>
       ${ev.desc || ev.body ? `<p class="entry-body">${ev.desc || ev.body}</p>` : ''}
-      <div style="font-family:var(--ff-heading);font-size:0.52rem;color:${statusColor};
-           letter-spacing:0.12em;text-transform:uppercase;margin-top:0.35rem;
-           border-top:1px solid var(--border);padding-top:0.3rem;">${statusLabel}</div>`;
-
+      <div style="font-family:var(--ff-heading);font-size:0.52rem;color:${statusColor};letter-spacing:0.12em;text-transform:uppercase;margin-top:0.35rem;border-top:1px solid var(--border);padding-top:0.3rem;">${statusLabel}</div>`;
     feed.insertBefore(entry, feed.firstChild);
     const emptyMsg = document.getElementById('journal-empty');
     if (emptyMsg) emptyMsg.style.display = 'none';
@@ -8012,11 +7995,17 @@ async function refreshFieldEventCards() {
     };
     const TYPE_SIGIL = { combat:'⚠', story:'✦', gather:'☽', recruit:'⬡' };
 
-    // World events (shared map)
-    const worldEvts = [
-      ...Object.entries((data?.dm     || {})).map(([id,ev]) => ({...ev, id, src:'dm'})),
-      ...Object.entries((data?.random || {})).map(([id,ev]) => ({...ev, id, src:'random'})),
-    ].filter(ev => ev && ev.title);
+    // World events — data may be a flat array (from refreshFieldEventCards)
+    // or the raw Firebase object {dm:{...}, random:{...}} — handle both
+    let worldEvts;
+    if (Array.isArray(data)) {
+      worldEvts = data.filter(ev => ev && ev.title);
+    } else {
+      worldEvts = [
+        ...Object.entries((data?.dm     || {})).map(([id,ev]) => ({...ev, id, src:'dm'})),
+        ...Object.entries((data?.random || {})).map(([id,ev]) => ({...ev, id, src:'random'})),
+      ].filter(ev => ev && ev.title);
+    }
 
     // Personal inbox DM events — all active (not yet resolved or declined)
     const inboxEvts = inboxData
@@ -11465,6 +11454,7 @@ async function refreshFieldEventCards() {
   // Remove a map marker by event id
   function removeEventMarkerById(evId) {
     if (!evId) return;
+    _removedEventIds.add(evId);
     if (dmMapMarkers[evId])       { dmMapMarkers[evId].remove(); delete dmMapMarkers[evId]; }
     if (randomMapMarkers[evId])   { randomMapMarkers[evId].remove(); delete randomMapMarkers[evId]; }
     if (_inboxMapMarkers[evId])   { _inboxMapMarkers[evId].remove(); delete _inboxMapMarkers[evId]; }
