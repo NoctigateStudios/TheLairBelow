@@ -3785,405 +3785,159 @@
   .ad-tab.active { color:var(--text-accent); border-bottom-color:var(--text-accent); }
 
   /* ═══════════════════════════════════════════════════════
-     COMBAT — PORTRAIT v6  (DD-inspired, vertical mobile)
+     COMBAT — PORTRAIT v6
   ═══════════════════════════════════════════════════════ */
+  #panel-combat { display:none; flex-direction:column; padding:0; overflow:hidden; background:var(--void); height:100%; }
+  #panel-combat.active { display:flex; position:fixed; top:0;left:0;right:0;bottom:0; z-index:300; max-width:430px; margin:0 auto; }
+  #combat-modal { display:contents; }
 
-  #panel-combat {
-    display: none;
-    flex-direction: column;
-    padding: 0;
-    overflow: hidden;
-    background: var(--void);
-    height: 100%;
-  }
-  #panel-combat.active {
-    display: flex;
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    z-index: 300;
-    max-width: 430px;
-    margin: 0 auto;
-  }
-  #combat-modal { display: contents; }
+  /* Top bar */
+  #cbt-topbar { flex-shrink:0; display:flex; align-items:center; padding:0.4rem 0.75rem; gap:0.35rem; background:rgba(5,4,7,0.97); border-bottom:1px solid rgba(139,26,26,0.3); }
+  #cbt-title { font-family:var(--ff-title); font-size:1rem; color:var(--crimson-bright); letter-spacing:2px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #cbt-phase { font-family:var(--ff-heading); font-size:0.42rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-secondary); white-space:nowrap; }
+  .cbt-astro-pill { font-family:var(--ff-heading); font-size:0.38rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-secondary); border:1px solid var(--border); padding:0.12rem 0.26rem; white-space:nowrap; flex-shrink:0; }
 
-  /* ── TOP BAR ── */
-  #cbt-topbar {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    padding: 0.35rem 0.75rem;
-    gap: 0.4rem;
-    background: rgba(5,4,7,0.97);
-    border-bottom: 1px solid rgba(139,26,26,0.3);
-  }
-  #cbt-title {
-    font-family: var(--ff-title);
-    font-size: 0.9rem;
-    color: var(--crimson-bright);
-    letter-spacing: 2px;
-    flex: 1;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  #cbt-phase {
-    font-family: var(--ff-heading);
-    font-size: 0.4rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    white-space: nowrap;
-  }
-  .cbt-astro-pill {
-    font-family: var(--ff-heading);
-    font-size: 0.36rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    border: 1px solid var(--border);
-    padding: 0.1rem 0.24rem;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
+  /* Enemies row */
+  #cbt-enemies-col { flex-shrink:0; padding:0.45rem 0.65rem 0.35rem; border-bottom:1px solid rgba(139,26,26,0.2); background:linear-gradient(180deg,rgba(139,26,26,0.07) 0%,transparent 100%); }
+  .cbt-col-label { font-family:var(--ff-heading); font-size:0.4rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--text-secondary); margin-bottom:0.32rem; }
+  #cbt-enemies-slots { display:flex; gap:0.4rem; }
+  .enemy-slot { flex:1; border:1px solid rgba(139,26,26,0.32); background:rgba(139,26,26,0.05); padding:0.45rem 0.5rem; cursor:pointer; transition:border-color .15s,background .15s; position:relative; min-width:0; min-height:64px; }
+  .enemy-slot.active-slot { border-color:var(--gold); background:rgba(201,168,76,0.07); }
+  .enemy-slot.dead-slot   { opacity:0.22; pointer-events:none; }
+  .enemy-slot.targeted-slot { animation:cbt-pulse 0.65s ease-in-out infinite; cursor:crosshair; }
+  @keyframes cbt-pulse { 0%,100%{border-color:var(--crimson-bright);box-shadow:0 0 6px rgba(196,48,48,0.25);} 50%{border-color:transparent;box-shadow:none;} }
+  .es-header { display:flex; align-items:center; gap:0.3rem; margin-bottom:0.22rem; }
+  .es-icon { flex-shrink:0; width:26px; height:26px; border:1px solid rgba(139,26,26,0.38); display:flex; align-items:center; justify-content:center; font-family:var(--ff-heading); font-size:0.7rem; color:var(--crimson-bright); }
+  .enemy-slot.active-slot .es-icon { border-color:var(--gold); color:var(--gold); }
+  .es-name { font-family:var(--ff-heading); font-size:0.62rem; letter-spacing:0.03em; color:var(--text-primary); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .es-inspect { background:none; border:none; color:var(--text-secondary); font-size:0.68rem; cursor:pointer; padding:0.1rem 0.2rem; }
+  .es-hpbar { height:4px; background:rgba(255,255,255,0.06); overflow:hidden; margin-bottom:0.16rem; }
+  .es-hpfill { height:100%; background:var(--crimson-bright); transition:width .3s; }
+  .es-hpfill.warn { background:var(--amber-bright); }
+  .es-stats { font-family:var(--ff-heading); font-size:0.38rem; letter-spacing:0.04em; color:var(--text-secondary); display:flex; gap:0.3rem; flex-wrap:wrap; }
+  .es-dead-x { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:var(--ff-heading); font-size:1.1rem; color:var(--crimson-bright); opacity:0.45; }
 
-  /* ── ENEMIES ROW ── */
-  #cbt-enemies-col {
-    flex-shrink: 0;
-    padding: 0.4rem 0.65rem 0.3rem;
-    border-bottom: 1px solid rgba(139,26,26,0.2);
-    background: linear-gradient(180deg, rgba(139,26,26,0.06) 0%, transparent 100%);
-  }
-  .cbt-col-label {
-    font-family: var(--ff-heading);
-    font-size: 0.38rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    margin-bottom: 0.3rem;
-  }
-  #cbt-enemies-slots {
-    display: flex;
-    gap: 0.4rem;
-  }
+  /* Initiative strip */
+  #cbt-init-strip { flex-shrink:0; display:flex; align-items:center; justify-content:center; gap:0.28rem; padding:0.28rem 0.65rem; border-bottom:1px solid var(--border); background:rgba(255,255,255,0.012); overflow-x:auto; scrollbar-width:none; }
+  #cbt-init-strip::-webkit-scrollbar { display:none; }
+  .init-token { flex-shrink:0; width:28px; height:28px; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:var(--ff-heading); font-size:0.68rem; transition:all .18s; }
+  .init-token.ally  { border-color:rgba(45,122,95,0.45); color:var(--viridian-bright); }
+  .init-token.enemy { border-color:rgba(139,26,26,0.45); color:var(--crimson-bright); }
+  .init-token.active-token { border-color:var(--gold); background:rgba(201,168,76,0.12); color:var(--gold); box-shadow:0 0 5px rgba(201,168,76,0.2); }
+  .init-token.dead-token { opacity:0.18; }
 
-  /* Enemy slot — compact card */
-  .enemy-slot {
-    flex: 1;
-    border: 1px solid rgba(139,26,26,0.3);
-    background: rgba(139,26,26,0.05);
-    padding: 0.38rem 0.42rem;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-    position: relative;
-    min-width: 0;
-  }
-  .enemy-slot.active-slot  { border-color: var(--gold); background: rgba(201,168,76,0.06); }
-  .enemy-slot.dead-slot    { opacity: 0.22; pointer-events: none; }
-  .enemy-slot.targeted-slot {
-    animation: cbt-pulse 0.65s ease-in-out infinite;
-    cursor: crosshair;
-  }
-  @keyframes cbt-pulse {
-    0%,100% { border-color: var(--crimson-bright); box-shadow: 0 0 6px rgba(196,48,48,0.25); }
-    50%      { border-color: transparent; box-shadow: none; }
-  }
-  .es-header { display: flex; align-items: center; gap: 0.28rem; margin-bottom: 0.2rem; }
-  .es-icon {
-    flex-shrink: 0; width: 22px; height: 22px;
-    border: 1px solid rgba(139,26,26,0.35);
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--ff-heading); font-size: 0.6rem;
-    color: var(--crimson-bright);
-  }
-  .enemy-slot.active-slot .es-icon { border-color: var(--gold); color: var(--gold); }
-  .es-name {
-    font-family: var(--ff-heading); font-size: 0.56rem;
-    letter-spacing: 0.03em; color: var(--text-primary);
-    flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .es-inspect {
-    background: none; border: none; color: var(--text-secondary);
-    font-size: 0.6rem; cursor: pointer; padding: 0; flex-shrink: 0;
-  }
-  .es-hpbar { height: 3px; background: rgba(255,255,255,0.06); overflow: hidden; margin-bottom: 0.14rem; }
-  .es-hpfill { height: 100%; background: var(--crimson-bright); transition: width 0.3s; }
-  .es-hpfill.warn { background: var(--amber-bright); }
-  .es-stats {
-    font-family: var(--ff-heading); font-size: 0.36rem;
-    letter-spacing: 0.04em; color: var(--text-secondary);
-    display: flex; gap: 0.28rem; flex-wrap: wrap;
-  }
-  .es-dead-x {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%,-50%);
-    font-family: var(--ff-heading); font-size: 1rem;
-    color: var(--crimson-bright); opacity: 0.45;
-  }
-
-  /* ── INITIATIVE STRIP ── */
-  #cbt-init-strip {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    padding: 0.24rem 0.65rem;
-    border-bottom: 1px solid var(--border);
-    background: rgba(255,255,255,0.012);
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  #cbt-init-strip::-webkit-scrollbar { display: none; }
-  .init-token {
-    flex-shrink: 0; width: 24px; height: 24px;
-    border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--ff-heading); font-size: 0.6rem;
-    transition: all 0.18s;
-  }
-  .init-token.ally   { border-color: rgba(45,122,95,0.45); color: var(--viridian-bright); }
-  .init-token.enemy  { border-color: rgba(139,26,26,0.45); color: var(--crimson-bright); }
-  .init-token.active-token {
-    border-color: var(--gold); background: rgba(201,168,76,0.12);
-    color: var(--gold); box-shadow: 0 0 5px rgba(201,168,76,0.2);
-  }
-  .init-token.dead-token { opacity: 0.18; }
-
-  /* ── COMBAT LOG ── */
-  #cbt-log-wrap {
-    flex-shrink: 0;
-    max-height: 64px;
-    overflow-y: auto;
-    padding: 0.28rem 0.65rem;
-    border-bottom: 1px solid var(--border);
-    background: rgba(255,255,255,0.01);
-    scrollbar-width: thin;
-    scrollbar-color: var(--stone) transparent;
-  }
-  #cbt-log-wrap::-webkit-scrollbar { width: 2px; }
-  #cbt-log-wrap::-webkit-scrollbar-thumb { background: var(--stone); }
-  .log-line { font-family:var(--ff-body);font-style:italic;font-size:0.72rem;color:var(--text-secondary);line-height:1.4;padding:0.04rem 0; }
-  .log-line.crit   { color:var(--gold);font-style:normal;font-family:var(--ff-heading);font-size:0.62rem;letter-spacing:0.04em; }
+  /* Log */
+  #cbt-log-wrap { flex-shrink:0; max-height:68px; overflow-y:auto; padding:0.3rem 0.65rem; border-bottom:1px solid var(--border); background:rgba(255,255,255,0.01); scrollbar-width:thin; scrollbar-color:var(--stone) transparent; }
+  #cbt-log-wrap::-webkit-scrollbar { width:2px; }
+  #cbt-log-wrap::-webkit-scrollbar-thumb { background:var(--stone); }
+  .log-line { font-family:var(--ff-body); font-style:italic; font-size:0.74rem; color:var(--text-secondary); line-height:1.4; padding:0.04rem 0; }
+  .log-line.crit   { color:var(--gold); font-style:normal; font-family:var(--ff-heading); font-size:0.64rem; letter-spacing:0.04em; }
   .log-line.hit    { color:var(--crimson-bright); }
   .log-line.heal   { color:var(--viridian-bright); }
   .log-line.miss   { color:var(--mist); }
-  .log-line.system { color:var(--text-secondary);font-size:0.62rem;font-style:normal; }
+  .log-line.system { color:var(--text-secondary); font-size:0.64rem; font-style:normal; }
   .log-line.effect { color:var(--amber-bright); }
-  .log-round-sep {
-    font-family:var(--ff-heading);font-size:0.36rem;letter-spacing:0.18em;
-    text-transform:uppercase;color:var(--stone);text-align:center;
-    padding:0.15rem 0;border-bottom:1px solid var(--border);margin:0.18rem 0;
-  }
+  .log-round-sep { font-family:var(--ff-heading); font-size:0.38rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--stone); text-align:center; padding:0.15rem 0; border-bottom:1px solid var(--border); margin:0.18rem 0; }
 
-  /* ── ALLIES ROW ── */
-  #cbt-allies-col {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0.35rem 0.65rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    scrollbar-width: thin;
-    scrollbar-color: var(--stone) transparent;
-    min-height: 0;
-  }
-  #cbt-allies-col::-webkit-scrollbar { width: 2px; }
-  #cbt-allies-col::-webkit-scrollbar-thumb { background: var(--stone); }
-
-  /* Ally slot */
-  .ally-slot {
-    flex-shrink: 0;
-    display: flex; align-items: center; gap: 0.42rem;
-    border: 1px solid rgba(45,122,95,0.18);
-    background: rgba(45,122,95,0.035);
-    padding: 0.35rem 0.42rem;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-  }
-  .ally-slot.active-slot { border-color: var(--gold); background: rgba(201,168,76,0.05); }
-  .ally-slot.dead-slot   { opacity: 0.22; pointer-events: none; }
-
-  .as-icon {
-    flex-shrink: 0; width: 30px; height: 30px;
-    border: 1px solid rgba(45,122,95,0.32);
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--ff-heading); font-size: 0.82rem;
-    color: var(--viridian-bright);
-  }
-  .ally-slot.active-slot .as-icon { border-color: var(--gold); color: var(--gold); }
-
-  .as-body { flex: 1; min-width: 0; }
-  .as-header { display: flex; align-items: center; gap: 0.28rem; margin-bottom: 0.16rem; }
-  .as-name {
-    font-family: var(--ff-heading); font-size: 0.62rem;
-    letter-spacing: 0.03em; color: var(--text-primary);
-    flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .as-inspect {
-    background: none; border: none; color: var(--text-secondary);
-    font-size: 0.62rem; cursor: pointer; padding: 0; flex-shrink: 0;
-  }
-  .as-bars { display: flex; flex-direction: column; gap: 0.11rem; }
-  .as-bar-row { display: flex; align-items: center; gap: 0.22rem; }
-  .as-bar-lbl { font-family:var(--ff-heading);font-size:0.34rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-secondary);width:1.2rem;flex-shrink:0; }
-  .as-bar { flex:1; height:3px; background:rgba(255,255,255,0.06); overflow:hidden; }
-  .as-bar-fill { height:100%; transition:width 0.3s; }
-  .hp-f  { background: var(--viridian-bright); }
-  .hp-fw { background: var(--amber-bright); }
-  .hp-fc { background: var(--crimson-bright); }
-  .mp-f  { background: var(--indigo-bright); }
-  .st-f  { background: var(--amber-bright); }
-  .as-bar-val { font-family:var(--ff-heading);font-size:0.36rem;color:var(--text-secondary);width:2.4rem;text-align:right;flex-shrink:0; }
-
-  .as-effects { display:flex;flex-wrap:wrap;gap:0.1rem;margin-top:0.1rem; }
-  .effect-pip { font-family:var(--ff-heading);font-size:0.33rem;padding:0.05rem 0.18rem;border:1px solid var(--border);color:var(--text-secondary); }
-  .effect-pip.poison { color:var(--viridian-bright);border-color:rgba(45,122,95,0.4); }
-  .effect-pip.burn   { color:var(--crimson-bright); border-color:rgba(139,26,26,0.4); }
-  .effect-pip.blight { color:var(--mist);           border-color:rgba(107,92,128,0.4); }
+  /* Allies */
+  #cbt-allies-col { flex:1; overflow-y:auto; padding:0.4rem 0.65rem; display:flex; flex-direction:column; gap:0.32rem; scrollbar-width:thin; scrollbar-color:var(--stone) transparent; min-height:0; }
+  #cbt-allies-col::-webkit-scrollbar { width:2px; }
+  #cbt-allies-col::-webkit-scrollbar-thumb { background:var(--stone); }
+  .ally-slot { flex-shrink:0; display:flex; align-items:center; gap:0.5rem; border:1px solid rgba(45,122,95,0.2); background:rgba(45,122,95,0.04); padding:0.45rem 0.5rem; cursor:pointer; transition:border-color .15s,background .15s; min-height:60px; }
+  .ally-slot.active-slot { border-color:var(--gold); background:rgba(201,168,76,0.05); }
+  .ally-slot.dead-slot   { opacity:0.22; pointer-events:none; }
+  .as-icon { flex-shrink:0; width:34px; height:34px; border:1px solid rgba(45,122,95,0.35); display:flex; align-items:center; justify-content:center; font-family:var(--ff-heading); font-size:0.9rem; color:var(--viridian-bright); }
+  .ally-slot.active-slot .as-icon { border-color:var(--gold); color:var(--gold); }
+  .as-body { flex:1; min-width:0; }
+  .as-header { display:flex; align-items:center; gap:0.3rem; margin-bottom:0.18rem; }
+  .as-name { font-family:var(--ff-heading); font-size:0.66rem; letter-spacing:0.03em; color:var(--text-primary); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .as-inspect { background:none; border:none; color:var(--text-secondary); font-size:0.68rem; cursor:pointer; padding:0.1rem 0.2rem; }
+  .as-bars { display:flex; flex-direction:column; gap:0.13rem; }
+  .as-bar-row { display:flex; align-items:center; gap:0.24rem; }
+  .as-bar-lbl { font-family:var(--ff-heading); font-size:0.38rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-secondary); width:1.3rem; flex-shrink:0; }
+  .as-bar { flex:1; height:4px; background:rgba(255,255,255,0.06); overflow:hidden; }
+  .as-bar-fill { height:100%; transition:width .3s; }
+  .hp-f { background:var(--viridian-bright); }
+  .hp-fw{ background:var(--amber-bright); }
+  .hp-fc{ background:var(--crimson-bright); }
+  .mp-f { background:var(--indigo-bright); }
+  .st-f { background:var(--amber-bright); }
+  .as-bar-val { font-family:var(--ff-heading); font-size:0.4rem; color:var(--text-secondary); width:2.6rem; text-align:right; flex-shrink:0; }
+  .as-effects { display:flex; flex-wrap:wrap; gap:0.12rem; margin-top:0.12rem; }
+  .effect-pip { font-family:var(--ff-heading); font-size:0.36rem; padding:0.06rem 0.2rem; border:1px solid var(--border); color:var(--text-secondary); }
+  .effect-pip.poison { color:var(--viridian-bright); border-color:rgba(45,122,95,0.4); }
+  .effect-pip.burn   { color:var(--crimson-bright);  border-color:rgba(139,26,26,0.4); }
+  .effect-pip.blight { color:var(--mist);            border-color:rgba(107,92,128,0.4); }
   .effect-pip.buff   { color:var(--gold);            border-color:rgba(201,168,76,0.4); }
 
-  /* ── ACTION BAR ── */
-  #cbt-action-bar {
-    flex-shrink: 0;
-    border-top: 1px solid rgba(201,168,76,0.2);
-    background: rgba(5,4,7,0.97);
-  }
-
-  /* Actor strip */
-  #cbt-active-strip {
-    display: flex; align-items: center; gap: 0.45rem;
-    padding: 0.3rem 0.65rem;
-    border-bottom: 1px solid var(--border);
-  }
-  #cbt-active-icon {
-    flex-shrink: 0; width: 26px; height: 26px;
-    border: 1px solid var(--gold); background: rgba(201,168,76,0.08);
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--ff-heading); font-size: 0.75rem; color: var(--gold);
-  }
-  #cbt-active-name {
-    font-family: var(--ff-heading); font-size: 0.56rem;
-    letter-spacing: 0.04em; color: var(--text-primary);
-    flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  #cbt-active-stats {
-    display: flex; gap: 0.38rem; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end;
-  }
-  .cas { font-family:var(--ff-heading);font-size:0.34rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-secondary);text-align:center; }
-  .cas span { display:block;font-size:0.56rem;color:var(--text-primary);letter-spacing:0; }
+  /* Action bar */
+  #cbt-action-bar { flex-shrink:0; border-top:1px solid rgba(201,168,76,0.22); background:rgba(5,4,7,0.97); }
+  #cbt-active-strip { display:flex; align-items:center; gap:0.5rem; padding:0.35rem 0.75rem; border-bottom:1px solid var(--border); }
+  #cbt-active-icon { flex-shrink:0; width:30px; height:30px; border:1px solid var(--gold); background:rgba(201,168,76,0.08); display:flex; align-items:center; justify-content:center; font-family:var(--ff-heading); font-size:0.85rem; color:var(--gold); }
+  #cbt-active-name { font-family:var(--ff-heading); font-size:0.62rem; letter-spacing:0.04em; color:var(--text-primary); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #cbt-active-stats { display:flex; gap:0.45rem; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
+  .cas { font-family:var(--ff-heading); font-size:0.38rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-secondary); text-align:center; }
+  .cas span { display:block; font-size:0.64rem; color:var(--text-primary); letter-spacing:0; }
   .cas span.hi   { color:var(--viridian-bright); }
   .cas span.warn { color:var(--amber-bright); }
   .cas span.crit { color:var(--crimson-bright); }
 
-  /* Actions row */
-  #cbt-actions-row {
-    display: flex; align-items: stretch; min-height: 56px;
-  }
+  /* Actions row — bigger touch targets */
+  #cbt-actions-row { display:flex; align-items:stretch; min-height:72px; }
+  #cbt-cat-tabs { display:flex; flex-direction:column; border-right:1px solid var(--border); flex-shrink:0; }
+  .cbt-cat-tab { flex:1; padding:0 0.65rem; background:none; border:none; border-bottom:1px solid var(--border); cursor:pointer; display:flex; align-items:center; gap:0.22rem; font-family:var(--ff-heading); font-size:0.44rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-secondary); white-space:nowrap; transition:background .12s,color .12s; -webkit-tap-highlight-color:transparent; min-height:24px; }
+  .cbt-cat-tab:last-child { border-bottom:none; }
+  .cbt-cat-tab .tab-icon { font-size:0.85rem; }
+  .cbt-cat-tab:active, .cbt-cat-tab.selected { background:rgba(255,255,255,0.045); color:var(--text-primary); }
+  .cbt-cat-tab.selected   { border-left:2px solid var(--gold); color:var(--gold); }
+  .cbt-cat-tab.atk-tab.selected  { border-left-color:var(--crimson-bright); color:var(--crimson-bright); }
+  .cbt-cat-tab.heal-tab.selected { border-left-color:var(--viridian-bright); color:var(--viridian-bright); }
 
-  /* Category tabs */
-  #cbt-cat-tabs {
-    display: flex; flex-direction: column;
-    border-right: 1px solid var(--border); flex-shrink: 0;
-  }
-  .cbt-cat-tab {
-    flex: 1; padding: 0 0.5rem;
-    background: none; border: none; border-bottom: 1px solid var(--border);
-    cursor: pointer; display: flex; align-items: center; gap: 0.18rem;
-    font-family: var(--ff-heading); font-size: 0.36rem;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--text-secondary); white-space: nowrap;
-    transition: background 0.12s, color 0.12s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .cbt-cat-tab:last-child { border-bottom: none; }
-  .cbt-cat-tab .tab-icon { font-size: 0.7rem; }
-  .cbt-cat-tab:active, .cbt-cat-tab.selected { background: rgba(255,255,255,0.04); color: var(--text-primary); }
-  .cbt-cat-tab.selected   { border-left: 2px solid var(--gold); color: var(--gold); }
-  .cbt-cat-tab.atk-tab.selected  { border-left-color: var(--crimson-bright); color: var(--crimson-bright); }
-  .cbt-cat-tab.heal-tab.selected { border-left-color: var(--viridian-bright); color: var(--viridian-bright); }
+  #cbt-action-list { flex:1; display:flex; align-items:stretch; overflow-x:auto; scrollbar-width:none; gap:1px; background:var(--border); }
+  #cbt-action-list::-webkit-scrollbar { display:none; }
 
-  /* Action cards — horizontal scroll */
-  #cbt-action-list {
-    flex: 1; display: flex; align-items: stretch;
-    overflow-x: auto; scrollbar-width: none; gap: 1px; background: var(--border);
-  }
-  #cbt-action-list::-webkit-scrollbar { display: none; }
-
-  .cbt-action-card {
-    flex-shrink: 0; min-width: 72px; max-width: 95px;
-    background: rgba(255,255,255,0.02);
-    border: none; cursor: pointer;
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 0.12rem; padding: 0.3rem 0.35rem;
-    text-align: center; transition: background 0.12s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .cbt-action-card:active { background: rgba(255,255,255,0.06); }
-  .cbt-action-card.disabled { opacity: 0.3; pointer-events: none; }
-  .cbt-action-card.attack-card { border-bottom: 2px solid rgba(139,26,26,0.5); }
-  .cbt-action-card.heal-card   { border-bottom: 2px solid rgba(45,122,95,0.5); }
-  .cbt-action-card.buff-card   { border-bottom: 2px solid rgba(212,137,10,0.4); }
-  .cbt-action-card.item-card   { border-bottom: 2px solid rgba(201,168,76,0.3); }
-  .ac-icon { font-family:var(--ff-heading);font-size:0.85rem;opacity:0.75; }
+  /* Action cards — larger for mobile */
+  .cbt-action-card { flex-shrink:0; min-width:80px; max-width:110px; background:rgba(255,255,255,0.02); border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.14rem; padding:0.35rem 0.4rem; text-align:center; transition:background .12s; -webkit-tap-highlight-color:transparent; }
+  .cbt-action-card:active { background:rgba(255,255,255,0.07); }
+  .cbt-action-card.disabled { opacity:0.3; pointer-events:none; }
+  .cbt-action-card.attack-card { border-bottom:2px solid rgba(139,26,26,0.55); }
+  .cbt-action-card.heal-card   { border-bottom:2px solid rgba(45,122,95,0.55); }
+  .cbt-action-card.buff-card   { border-bottom:2px solid rgba(212,137,10,0.45); }
+  .cbt-action-card.item-card   { border-bottom:2px solid rgba(201,168,76,0.35); }
+  .ac-icon { font-family:var(--ff-heading); font-size:1rem; opacity:0.8; }
   .attack-card .ac-icon { color:var(--crimson-bright); }
   .heal-card   .ac-icon { color:var(--viridian-bright); }
   .buff-card   .ac-icon { color:var(--amber-bright); }
   .item-card   .ac-icon { color:var(--gold-dim); }
-  .ac-name { font-family:var(--ff-heading);font-size:0.44rem;letter-spacing:0.04em;color:var(--text-primary); }
-  .ac-sub  { font-family:var(--ff-heading);font-size:0.35rem;letter-spacing:0.03em;color:var(--text-secondary); }
-  .ac-cost { font-family:var(--ff-heading);font-size:0.34rem;color:var(--indigo-bright); }
-  .ac-qty  { font-family:var(--ff-heading);font-size:0.36rem;color:var(--gold-dim); }
-  .cbt-action-empty {
-    display:flex;align-items:center;justify-content:center;padding:0.5rem 0.8rem;
-    font-family:var(--ff-body);font-style:italic;font-size:0.7rem;color:var(--text-secondary);
-  }
+  .ac-name { font-family:var(--ff-heading); font-size:0.52rem; letter-spacing:0.04em; color:var(--text-primary); }
+  .ac-sub  { font-family:var(--ff-heading); font-size:0.4rem; letter-spacing:0.03em; color:var(--text-secondary); }
+  .ac-cost { font-family:var(--ff-heading); font-size:0.38rem; color:var(--indigo-bright); }
+  .ac-qty  { font-family:var(--ff-heading); font-size:0.42rem; color:var(--gold-dim); }
+  .cbt-action-empty { display:flex; align-items:center; justify-content:center; padding:0.5rem 0.8rem; font-family:var(--ff-body); font-style:italic; font-size:0.74rem; color:var(--text-secondary); }
 
-  /* Pass / Retreat */
-  #cbt-footer-btns {
-    display: flex; border-left: 1px solid var(--border); flex-shrink: 0; flex-direction: column;
-  }
-  .cbt-pass-btn, .cbt-retreat-btn {
-    flex: 1; padding: 0 0.55rem;
-    background: none; border: none; border-bottom: 1px solid var(--border);
-    cursor: pointer; font-family: var(--ff-heading); font-size: 0.36rem;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    transition: background 0.12s; -webkit-tap-highlight-color: transparent; white-space: nowrap;
-  }
-  .cbt-pass-btn:last-child, .cbt-retreat-btn:last-child { border-bottom: none; }
-  .cbt-pass-btn { color: var(--text-secondary); }
-  .cbt-pass-btn:active { background: rgba(255,255,255,0.04); color: var(--text-primary); }
-  .cbt-retreat-btn { color: var(--crimson-bright); }
-  .cbt-retreat-btn:active { background: rgba(139,26,26,0.08); }
+  /* Pass / Flee — bigger touch area */
+  #cbt-footer-btns { display:flex; border-left:1px solid var(--border); flex-shrink:0; flex-direction:column; }
+  .cbt-pass-btn, .cbt-retreat-btn { flex:1; padding:0 0.7rem; background:none; border:none; border-bottom:1px solid var(--border); cursor:pointer; font-family:var(--ff-heading); font-size:0.44rem; letter-spacing:0.1em; text-transform:uppercase; transition:background .12s; -webkit-tap-highlight-color:transparent; white-space:nowrap; min-width:52px; }
+  .cbt-pass-btn:last-child, .cbt-retreat-btn:last-child { border-bottom:none; }
+  .cbt-pass-btn { color:var(--text-secondary); }
+  .cbt-pass-btn:active { background:rgba(255,255,255,0.045); color:var(--text-primary); }
+  .cbt-retreat-btn { color:var(--crimson-bright); }
+  .cbt-retreat-btn:active { background:rgba(139,26,26,0.08); }
 
-  /* ── Target prompt — thin strip, NOT full screen ── */
-  #combat-target-prompt {
-    display: none;
-    position: fixed; bottom: 0; left: 0; right: 0;
-    max-width: 430px; margin: 0 auto;
-    font-family: var(--ff-heading); font-size: 0.44rem;
-    letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--void); background: var(--crimson-bright);
-    text-align: center; padding: 0.45rem;
-    z-index: 500;
-  }
-  #combat-target-prompt.active { display: block; }
+  /* Target prompt — thin strip, NOT full screen */
+  #combat-target-prompt { display:none; position:fixed; bottom:0; left:0; right:0; max-width:430px; margin:0 auto; font-family:var(--ff-heading); font-size:0.46rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--void); background:var(--crimson-bright); text-align:center; padding:0.5rem; z-index:500; }
+  #combat-target-prompt.active { display:block; }
 
-  /* ── Inspect overlay ── */
-  #combat-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(5,4,7,0.82); z-index: 600;
-    align-items: flex-end; justify-content: center;
-  }
-  #combat-overlay.open { display: flex; }
-  #combat-overlay-content {
-    background: var(--deep); border-top: 1px solid var(--border-bright);
-    width: 100%; max-width: 430px; max-height: 72vh; overflow-y: auto;
-    padding: 1rem 1rem 1.5rem;
-  }
+  /* Inspect overlay */
+  #combat-overlay { display:none; position:fixed; inset:0; background:rgba(5,4,7,0.82); z-index:600; align-items:flex-end; justify-content:center; }
+  #combat-overlay.open { display:flex; }
+  #combat-overlay-content { background:var(--deep); border-top:1px solid var(--border-bright); width:100%; max-width:430px; max-height:72vh; overflow-y:auto; padding:1rem 1rem 1.5rem; }
   .cov-title { font-family:var(--ff-heading);font-size:0.78rem;letter-spacing:0.05em;color:var(--text-primary);margin-bottom:0.18rem; }
-  .cov-close { float:right;background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:0.95rem; }
+  .cov-close { float:right;background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:1rem;padding:0.1rem 0.3rem; }
   .cov-section { font-family:var(--ff-heading);font-size:0.46rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-secondary);border-bottom:1px solid var(--border);padding-bottom:0.18rem;margin:0.65rem 0 0.35rem; }
-  .cov-row { display:flex;justify-content:space-between;align-items:baseline;padding:0.18rem 0;border-bottom:1px solid rgba(255,255,255,0.035); }
-  .cov-key { font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.04em;color:var(--text-secondary); }
-  .cov-val { font-family:var(--ff-heading);font-size:0.58rem;color:var(--text-primary); }
+  .cov-row { display:flex;justify-content:space-between;align-items:baseline;padding:0.2rem 0;border-bottom:1px solid rgba(255,255,255,0.04); }
+  .cov-key { font-family:var(--ff-heading);font-size:0.52rem;letter-spacing:0.04em;color:var(--text-secondary); }
+  .cov-val { font-family:var(--ff-heading);font-size:0.6rem;color:var(--text-primary); }
   .cov-body { font-family:var(--ff-body);font-style:italic;font-size:0.86rem;color:var(--text-secondary);line-height:1.6;margin:0.35rem 0; }
   .csheet-head { display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem; }
   .csheet-icon { font-family:var(--ff-heading);font-size:1.1rem;color:var(--text-secondary); }
@@ -4198,19 +3952,17 @@
   .csheet-tag.attack { color:var(--crimson-bright);border-color:rgba(196,48,48,0.3); }
   .csheet-tag.heal   { color:var(--viridian-bright);border-color:rgba(45,122,95,0.3); }
   .csheet-tag.buff   { color:var(--amber-bright);border-color:rgba(212,137,10,0.3); }
-  .csheet-close { width:100%;margin-top:1rem;padding:0.55rem;font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.18em;text-transform:uppercase;background:none;border:1px solid var(--border);color:var(--text-secondary);cursor:pointer; }
+  .csheet-close { width:100%;margin-top:1rem;padding:0.65rem;font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.18em;text-transform:uppercase;background:none;border:1px solid var(--border);color:var(--text-secondary);cursor:pointer; }
 
-  /* ── Retreat overlay ── */
+  /* Retreat / Victory / Defeat */
   #combat-retreat-overlay { display:none;position:fixed;inset:0;background:rgba(5,4,7,0.9);z-index:650;align-items:center;justify-content:center; }
   #combat-retreat-overlay.open { display:flex; }
   .retreat-card { background:var(--deep);border:1px solid rgba(139,26,26,0.5);padding:1.4rem;max-width:290px;width:88%; }
-  .retreat-title { font-family:var(--ff-heading);font-size:0.68rem;letter-spacing:0.12em;color:var(--crimson-bright);margin-bottom:0.55rem; }
-  .retreat-body  { font-family:var(--ff-body);font-style:italic;font-size:0.86rem;color:var(--text-secondary);line-height:1.6;margin-bottom:0.9rem; }
+  .retreat-title { font-family:var(--ff-heading);font-size:0.7rem;letter-spacing:0.12em;color:var(--crimson-bright);margin-bottom:0.55rem; }
+  .retreat-body  { font-family:var(--ff-body);font-style:italic;font-size:0.88rem;color:var(--text-secondary);line-height:1.6;margin-bottom:0.9rem; }
   .retreat-btns  { display:flex;gap:0.45rem; }
-  .retreat-confirm { flex:1;padding:0.6rem;font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.14em;cursor:pointer;border:1px solid var(--crimson-bright);background:rgba(139,26,26,0.1);color:var(--crimson-bright); }
-  .retreat-cancel  { flex:1;padding:0.6rem;font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.14em;cursor:pointer;border:1px solid var(--border);background:none;color:var(--text-secondary); }
-
-  /* ── Victory / Defeat ── */
+  .retreat-confirm { flex:1;padding:0.7rem;font-family:var(--ff-heading);font-size:0.52rem;letter-spacing:0.14em;cursor:pointer;border:1px solid var(--crimson-bright);background:rgba(139,26,26,0.1);color:var(--crimson-bright); }
+  .retreat-cancel  { flex:1;padding:0.7rem;font-family:var(--ff-heading);font-size:0.52rem;letter-spacing:0.14em;cursor:pointer;border:1px solid var(--border);background:none;color:var(--text-secondary); }
   #combat-victory-overlay { display:none;position:fixed;inset:0;background:rgba(5,4,7,0.96);z-index:700;flex-direction:column;align-items:center;justify-content:center;padding:2rem; }
   #combat-victory-overlay.open { display:flex; }
   .victory-sigil { font-family:var(--ff-heading);font-size:2rem;color:var(--gold);margin-bottom:0.55rem;text-shadow:0 0 28px rgba(201,168,76,0.45); }
@@ -4220,16 +3972,14 @@
   .victory-reward-row { display:flex;justify-content:space-between;align-items:center;padding:0.38rem 0;border-top:1px solid var(--border);font-family:var(--ff-heading);font-size:0.52rem;letter-spacing:0.05em;color:var(--text-secondary); }
   .victory-reward-row:last-child { border-bottom:1px solid var(--border); }
   .victory-reward-val { color:var(--viridian-bright); }
-  .victory-leave-btn { font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;padding:0.72rem 1.8rem;cursor:pointer;border:1px solid var(--gold-dim);background:none;color:var(--gold); }
+  .victory-leave-btn { font-family:var(--ff-heading);font-size:0.52rem;letter-spacing:0.2em;text-transform:uppercase;padding:0.8rem 2rem;cursor:pointer;border:1px solid var(--gold-dim);background:none;color:var(--gold); }
   #combat-defeat-overlay { display:none;position:fixed;inset:0;background:rgba(5,4,7,0.97);z-index:700;flex-direction:column;align-items:center;justify-content:center;padding:2rem; }
   #combat-defeat-overlay.open { display:flex; }
   .defeat-sigil { font-family:var(--ff-heading);font-size:2.4rem;color:var(--crimson-bright);margin-bottom:0.55rem; }
   .defeat-title { font-family:var(--ff-title);font-size:1.55rem;color:var(--crimson-bright);letter-spacing:3px;margin-bottom:0.38rem; }
   .defeat-body  { font-family:var(--ff-body);font-style:italic;font-size:0.92rem;color:var(--text-secondary);line-height:1.7;text-align:center;margin-bottom:0.55rem; }
   .defeat-cost  { font-family:var(--ff-heading);font-size:0.52rem;letter-spacing:0.08em;color:var(--crimson-bright);margin-bottom:1.4rem; }
-  .defeat-btn   { font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.18em;text-transform:uppercase;padding:0.72rem 1.8rem;cursor:pointer;border:1px solid rgba(139,26,26,0.55);background:none;color:var(--crimson-bright); }
-
-  /* Skill-check overlay */
+  .defeat-btn   { font-family:var(--ff-heading);font-size:0.52rem;letter-spacing:0.18em;text-transform:uppercase;padding:0.8rem 2rem;cursor:pointer;border:1px solid rgba(139,26,26,0.55);background:none;color:var(--crimson-bright); }
   #skill-check-overlay { display:none;position:fixed;inset:0;background:rgba(5,4,7,0.9);z-index:600;align-items:center;justify-content:center;padding:1.5rem; }
   #skill-check-overlay.open { display:flex; }
   .sc-result-card { background:var(--deep);border:1px solid var(--border-bright);padding:1.4rem;width:100%;max-width:320px; }
@@ -4240,7 +3990,7 @@
   .sc-roll-detail { font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.08em;color:var(--text-secondary); }
   .sc-roll-total { font-family:var(--ff-heading);font-size:0.55rem;letter-spacing:0.1em;margin-bottom:0.5rem; }
   .sc-result-extra { font-family:var(--ff-body);font-style:italic;font-size:0.84rem;color:var(--text-secondary);line-height:1.6;border-top:1px solid var(--border);padding-top:0.5rem;margin-bottom:0.8rem; }
-  .sc-continue-btn { width:100%;padding:0.65rem;font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;border:1px solid var(--border-bright);background:none;color:var(--text-accent); }
+  .sc-continue-btn { width:100%;padding:0.7rem;font-family:var(--ff-heading);font-size:0.52rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;border:1px solid var(--border-bright);background:none;color:var(--text-accent); }
   #levelup-modal { display:none;position:fixed;inset:0;background:rgba(5,4,7,0.96);z-index:800;align-items:center;justify-content:center;padding:1.5rem; }
   #levelup-modal.open { display:flex; }
   .levelup-inner { background:var(--deep);border:1px solid var(--gold-dim);padding:1.6rem;width:100%;max-width:320px;max-height:80vh;overflow-y:auto; }
@@ -4256,16 +4006,10 @@
   .levelup-spec-desc { font-family:var(--ff-body);font-style:italic;font-size:0.76rem;color:var(--text-secondary);line-height:1.55; }
   .levelup-spec-bonus { font-family:var(--ff-heading);font-size:0.46rem;letter-spacing:0.08em;color:var(--viridian-bright);margin-top:0.2rem; }
 
-  /* Legacy compat — hide old elements if they somehow appear */
-  #combat-modal { display:contents; }
-  #combat-context-bar { display:none; }
-  .combatant-card { display:none; }
-  #combat-enemies, #combat-allies { display:none; }
-  #combat-skill-grid { display:none; }
-  #combat-actor-label { display:none; }
-  .cc-rank { display:none; }
-  #combat-astro-modifier { display:none; }
-
+  /* Legacy compat */
+  #combat-modal{display:contents;} #combat-context-bar{display:none;} .combatant-card{display:none;}
+  #combat-enemies{display:none;} #combat-allies{display:none;} #combat-skill-grid{display:none;}
+  #combat-actor-label{display:none;} .cc-rank{display:none;} #combat-astro-modifier{display:none;}
 
 
     /* ── CHARACTER CREATION STEPS ── */
@@ -5053,7 +4797,7 @@
 <!-- COMBAT TAB PANEL — shown as a tab when combat is active -->
 <div id="panel-combat" class="tab-panel">
 
-  <!-- TOP BAR: title · round · astro -->
+  <!-- TOP BAR -->
   <div id="cbt-topbar">
     <div id="cbt-title">Combat</div>
     <div id="cbt-phase">Round 1</div>
@@ -5062,17 +4806,17 @@
     <div id="cb-time"   class="cbt-astro-pill">—</div>
   </div>
 
-  <!-- ENEMIES ROW -->
+  <!-- ENEMIES -->
   <div id="cbt-enemies-col">
     <div class="cbt-col-label">Enemies</div>
     <div id="cbt-enemies-slots"></div>
   </div>
 
-  <!-- INITIATIVE STRIP -->
+  <!-- INITIATIVE -->
   <div id="cbt-init-strip"></div>
 
-  <!-- COMBAT LOG -->
-  <div id="cbt-log-wrap" id="cbt-log"></div>
+  <!-- LOG -->
+  <div id="cbt-log-wrap"></div>
 
   <!-- ALLIES -->
   <div id="cbt-allies-col">
@@ -5081,13 +4825,11 @@
 
   <!-- ACTION BAR -->
   <div id="cbt-action-bar">
-
     <div id="cbt-active-strip">
       <div id="cbt-active-icon">✦</div>
       <div id="cbt-active-name">—</div>
       <div id="cbt-active-stats"></div>
     </div>
-
     <div id="cbt-actions-row">
       <div id="cbt-cat-tabs">
         <button class="cbt-cat-tab atk-tab selected" id="cbt-tab-attack" onclick="cbtSelectTab('attack')">
@@ -5102,14 +4844,13 @@
       </div>
       <div id="cbt-action-list"></div>
       <div id="cbt-footer-btns">
-        <button class="cbt-pass-btn" onclick="combatPass()">Pass</button>
+        <button class="cbt-pass-btn"    onclick="combatPass()">Pass</button>
         <button class="cbt-retreat-btn" onclick="confirmRetreat()">Flee</button>
       </div>
     </div>
-
   </div>
 
-  <!-- TARGET PROMPT — thin strip at bottom -->
+  <!-- TARGET PROMPT -->
   <div id="combat-target-prompt">Tap a target — or Pass to cancel</div>
 
   <!-- RETREAT CONFIRM -->
@@ -5119,7 +4860,7 @@
       <div class="retreat-body">Withdrawing now forfeits all rewards.</div>
       <div class="retreat-btns">
         <button class="retreat-confirm" onclick="closeCombat()">Retreat</button>
-        <button class="retreat-cancel" onclick="document.getElementById('combat-retreat-overlay').classList.remove('open')">Stay</button>
+        <button class="retreat-cancel"  onclick="document.getElementById('combat-retreat-overlay').classList.remove('open')">Stay</button>
       </div>
     </div>
   </div>
@@ -5145,8 +4886,8 @@
   <div id="combat-defeat-overlay">
     <div class="defeat-sigil">✕</div>
     <div class="defeat-title" id="defeat-title">Fallen</div>
-    <div class="defeat-body" id="defeat-body">The passage takes you.</div>
-    <div class="defeat-cost" id="defeat-cost"></div>
+    <div class="defeat-body"  id="defeat-body">The passage takes you.</div>
+    <div class="defeat-cost"  id="defeat-cost"></div>
     <button class="defeat-btn" onclick="closeCombat()">Return to the Lair</button>
   </div>
 
@@ -5529,7 +5270,7 @@
         const elat = ev.lat ?? ev.location?.lat;
         const elng = ev.lng ?? ev.location?.lng;
         if (!elat || !elng) return;
-        if (dmMapMarkers[id] || _removedEventIds.has(id)) return;
+        if (dmMapMarkers[id]||_removedEventIds.has(id)) return;
         const normEv = { ...ev, lat: elat, lng: elng, id, src: 'dm' };
         const marker = L.marker([elat, elng], {
           icon: makeIcon(ev.type || 'gather', 'dm')
@@ -5546,11 +5287,11 @@
       const randomEvts = data.random || {};
       Object.entries(randomEvts).forEach(([id, ev]) => {
         if (!ev) return;
-        if (randomMapMarkers[id] || _removedEventIds.has(id)) return;
+        if (randomMapMarkers[id]||_removedEventIds.has(id)) return;
         // Offset from player position using stored dlat/dlng, or absolute lat/lng
         const elat = ev.lat !== undefined ? ev.lat : lat + (ev.dlat || 0);
         const elng = ev.lng !== undefined ? ev.lng : lng + (ev.dlng || 0);
-        const normEvR = { ...ev, id, src: 'random', lat: elat, lng: elng };
+        const normEvR={...ev,id,src:'random',lat:elat,lng:elng};
         const marker = L.marker([elat, elng], { icon: makeIcon(ev.type || 'gather', 'random') }).addTo(map);
         marker.bindPopup(makeEventPopup(normEvR), { maxWidth: 240, className: '' });
         randomMapMarkers[id] = marker;
@@ -5699,7 +5440,7 @@
   }
 
   async function deleteWorldEventAfterResolve(ev, evId, status) {
-    const resolveStatus = status || 'resolved';
+    const resolveStatus=status||'resolved';
     if (!ev) return;
     try {
       if (ev.src === 'inbox' || ev.src === 'player') {
@@ -5724,19 +5465,15 @@
   }
 
   function appendWorldEventToJournal(ev, status) {
-    if (!ev || !ev.title) return;
-    const feed = document.getElementById('journal-feed');
-    if (!feed) return;
-    const jKey = 'world_done_' + (ev.id || Math.random().toString(36).slice(2));
-    if (_journalEntryIds.has(jKey)) return;
-    _journalEntryIds.add(jKey);
+    if (!ev||!ev.title) return;
+    const feed=document.getElementById('journal-feed'); if (!feed) return;
+    const jKey='world_done_'+(ev.id||Math.random().toString(36).slice(2));
+    if (_journalEntryIds.has(jKey)) return; _journalEntryIds.add(jKey);
     const SIGILS={combat:'⚔',story:'✦',gather:'☽',recruit:'⬡',neutral:'◈'};
-    const sigil=SIGILS[ev.type]||'◈', when=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const sigil=SIGILS[ev.type]||'◈',when=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     const statusLabel=status==='defeated'?'Defeated':status==='retreated'?'Withdrawn':ev.repeatable?'Completed · Repeatable':'Completed';
     const statusColor=status==='defeated'?'var(--crimson-bright)':status==='retreated'?'var(--text-secondary)':'var(--viridian-bright)';
-    const entry=document.createElement('div');
-    entry.className='journal-entry '+(ev.type||'neutral');
-    entry.style.opacity='0.45';
+    const entry=document.createElement('div'); entry.className='journal-entry '+(ev.type||'neutral'); entry.style.opacity='0.45';
     entry.innerHTML=`<div class="entry-header"><span class="entry-title">${sigil} ${ev.title}</span><span class="entry-time">${when}</span></div>${ev.desc||ev.body?`<p class="entry-body">${ev.desc||ev.body}</p>`:''}<div style="font-family:var(--ff-heading);font-size:0.52rem;color:${statusColor};letter-spacing:0.12em;text-transform:uppercase;margin-top:0.35rem;border-top:1px solid var(--border);padding-top:0.3rem;">${statusLabel}</div>`;
     feed.insertBefore(entry,feed.firstChild);
     const em=document.getElementById('journal-empty');if(em)em.style.display='none';
@@ -6222,14 +5959,14 @@
       combatTab.classList.add('pulsing');
     }
     switchTab('combat');
-    const _si = (id,p,v) => { const e=document.getElementById(id); if(e) e[p]=v; };
-    _si('cbt-title',       'textContent', 'Entering…');
-    _si('cbt-phase',       'textContent', 'Loading encounter…');
-    _si('cbt-init-strip',  'innerHTML',   '');
-    _si('cbt-enemies-slots','innerHTML',  '');
-    _si('cbt-log-wrap',    'innerHTML',   '');
-    _si('cbt-action-list', 'innerHTML',   '');
-    _si('cbt-active-name', 'textContent', 'Loading…');
+    const _si=(id,p,v)=>{const e=document.getElementById(id);if(e)e[p]=v;};
+    _si('cbt-title','textContent','Entering…');
+    _si('cbt-phase','textContent','Loading encounter…');
+    _si('cbt-init-strip','innerHTML','');
+    _si('cbt-enemies-slots','innerHTML','');
+    _si('cbt-log-wrap','innerHTML','');
+    _si('cbt-action-list','innerHTML','');
+    _si('cbt-active-name','textContent','Loading…');
 
     const eventData = (eventOrKey && typeof eventOrKey === 'object') ? eventOrKey : null;
     const forcedEnemyKeys = eventData?.enemies || null;
@@ -6334,134 +6071,110 @@
     p.appendChild(el); p.scrollTop=p.scrollHeight;
   }
 
-  // ═══ COMBAT RENDER — PORTRAIT v6 ═══
-
+  // ═══ COMBAT RENDER v6 ═══
   let _cbtActiveTab = 'attack';
 
   function renderCombat() {
     if (!_CS) return;
     const active = _CS.combatants[_CS.turnIdx];
-
     // Topbar
-    const tEl = document.getElementById('cbt-title');
-    const pEl = document.getElementById('cbt-phase');
+    const tEl=document.getElementById('cbt-title'), pEl=document.getElementById('cbt-phase');
     if (tEl) tEl.textContent = _CS.title || 'Combat';
     if (pEl) pEl.textContent = 'Round ' + _CS.round + (active ? '  ·  ' + active.name + "'s turn" : '');
-    updateCombatContextBar();
-
-    // Initiative strip
+    // Astro pills
+    const ph = (typeof getPlanetaryHour==='function' && playerLat) ? getPlanetaryHour(playerLat, playerLng) : null;
+    const cbP=document.getElementById('cb-planet'), cbM=document.getElementById('cb-moon'), cbT=document.getElementById('cb-time');
+    if (cbP && ph) cbP.textContent = ph.planet + ' Hour';
+    if (cbM) cbM.textContent = getMoonPhaseName();
+    if (cbT) cbT.textContent = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    // Initiative
     const initEl = document.getElementById('cbt-init-strip');
-    if (initEl) initEl.innerHTML = _CS.combatants.map((cb, i) => {
-      const cls = ['init-token', cb.side === 'enemy' ? 'enemy' : 'ally',
-        i === _CS.turnIdx ? 'active-token' : '', cb.dead ? 'dead-token' : ''].filter(Boolean).join(' ');
-      return `<div class="${cls}" title="${cb.name}">${cb.icon || '◈'}</div>`;
+    if (initEl) initEl.innerHTML = _CS.combatants.map((cb,i) => {
+      const cls=['init-token',cb.side==='enemy'?'enemy':'ally',i===_CS.turnIdx?'active-token':'',cb.dead?'dead-token':''].filter(Boolean).join(' ');
+      return `<div class="${cls}" title="${cb.name}">${cb.icon||'◈'}</div>`;
     }).join('');
-
-    // Render columns
-    const enemies = _CS.combatants.filter(c => c.side === 'enemy');
-    const allies  = _CS.combatants.filter(c => c.side === 'ally');
-    cbtRenderEnemies(enemies, active);
-    cbtRenderAllies(allies, active);
+    // Columns
+    cbtRenderEnemies(_CS.combatants.filter(c=>c.side==='enemy'), active);
+    cbtRenderAllies(_CS.combatants.filter(c=>c.side==='ally'), active);
     cbtRenderActionBar(active);
   }
 
   function cbtRenderEnemies(enemies, active) {
-    const slots = document.getElementById('cbt-enemies-slots');
-    const lbl   = document.querySelector('#cbt-enemies-col .cbt-col-label');
-    if (lbl) lbl.textContent = 'Enemies ' + enemies.filter(c=>!c.dead).length + '/' + enemies.length;
+    const slots=document.getElementById('cbt-enemies-slots');
+    const lbl=document.querySelector('#cbt-enemies-col .cbt-col-label');
+    if (lbl) lbl.textContent='Enemies '+enemies.filter(c=>!c.dead).length+'/'+enemies.length;
     if (!slots) return;
     slots.innerHTML = enemies.map(cb => {
-      const hp  = Math.max(0, Math.min(100, (cb.hp / cb.maxHp) * 100));
-      const hpC = hp < 25 ? 'crit' : hp < 50 ? 'warn' : '';
-      const isTurn = active && active.id === cb.id;
-      const cls = ['enemy-slot', isTurn ? 'active-slot' : '', cb.dead ? 'dead-slot' : ''].filter(Boolean).join(' ');
+      const hp=Math.max(0,Math.min(100,(cb.hp/cb.maxHp)*100));
+      const hpC=hp<25?'crit':hp<50?'warn':'';
+      const isTurn=active&&active.id===cb.id;
+      const cls=['enemy-slot',isTurn?'active-slot':'',cb.dead?'dead-slot':''].filter(Boolean).join(' ');
       return `<div class="${cls}" data-cid="${cb.id}" onclick="handleCombatantClick('${cb.id}')">
-        ${cb.dead ? '<div class="es-dead-x">✕</div>' : ''}
+        ${cb.dead?'<div class="es-dead-x">✕</div>':''}
         <div class="es-header">
-          <div class="es-icon">${cb.icon || '▽'}</div>
+          <div class="es-icon">${cb.icon||'▽'}</div>
           <div class="es-name">${cb.name}</div>
           <button class="es-inspect" onclick="event.stopPropagation();inspectCombatant('${cb.id}')">ⓘ</button>
         </div>
         <div class="es-hpbar"><div class="es-hpfill ${hpC}" style="width:${hp}%"></div></div>
-        <div class="es-stats">
-          <span>${Math.ceil(cb.hp)}/${cb.maxHp} HP</span>
-          <span>ARM ${cb.armour||0}</span>
-          <span>DOD ${cb.dodge||0}%</span>
-        </div>
+        <div class="es-stats"><span>${Math.ceil(cb.hp)}/${cb.maxHp} HP</span><span>ARM ${cb.armour||0}</span><span>DOD ${cb.dodge||0}%</span></div>
         ${(cb.effects||[]).map(ef=>`<span class="effect-pip ${ef.type}">${ef.type}</span>`).join('')}
       </div>`;
     }).join('');
   }
 
   function cbtRenderAllies(allies, active) {
-    const col = document.getElementById('cbt-allies-col');
+    const col=document.getElementById('cbt-allies-col');
     if (!col) return;
-    const lbl = col.querySelector('.cbt-col-label');
-    const labelText = 'Company ' + allies.filter(c=>!c.dead).length + '/' + allies.length;
-    col.innerHTML = `<div class="cbt-col-label">${labelText}</div>` +
+    col.innerHTML = `<div class="cbt-col-label">Company ${allies.filter(c=>!c.dead).length}/${allies.length}</div>` +
       allies.map(cb => {
-        const hp  = Math.max(0, Math.min(100, (cb.hp / cb.maxHp) * 100));
-        const mp  = cb.maxMana > 0 ? Math.max(0, Math.min(100, (cb.mana / cb.maxMana) * 100)) : 0;
-        const st  = Math.min(100, cb.stress || 0);
-        const hpC = hp < 25 ? 'hp-fc' : hp < 50 ? 'hp-fw' : 'hp-f';
-        const isTurn = active && active.id === cb.id;
-        const cls = ['ally-slot', isTurn ? 'active-slot' : '', cb.dead ? 'dead-slot' : ''].filter(Boolean).join(' ');
-        const pips = (cb.effects||[]).map(ef=>`<span class="effect-pip ${ef.type}">${ef.type}</span>`).join('');
+        const hp=Math.max(0,Math.min(100,(cb.hp/cb.maxHp)*100));
+        const mp=cb.maxMana>0?Math.max(0,Math.min(100,(cb.mana/cb.maxMana)*100)):0;
+        const st=Math.min(100,cb.stress||0);
+        const hpC=hp<25?'hp-fc':hp<50?'hp-fw':'hp-f';
+        const isTurn=active&&active.id===cb.id;
+        const cls=['ally-slot',isTurn?'active-slot':'',cb.dead?'dead-slot':''].filter(Boolean).join(' ');
+        const pips=(cb.effects||[]).map(ef=>`<span class="effect-pip ${ef.type}">${ef.type}</span>`).join('');
         return `<div class="${cls}" data-cid="${cb.id}" onclick="handleCombatantClick('${cb.id}')">
-          <div class="as-icon">${cb.icon || '✦'}</div>
+          <div class="as-icon">${cb.icon||'✦'}</div>
           <div class="as-body">
             <div class="as-header">
-              <div class="as-name">${cb.name}${cb.dead ? ' <span style="font-size:0.32rem;color:var(--crimson-bright);letter-spacing:0.1em">FALLEN</span>' : ''}</div>
+              <div class="as-name">${cb.name}${cb.dead?' <span style="font-size:0.32rem;color:var(--crimson-bright)">FALLEN</span>':''}</div>
               <button class="as-inspect" onclick="event.stopPropagation();inspectCombatant('${cb.id}')">ⓘ</button>
             </div>
             <div class="as-bars">
-              <div class="as-bar-row">
-                <span class="as-bar-lbl">HP</span>
-                <div class="as-bar"><div class="as-bar-fill ${hpC}" style="width:${hp}%"></div></div>
-                <span class="as-bar-val">${Math.ceil(cb.hp)}/${cb.maxHp}</span>
-              </div>
-              ${cb.maxMana > 0 ? `<div class="as-bar-row">
-                <span class="as-bar-lbl">MP</span>
-                <div class="as-bar"><div class="as-bar-fill mp-f" style="width:${mp}%"></div></div>
-                <span class="as-bar-val">${Math.ceil(cb.mana||0)}/${cb.maxMana}</span>
-              </div>` : ''}
-              <div class="as-bar-row">
-                <span class="as-bar-lbl">STR</span>
-                <div class="as-bar"><div class="as-bar-fill st-f" style="width:${st}%"></div></div>
-                <span class="as-bar-val">${Math.round(cb.stress||0)}%</span>
-              </div>
+              <div class="as-bar-row"><span class="as-bar-lbl">HP</span><div class="as-bar"><div class="as-bar-fill ${hpC}" style="width:${hp}%"></div></div><span class="as-bar-val">${Math.ceil(cb.hp)}/${cb.maxHp}</span></div>
+              ${cb.maxMana>0?`<div class="as-bar-row"><span class="as-bar-lbl">MP</span><div class="as-bar"><div class="as-bar-fill mp-f" style="width:${mp}%"></div></div><span class="as-bar-val">${Math.ceil(cb.mana||0)}/${cb.maxMana}</span></div>`:''}
+              <div class="as-bar-row"><span class="as-bar-lbl">STR</span><div class="as-bar"><div class="as-bar-fill st-f" style="width:${st}%"></div></div><span class="as-bar-val">${Math.round(cb.stress||0)}%</span></div>
             </div>
-            ${pips ? `<div class="as-effects">${pips}</div>` : ''}
+            ${pips?`<div class="as-effects">${pips}</div>`:''}
           </div>
         </div>`;
       }).join('');
   }
 
   function cbtRenderActionBar(active) {
-    const iconEl  = document.getElementById('cbt-active-icon');
-    const nameEl  = document.getElementById('cbt-active-name');
-    const statsEl = document.getElementById('cbt-active-stats');
-    const listEl  = document.getElementById('cbt-action-list');
-
-    if (!active || active.dead || active.side === 'enemy') {
-      if (iconEl)  iconEl.textContent  = active ? (active.icon || '▽') : '◈';
-      if (nameEl)  nameEl.textContent  = active ? active.name + ' is acting…' : 'Waiting…';
-      if (statsEl) statsEl.innerHTML   = '';
-      if (listEl)  listEl.innerHTML    = '<div class="cbt-action-empty">Waiting for turn…</div>';
-      document.querySelectorAll('.cbt-cat-tab').forEach(t => t.style.opacity = '0.38');
+    const iconEl=document.getElementById('cbt-active-icon');
+    const nameEl=document.getElementById('cbt-active-name');
+    const statsEl=document.getElementById('cbt-active-stats');
+    const listEl=document.getElementById('cbt-action-list');
+    if (!active||active.dead||active.side==='enemy') {
+      if(iconEl) iconEl.textContent=active?(active.icon||'▽'):'◈';
+      if(nameEl) nameEl.textContent=active?active.name+' is acting…':'Waiting…';
+      if(statsEl)statsEl.innerHTML='';
+      if(listEl) listEl.innerHTML='<div class="cbt-action-empty">Waiting for turn…</div>';
+      document.querySelectorAll('.cbt-cat-tab').forEach(t=>t.style.opacity='0.4');
       return;
     }
-    document.querySelectorAll('.cbt-cat-tab').forEach(t => t.style.opacity = '');
-    if (iconEl) iconEl.textContent = active.icon || '✦';
-    if (nameEl) nameEl.textContent = active.name;
-
-    // Stats strip
-    if (statsEl) {
-      const d = active.derived || {};
-      const hpPct = active.hp / active.maxHp;
-      const hpCls = hpPct < 0.25 ? 'crit' : hpPct < 0.5 ? 'warn' : 'hi';
-      const stCls = (active.stress||0) >= 80 ? 'crit' : (active.stress||0) >= 50 ? 'warn' : '';
-      statsEl.innerHTML = `
+    document.querySelectorAll('.cbt-cat-tab').forEach(t=>t.style.opacity='');
+    if(iconEl) iconEl.textContent=active.icon||'✦';
+    if(nameEl) nameEl.textContent=active.name;
+    if(statsEl){
+      const d=active.derived||{};
+      const hpPct=active.hp/active.maxHp;
+      const hpCls=hpPct<0.25?'crit':hpPct<0.5?'warn':'hi';
+      const stCls=(active.stress||0)>=80?'crit':(active.stress||0)>=50?'warn':'';
+      statsEl.innerHTML=`
         <div class="cas">HP<span class="${hpCls}">${Math.ceil(active.hp)}/${active.maxHp}</span></div>
         ${active.maxMana>0?`<div class="cas">MP<span>${Math.ceil(active.mana||0)}/${active.maxMana}</span></div>`:''}
         <div class="cas">STR<span class="${stCls}">${Math.round(active.stress||0)}%</span></div>
@@ -6472,93 +6185,52 @@
   }
 
   function cbtSelectTab(tab) {
-    _cbtActiveTab = tab;
-    document.querySelectorAll('.cbt-cat-tab').forEach(t => t.classList.remove('selected'));
-    const el = document.getElementById('cbt-tab-' + tab);
-    if (el) el.classList.add('selected');
-    if (!_CS) return;
-    const active = _CS.combatants[_CS.turnIdx];
-    if (active && !active.dead && active.side !== 'enemy') cbtRenderTab(tab, active);
+    _cbtActiveTab=tab;
+    document.querySelectorAll('.cbt-cat-tab').forEach(t=>t.classList.remove('selected'));
+    const el=document.getElementById('cbt-tab-'+tab);
+    if(el)el.classList.add('selected');
+    if(!_CS)return;
+    const active=_CS.combatants[_CS.turnIdx];
+    if(active&&!active.dead&&active.side!=='enemy')cbtRenderTab(tab,active);
   }
 
   function cbtRenderTab(tab, active) {
-    const listEl = document.getElementById('cbt-action-list');
-    if (!listEl) return;
-    if (tab === 'attack') {
-      const skills = getSkillsFor(active).filter(sk => {
-        const cat = sk.category || sk.cat || 'attack';
-        return cat === 'attack' || cat === 'debuff';
-      });
-      listEl.innerHTML = [
-        cbtCard({ icon:'⚔', name:'Strike', sub:'Physical · Free', type:'attack', onclick:"combatBasicAttack()" })
-      ].concat(skills.map(sk => {
-        const mc  = sk.cost?.mana || 0;
-        const dis = mc > (active.mana || 0);
-        const dmg = sk.damage?.type && sk.damage.type !== 'none'
-          ? `${sk.damage.dice||''}${sk.damage.flat?'+'+sk.damage.flat:''} ${sk.damage.type}` : (sk.category||'attack');
-        return cbtCard({ icon:'✦', name:sk.name||sk._key, sub:dmg, type:'attack',
-          cost:mc?mc+' MP':'', disabled:dis, onclick:dis?'':`selectSkill('${sk._key}')` });
-      })).join('');
-    } else if (tab === 'skills') {
-      const skills = getSkillsFor(active).filter(sk => {
-        const cat = sk.category || sk.cat || '';
-        return cat === 'heal' || cat === 'buff' || cat === 'revive' || cat === 'utility';
-      });
-      listEl.innerHTML = !skills.length
-        ? '<div class="cbt-action-empty">No support skills.</div>'
-        : skills.map(sk => {
-            const cat = sk.category || sk.cat || 'buff';
-            const mc  = sk.cost?.mana || 0;
-            const dis = mc > (active.mana || 0);
-            const icon = cat==='heal'?'♥':cat==='revive'?'◈':'⊞';
-            return cbtCard({ icon, name:sk.name||sk._key,
-              sub:sk.desc?sk.desc.slice(0,36)+(sk.desc.length>36?'…':''):cat,
-              type:cat, cost:mc?mc+' MP':'', disabled:dis,
-              onclick:dis?'':`selectSkill('${sk._key}')` });
-          }).join('');
-    } else if (tab === 'items') {
-      let ownedItems = [];
-      if (active.isPlayer) {
-        ownedItems = Object.entries(inventory || {}).filter(([,qty]) => qty > 0);
-      } else if (active.sourceAcolyte) {
-        const inv = active.sourceAcolyte.inventory;
-        if (inv && typeof inv === 'object' && !Array.isArray(inv)) {
-          ownedItems = Object.entries(inv).filter(([,qty]) => qty > 0);
-        }
-      }
-      const consumables = ownedItems.map(([key,qty]) => {
-        const r = RECIPES.find(x => x.key === key);
-        if (!r) return null;
-        const isCons = r.cat === 'consumables' || (r.type||'').toLowerCase().includes('consumable');
-        return isCons ? { key, qty, r } : null;
-      }).filter(Boolean);
-      listEl.innerHTML = !consumables.length
-        ? '<div class="cbt-action-empty">No items carried.</div>'
-        : consumables.map(({ key, qty, r }) =>
-            cbtCard({ icon:r.icon||'○', name:r.name, sub:r.effect||'Use',
-              type:'item', qty:'×'+qty, onclick:`useCombatItem('${key}','${active.id}')` })
-          ).join('');
+    const listEl=document.getElementById('cbt-action-list');
+    if(!listEl)return;
+    if(tab==='attack'){
+      const skills=getSkillsFor(active).filter(sk=>{const cat=sk.category||sk.cat||'attack';return cat==='attack'||cat==='debuff';});
+      listEl.innerHTML=[cbtCard({icon:'⚔',name:'Strike',sub:'Physical · Free',type:'attack',onclick:"combatBasicAttack()"})]
+        .concat(skills.map(sk=>{
+          const mc=sk.cost?.mana||0,dis=mc>(active.mana||0);
+          const dmg=sk.damage?.type&&sk.damage.type!=='none'?`${sk.damage.dice||''}${sk.damage.flat?'+'+sk.damage.flat:''} ${sk.damage.type}`:(sk.category||'attack');
+          return cbtCard({icon:'✦',name:sk.name||sk._key,sub:dmg,type:'attack',cost:mc?mc+' MP':'',disabled:dis,onclick:dis?'':`selectSkill('${sk._key}')`});
+        })).join('');
+    } else if(tab==='skills'){
+      const skills=getSkillsFor(active).filter(sk=>{const cat=sk.category||sk.cat||'';return cat==='heal'||cat==='buff'||cat==='revive'||cat==='utility';});
+      listEl.innerHTML=!skills.length?'<div class="cbt-action-empty">No support skills.</div>'
+        :skills.map(sk=>{
+          const cat=sk.category||sk.cat||'buff',mc=sk.cost?.mana||0,dis=mc>(active.mana||0);
+          const icon=cat==='heal'?'♥':cat==='revive'?'◈':'⊞';
+          return cbtCard({icon,name:sk.name||sk._key,sub:sk.desc?sk.desc.slice(0,36)+(sk.desc.length>36?'…':''):cat,type:cat,cost:mc?mc+' MP':'',disabled:dis,onclick:dis?'':`selectSkill('${sk._key}')`});
+        }).join('');
+    } else if(tab==='items'){
+      let owned=[];
+      if(active.isPlayer){ owned=Object.entries(inventory||{}).filter(([,qty])=>qty>0); }
+      else if(active.sourceAcolyte){ const inv=active.sourceAcolyte.inventory; if(inv&&typeof inv==='object'&&!Array.isArray(inv))owned=Object.entries(inv).filter(([,qty])=>qty>0); }
+      const cons=owned.map(([key,qty])=>{const r=RECIPES.find(x=>x.key===key);if(!r)return null;const ok=r.cat==='consumables'||(r.type||'').toLowerCase().includes('consumable');return ok?{key,qty,r}:null;}).filter(Boolean);
+      listEl.innerHTML=!cons.length?'<div class="cbt-action-empty">No items carried.</div>'
+        :cons.map(({key,qty,r})=>cbtCard({icon:r.icon||'○',name:r.name,sub:r.effect||'Use',type:'item',qty:'×'+qty,onclick:`useCombatItem('${key}','${active.id}')`})).join('');
     }
   }
 
-  function cbtCard({ icon, name, sub, type, cost, qty, disabled, onclick }) {
-    const typeClass = type==='attack'||type==='debuff' ? 'attack-card'
-                    : type==='heal'||type==='revive'   ? 'heal-card'
-                    : type==='buff'||type==='utility'  ? 'buff-card' : 'item-card';
-    const dis   = disabled ? ' disabled' : '';
-    const click = onclick  ? `onclick="${onclick}"` : '';
-    return `<button class="cbt-action-card ${typeClass}${dis}" ${click}>
-      <div class="ac-icon">${icon}</div>
-      <div class="ac-name">${name}</div>
-      ${sub  ? `<div class="ac-sub">${sub}</div>`  : ''}
-      ${cost ? `<div class="ac-cost">${cost}</div>` : ''}
-      ${qty  ? `<div class="ac-qty">${qty}</div>`   : ''}
-    </button>`;
+  function cbtCard({icon,name,sub,type,cost,qty,disabled,onclick}){
+    const tc=type==='attack'||type==='debuff'?'attack-card':type==='heal'||type==='revive'?'heal-card':type==='buff'||type==='utility'?'buff-card':'item-card';
+    return `<button class="cbt-action-card ${tc}${disabled?' disabled':''}" ${onclick?`onclick="${onclick}"`:''}><div class="ac-icon">${icon}</div><div class="ac-name">${name}</div>${sub?`<div class="ac-sub">${sub}</div>`:''}${cost?`<div class="ac-cost">${cost}</div>`:''}${qty?`<div class="ac-qty">${qty}</div>`:''}</button>`;
   }
 
-  function toggleCombatLog() {}  // log always visible
-  function renderActions()  { renderCombat(); }
-  function renderCard(cb)   { return ''; }
+  function toggleCombatLog(){}
+  function renderActions(){renderCombat();}
+  function renderCard(cb){return '';}
 
   function getSkillsFor(combatant){
     // For player/acolytes, use their saved skills[] array (learned skills only)
@@ -7971,16 +7643,11 @@ async function refreshFieldEventCards() {
     };
     const TYPE_SIGIL = { combat:'⚠', story:'✦', gather:'☽', recruit:'⬡' };
 
-    // World events — accept either flat array (from refreshFieldEventCards) or {dm,random} object
-    let worldEvts;
-    if (Array.isArray(data)) {
-      worldEvts = data.filter(ev => ev && ev.title);
-    } else {
-      worldEvts = [
-        ...Object.entries((data?.dm     || {})).map(([id,ev]) => ({...ev, id, src:'dm'})),
-        ...Object.entries((data?.random || {})).map(([id,ev]) => ({...ev, id, src:'random'})),
-      ].filter(ev => ev && ev.title);
-    }
+    // World events (shared map)
+    const worldEvts = [
+      ...Object.entries((data?.dm     || {})).map(([id,ev]) => ({...ev, id, src:'dm'})),
+      ...Object.entries((data?.random || {})).map(([id,ev]) => ({...ev, id, src:'random'})),
+    ].filter(ev => ev && ev.title);
 
     // Personal inbox DM events — all active (not yet resolved or declined)
     const inboxEvts = inboxData
