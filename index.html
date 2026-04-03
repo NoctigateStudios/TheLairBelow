@@ -1906,9 +1906,6 @@
   }
   #combat-target-prompt.active { display: block; }
 
-    text-align: center;
-    width: calc(100% - 2rem);
-  }
 
   /* ═══════════════════════════════════════
      PLANETARY HOURS INDICATOR
@@ -2671,7 +2668,7 @@
 </style>
 <style>
   /* ═══════════════════════════════════════════════════
-     HOLISTIC VISUAL OVERHAUL — v0.7.36
+     HOLISTIC VISUAL OVERHAUL — v0.8.0
      Principles: editorial, handcrafted, ruled-paper feel
      No glowing widgets; type and line as primary language
   ═══════════════════════════════════════════════════ */
@@ -5673,7 +5670,7 @@ randomMapMarkers[id] = marker;
         console.error('Combat error:', err);
         toast('Combat failed to load: ' + (err.message || err));
         switchTab('field');
-      }).then(() => deleteWorldEventAfterResolve(ev, evId));
+      });
       return;
     }
 
@@ -6277,7 +6274,7 @@ randomMapMarkers[id] = marker;
     document.getElementById('combat-allies').innerHTML = '';
     document.getElementById('combat-log-panel').innerHTML = '';
     document.getElementById('combat-skill-grid').innerHTML = '';
-    document.getElementById('combat-actor-label').textContent = '';
+    document.getElementById('ccd-actor-sub').textContent = '';
 
     const eventData = (eventOrKey && typeof eventOrKey === 'object') ? eventOrKey : null;
     const forcedEnemyKeys = eventData?.enemies || null;
@@ -6350,7 +6347,7 @@ randomMapMarkers[id] = marker;
         resistances:e.resistances||{}};
     });
     const all=[...enemies,player,...acolytes].sort((a,b)=>b.initiative-a.initiative);
-    _CS={title:encounterTitle||enemyDefs[0]?.name||'Combat',combatants:all,round:1,turnIdx:0};
+    _CS={title:encounterTitle||enemyDefs[0]?.name||'Combat',combatants:all,round:1,turnIdx:0,_sourceEvent:eventOrKey&&typeof eventOrKey==='object'?eventOrKey:null,_sourceEvId:eventOrKey?._evtId||eventOrKey?.id||null};
     switchTab('combat');
     combatLog('The encounter begins. Turn order set by initiative.','system');
     renderCombat();
@@ -6364,6 +6361,7 @@ randomMapMarkers[id] = marker;
     document.getElementById('combat-retreat-overlay')?.classList.remove('open');
     _CS = null; _pendingSkill = null;
     document.getElementById('combat-target-prompt').classList.remove('active');
+    switchCombatTab('actions', null);
     // Now safe to switch tab
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -6498,7 +6496,7 @@ randomMapMarkers[id] = marker;
   function renderActions(){
     if(!_CS)return;
     const active=_CS.combatants[_CS.turnIdx];
-    const label=document.getElementById('combat-actor-label');
+    const label=document.getElementById('ccd-actor-sub');
     const grid=document.getElementById('combat-skill-grid');
     if(!active||active.dead){label.textContent='Waiting…';grid.innerHTML='';return;}
     if(active.side==='enemy'){label.textContent=active.name+' is acting…';grid.innerHTML='';return;}
@@ -11092,8 +11090,12 @@ async function refreshFieldEventCards() {
       });
 
       document.getElementById('combat-skill-grid').innerHTML = '';
-      document.getElementById('combat-actor-label').textContent = '';
+      document.getElementById('ccd-actor-sub').textContent = '';
       persistState().catch(() => {});
+      // Resolve the source event on the map now that combat is won
+      if (_CS._sourceEvent) {
+        deleteWorldEventAfterResolve(_CS._sourceEvent, _CS._sourceEvId).catch(()=>{});
+      }
       // Show victory overlay
       showCombatVictory({ loot, totalXp });
       _CS = null;
@@ -11106,7 +11108,10 @@ async function refreshFieldEventCards() {
       if (playerDied || fullRout) {
         combatLog('✗ The company falls.', 'hit');
         document.getElementById('combat-skill-grid').innerHTML = '';
-        document.getElementById('combat-actor-label').textContent = '';
+        document.getElementById('ccd-actor-sub').textContent = '';
+        if (_CS._sourceEvent) {
+          deleteWorldEventAfterResolve(_CS._sourceEvent, _CS._sourceEvId).catch(()=>{});
+        }
         _CS = null;
         if (playerDied) handlePlayerDeath(); // shows defeat overlay itself
       }
@@ -11722,6 +11727,223 @@ async function refreshFieldEventCards() {
     renderCombat();
     persistState().catch(()=>{});
     advanceTurn();
+  }
+
+
+  // ── COMMAND DECK ─────────────────────────────────────────────
+
+  function switchCombatTab(tab, btnEl) {
+    document.querySelectorAll('.ccd-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.ccd-panel').forEach(p=>p.classList.remove('active'));
+    if(btnEl) btnEl.classList.add('active');
+    else document.querySelector(`.ccd-tab[data-tab="${tab}"]`)?.classList.add('active');
+    document.getElementById('ccd-panel-'+tab)?.classList.add('active');
+  }
+
+  function updateCommandDeck(active) {
+    if(!active) return;
+
+    // Header: icon, name, HP/MP/Stress pills
+    const iconEl = document.getElementById('ccd-actor-icon');
+    const nameEl = document.getElementById('ccd-actor-name');
+    const subEl  = document.getElementById('ccd-actor-sub');
+    const hpEl   = document.getElementById('ccd-hp');
+    const mpEl   = document.getElementById('ccd-mp');
+    const strEl  = document.getElementById('ccd-str');
+
+    if(iconEl) iconEl.textContent = active.icon||'◈';
+    if(nameEl) nameEl.textContent = active.name;
+    if(subEl)  subEl.textContent  = active.side==='ally' ? 'Choose an action' : 'Acting…';
+
+    if(hpEl) {
+      hpEl.textContent = Math.ceil(active.hp)+'/'+active.maxHp+' HP';
+      hpEl.classList.toggle('danger', (active.hp/active.maxHp) < 0.3);
+    }
+    if(mpEl) {
+      const hasMp = (active.maxMana||0) > 0;
+      mpEl.style.display = hasMp ? '' : 'none';
+      if(hasMp) mpEl.textContent = Math.ceil(active.mana||0)+'/'+active.maxMana+' MP';
+    }
+    if(strEl) {
+      const hasStr = active.side==='ally';
+      strEl.style.display = hasStr ? '' : 'none';
+      if(hasStr) {
+        const s = Math.round(active.stress||0);
+        strEl.textContent = s+'% STR';
+        strEl.className = 'ccd-stat-pill str' + (s>=80?' warn':'');
+      }
+    }
+
+    // Populate Stats tab
+    populateCombatStats(active);
+    // Populate Skills tab
+    populateCombatSkills(active);
+    // Populate Equipment tab
+    populateCombatEquip(active);
+  }
+
+  function populateCombatStats(cb) {
+    const el = document.getElementById('ccd-stats-body');
+    if(!el) return;
+    const d = cb.derived||{};
+
+    const vitals = [
+      ['HP',       Math.ceil(cb.hp)+' / '+cb.maxHp,         cb.hp/cb.maxHp < 0.3 ? 'danger' : cb.hp/cb.maxHp < 0.6 ? 'warn' : 'good'],
+      ...(cb.maxMana>0 ? [['Mana', Math.ceil(cb.mana||0)+' / '+cb.maxMana, '']] : []),
+      ...(cb.side==='ally' ? [['Stress', Math.round(cb.stress||0)+'%', (cb.stress||0)>=80?'danger':(cb.stress||0)>=50?'warn':'']] : []),
+      ...(cb.shield>0 ? [['Shield', cb.shield, 'good']] : []),
+    ];
+
+    const combat_stats = cb.side==='enemy' ? [
+      ['Armour',    cb.armour||0,           ''],
+      ['Dodge',     (cb.dodge||0)+'%',      ''],
+      ['Initiative',Math.round(cb.initiative||0), ''],
+      ['Damage',    cb.damageExpr||'—',     ''],
+      ['XP Reward', cb.xpReward||0,         ''],
+    ] : [
+      ['Initiative',Math.round(cb.initiative||0), ''],
+      ['Crit',      (d.crit||0)+'%',        d.crit>=20?'good':''],
+      ['Dodge',     (d.dodge||0)+'%',       d.dodge>=20?'good':''],
+      ['Accuracy',  d.accuracy||0,          ''],
+      ...(d.power?[['Power', d.power, '']]:[]),
+    ];
+
+    const resistances = cb.side==='enemy'
+      ? Object.entries(cb.resistances||{}).filter(([,v])=>v)
+          .map(([k,v])=>[k, v>0?'-'+v+'%':'+'+Math.abs(v)+'%', v>0?'good':'danger'])
+      : [];
+
+    const effects_list = (cb.effects||[]).map(ef=>
+      [ef.type, ef.stacks>1?'×'+ef.stacks+' ('+ef.turns+'t)':'('+ef.turns+'t)', 'warn']
+    );
+
+    let html = '';
+    const section = (title, rows) => {
+      if(!rows.length) return '';
+      return `<div class="ccd-stat-block">
+        <div class="ccd-stat-block-title">${title}</div>
+        ${rows.map(([k,v,cls])=>`<div class="ccd-stat-row">
+          <span class="ccd-stat-key">${k}</span>
+          <span class="ccd-stat-val ${cls||''}">${v}</span>
+        </div>`).join('')}
+      </div>`;
+    };
+
+    html += section('Vitals', vitals);
+    html += section('Combat', combat_stats);
+    if(resistances.length) html += section('Resistances', resistances);
+    if(effects_list.length) html += section('Active Effects', effects_list);
+
+    el.innerHTML = html || '<div class="ccd-skill-empty">No data available.</div>';
+  }
+
+  function populateCombatSkills(cb) {
+    const el = document.getElementById('ccd-skills-body');
+    if(!el) return;
+    const skills = getSkillsFor(cb);
+    if(!skills.length) {
+      el.innerHTML = '<div class="ccd-skill-empty">No skills learned.</div>';
+      return;
+    }
+    el.innerHTML = skills.map(sk=>{
+      const cat = sk.category||sk.cat||'attack';
+      const mc  = sk.cost?.mana||0;
+      const can = !mc || mc <= (cb.mana||0);
+      const dmg = sk.damage?.type&&sk.damage.type!=='none'
+        ? `${sk.damage.dice||''}${sk.damage.flat?'+'+sk.damage.flat:''} ${sk.damage.type}`
+        : '';
+      return `<div class="ccd-skill-row" onclick="selectSkill('${sk._key}')" style="${!can?'opacity:0.45':''}">
+        <div class="ccd-skill-name">${sk.name||sk._key}</div>
+        ${dmg?`<div class="ccd-skill-cat ${cat}" style="flex:1">${dmg}</div>`:'<div class="ccd-skill-cat '+cat+'">'+cat+'</div>'}
+        ${mc?`<div class="ccd-skill-cost">${mc} MP</div>`:''}
+      </div>`;
+    }).join('');
+  }
+
+  function populateCombatEquip(cb) {
+    const el = document.getElementById('ccd-equip-body');
+    if(!el) return;
+
+    // For player: use _characterData equipment
+    // For acolytes: use cb.sourceAcolyte data
+    const charData = cb.isPlayer ? _characterData : cb.sourceAcolyte;
+    const equip = charData?.equipment||{};
+    const slots = [
+      ['weapon',  'Weapon'],
+      ['offhand', 'Off-hand'],
+      ['armour',  'Armour'],
+      ['sigil1',  'Sigil I'],
+      ['sigil2',  'Sigil II'],
+    ];
+    const rows = slots.map(([slot, label])=>{
+      const key = equip[slot];
+      const r   = key ? RECIPES.find(x=>x.key===key) : null;
+      const name = r?.name || (key||null);
+      return `<div class="ccd-equip-slot">
+        <span class="ccd-equip-slot-name">${label}</span>
+        <span class="ccd-equip-item ${name?'':'empty'}">${name||'—'}</span>
+        ${r?.effect?`<span class="ccd-equip-effect">${r.effect}</span>`:''}
+      </div>`;
+    }).join('');
+
+    // Show items in inventory too
+    const items = cb.isPlayer
+      ? Object.entries(inventory||{}).filter(([,qty])=>qty>0).map(([k,qty])=>{
+          const r = RECIPES.find(x=>x.key===k);
+          return r ? `<div class="ccd-equip-slot">
+            <span class="ccd-equip-slot-name">Item</span>
+            <span class="ccd-equip-item">${r.name} ×${qty}</span>
+            <span class="ccd-equip-effect">${r.effect||''}</span>
+          </div>` : '';
+        }).filter(Boolean).join('')
+      : '';
+
+    el.innerHTML = rows + items || '<div class="ccd-skill-empty">Nothing equipped.</div>';
+  }
+
+  // ── Tab switching ──
+  function switchCombatTab(tab, btnEl) {
+    document.querySelectorAll('.ccd-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.ccd-panel').forEach(p=>p.classList.remove('active'));
+    if(btnEl) btnEl.classList.add('active');
+    else document.querySelector(`.ccd-tab[data-tab="${tab}"]`)?.classList.add('active');
+    document.getElementById('ccd-panel-'+tab)?.classList.add('active');
+  }
+
+  // Patch combatLog to also notify the log tab
+  const _origCombatLog = typeof combatLog !== 'undefined' ? combatLog : null;
+  function combatLog(msg, type='system') {
+    const panel = document.getElementById('combat-log-panel');
+    if(panel) {
+      const div = document.createElement('div');
+      div.className = 'log-line ' + type;
+      div.textContent = msg;
+      panel.appendChild(div);
+      panel.scrollTop = panel.scrollHeight;
+    }
+    // Mark log tab as having new entries if it's not active
+    const logTab = document.querySelector('.ccd-tab[data-tab="log"]');
+    const logPanel = document.getElementById('ccd-panel-log');
+    if(logTab && !logPanel?.classList.contains('active')) {
+      logTab.classList.add('log-has-new');
+    }
+  }
+
+  // Patch switchCombatTab to clear log notification
+  const _origSwitchCombatTab = switchCombatTab;
+  // (already defined above — just clear notification on log tab click)
+
+  // Override updateCombatContextBar to use new IDs
+  function updateCombatContextBar() {
+    const ph = (typeof getPlanetaryHour==='function'&&playerLat) ? getPlanetaryHour(playerLat,playerLng) : null;
+    const pEl = document.getElementById('cb-planet');
+    if(pEl&&ph) pEl.textContent = ph.planet+' Hour';
+    const mEl = document.getElementById('cb-moon');
+    if(mEl) mEl.textContent = getMoonPhaseName();
+    const tEl = document.getElementById('cb-time');
+    if(tEl) tEl.textContent = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const eEl = document.getElementById('cb-encounter');
+    if(eEl&&_CS) eEl.textContent = _CS.title||'Encounter';
   }
 
 </script>
