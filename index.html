@@ -5163,6 +5163,7 @@
   <!-- ACTION AREA -->
   <div id="combat-actions">
     <div id="combat-actor-label">Awaiting…</div>
+    <div id="ccd-actor-sub" style="font-family:var(--ff-body);font-style:italic;font-size:0.75rem;color:var(--text-secondary);padding:0 1rem 0.2rem;min-height:1em;"></div>
     <div id="combat-skill-grid"></div>
     <div id="combat-footer-btns">
       <button class="combat-pass-btn" onclick="combatPass()">Pass Turn</button>
@@ -6267,14 +6268,15 @@ randomMapMarkers[id] = marker;
       combatTab.classList.add('pulsing');
     }
     switchTab('combat');
-    document.getElementById('combat-title').textContent = 'Entering the passage…';
-    document.getElementById('combat-phase-bar').textContent = 'Loading encounter…';
-    document.getElementById('combat-init-track').innerHTML = '';
-    document.getElementById('combat-enemies').innerHTML = '';
-    document.getElementById('combat-allies').innerHTML = '';
-    document.getElementById('combat-log-panel').innerHTML = '';
-    document.getElementById('combat-skill-grid').innerHTML = '';
-    document.getElementById('ccd-actor-sub').textContent = '';
+    const _gel = id => document.getElementById(id);
+    if (_gel('combat-title'))      _gel('combat-title').textContent      = 'Entering the passage…';
+    if (_gel('combat-phase-bar'))  _gel('combat-phase-bar').textContent  = 'Loading encounter…';
+    if (_gel('combat-init-track')) _gel('combat-init-track').innerHTML   = '';
+    if (_gel('combat-enemies'))    _gel('combat-enemies').innerHTML      = '';
+    if (_gel('combat-allies'))     _gel('combat-allies').innerHTML       = '';
+    if (_gel('combat-log-panel'))  _gel('combat-log-panel').innerHTML    = '';
+    if (_gel('combat-skill-grid')) _gel('combat-skill-grid').innerHTML   = '';
+    if (_gel('ccd-actor-sub'))     _gel('ccd-actor-sub').textContent     = '';
 
     const eventData = (eventOrKey && typeof eventOrKey === 'object') ? eventOrKey : null;
     const forcedEnemyKeys = eventData?.enemies || null;
