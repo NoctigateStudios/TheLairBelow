@@ -5579,6 +5579,7 @@
   // World events loaded from Firebase — split into dm (placed by DM) and random (spawned near player)
   let dmMapMarkers = {};     // evtId -> leaflet marker
   let randomMapMarkers = {}; // evtId -> leaflet marker
+  const _removedEventIds = new Set(); // IDs deleted locally — skip re-adding on poll
 
   async function loadWorldEvents(lat, lng) {
     try {
@@ -5594,7 +5595,7 @@
         const elat = ev.lat ?? ev.location?.lat;
         const elng = ev.lng ?? ev.location?.lng;
         if (!elat || !elng) return;
-        if (dmMapMarkers[id]) return; // already on map
+        if (dmMapMarkers[id] || _removedEventIds.has(id)) return; // already on map or locally removed
         const normEv = { ...ev, lat: elat, lng: elng, id, src: 'dm' };
         const marker = L.marker([elat, elng], {
           icon: makeIcon(ev.type || 'gather', 'dm')
@@ -5611,12 +5612,13 @@
       const randomEvts = data.random || {};
       Object.entries(randomEvts).forEach(([id, ev]) => {
         if (!ev) return;
-        if (randomMapMarkers[id]) return;
+        if (randomMapMarkers[id] || _removedEventIds.has(id)) return;
         // Offset from player position using stored dlat/dlng, or absolute lat/lng
         const elat = ev.lat !== undefined ? ev.lat : lat + (ev.dlat || 0);
         const elng = ev.lng !== undefined ? ev.lng : lng + (ev.dlng || 0);
+        const normEvR = { ...ev, id, src: 'random', lat: elat, lng: elng };
         const marker = L.marker([elat, elng], { icon: makeIcon(ev.type || 'gather', 'random') }).addTo(map);
-        marker.bindPopup(makeEventPopup(ev), { maxWidth: 240, className: '' });
+        marker.bindPopup(makeEventPopup(normEvR), { maxWidth: 240, className: '' });
         randomMapMarkers[id] = marker;
       });
       Object.keys(randomMapMarkers).forEach(id => {
@@ -7908,22 +7910,6 @@ async function refreshFieldEventCards() {
     const worldData = worldRes.ok ? await worldRes.json() : {};
     const inboxData = inboxRes.ok ? await inboxRes.json() : {};
 
-    // Normalize WORLD events — worldData is { dm:{id:ev,...}, random:{id:ev,...} }
-    // Must flatten both sub-collections, preserving src for correct Firebase deletion
-    const normWorld = [
-      ...Object.entries((worldData?.dm     || {})).map(([id, ev]) => ({ ...ev, id, src: 'dm' })),
-      ...Object.entries((worldData?.random || {})).map(([id, ev]) => ({ ...ev, id, src: 'random' })),
-    ].filter(ev => ev && ev.title).map(ev => {
-      const lat = Number(ev.lat ?? ev.location?.lat ?? ev.latitude ?? ev.coords?.lat);
-      const lng = Number(ev.lng ?? ev.location?.lng ?? ev.longitude ?? ev.coords?.lng);
-      return {
-        ...ev,
-        lat, lng,
-        title: ev.title || ev.body || 'Unknown Event',
-        desc:  ev.desc  || ev.body || '',
-      };
-    });
-
     // Normalize PLAYER inbox events
     const normInbox = Object.entries(inboxData || {}).map(([id, ev]) => ({
       ...ev,
@@ -7933,11 +7919,11 @@ async function refreshFieldEventCards() {
       desc: ev.desc || ev.body || ''
     }));
 
-    // Optional cache
-    _cachedWorldEvents = normWorld;
+    // Cache raw world data (used by other functions)
+    _cachedWorldEvents = worldData;
 
-    // Pass CLEAN data to renderer
-    renderFieldEventCards(normWorld, normInbox);
+    // Pass raw worldData — renderFieldEventCards handles dm/random flattening internally
+    renderFieldEventCards(worldData, normInbox);
 
   } catch (e) {
     console.error("refreshFieldEventCards error:", e);
@@ -11408,6 +11394,7 @@ async function refreshFieldEventCards() {
   // Remove a map marker by event id
   function removeEventMarkerById(evId) {
     if (!evId) return;
+    _removedEventIds.add(evId); // prevent re-add on next poll
     if (dmMapMarkers[evId])       { dmMapMarkers[evId].remove(); delete dmMapMarkers[evId]; }
     if (randomMapMarkers[evId])   { randomMapMarkers[evId].remove(); delete randomMapMarkers[evId]; }
     if (_inboxMapMarkers[evId])   { _inboxMapMarkers[evId].remove(); delete _inboxMapMarkers[evId]; }
