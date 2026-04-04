@@ -219,6 +219,67 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
 .tb-ctx-item:hover { background:rgba(201,168,76,0.08); color:var(--gold); }
 .tb-ctx-sep { border-top:1px solid var(--border); margin:0.2rem 0; }
 
+
+/* Edge condition labels */
+.tb-edge-label {
+  font-family: var(--ff-h);
+  font-size: 10px;
+  fill: var(--gold);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+  letter-spacing: 0.04em;
+}
+.tb-edge-cond-bg {
+  fill: var(--deep);
+  stroke: var(--gold-dim);
+  stroke-width: 1;
+  rx: 2;
+}
+.tb-edge-cond-bg.cond-level    { stroke: var(--amber-bright); }
+.tb-edge-cond-bg.cond-resource { stroke: var(--gold); }
+.tb-edge-cond-bg.cond-quest    { stroke: var(--dm-bright); }
+.tb-edge-cond-bg.cond-skill    { stroke: var(--indigo-bright); }
+.tb-edge-cond-bg.cond-trait    { stroke: var(--viridian-bright); }
+
+/* Edge inspector modal */
+#tb-edge-modal {
+  display: none;
+  position: absolute;
+  z-index: 200;
+  background: var(--deep);
+  border: 1px solid var(--gold-dim);
+  padding: 1rem;
+  min-width: 260px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+#tb-edge-modal.open { display: block; }
+#tb-edge-modal-title {
+  font-family: var(--ff-h);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  margin-bottom: 0.7rem;
+  text-transform: uppercase;
+}
+#tb-edge-modal .fld { margin-bottom: 0.5rem; }
+#tb-edge-modal .fld label { font-size: 0.44rem; letter-spacing: 0.12em; }
+#tb-edge-modal input, #tb-edge-modal select {
+  width: 100%; background: var(--shadow); border: 1px solid var(--stone);
+  color: var(--bone); padding: 0.3rem 0.4rem; font-family: var(--ff-b); font-size: 0.78rem; outline: none;
+}
+#tb-edge-modal input:focus { border-color: var(--gold-dim); }
+.tb-cond-chips {
+  display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.5rem;
+}
+.tb-cond-chip {
+  font-family: var(--ff-h); font-size: 0.42rem; letter-spacing: 0.08em;
+  padding: 0.18rem 0.45rem; border: 1px solid var(--stone);
+  color: var(--mist); cursor: pointer; transition: all 0.12s;
+}
+.tb-cond-chip:hover { border-color: var(--gold-dim); color: var(--gold); }
+.tb-cond-chip.active { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.08); }
+
 </style>
 </head>
 <body>
@@ -248,7 +309,7 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
   <button class="nb" onclick="nav('forge')" data-page="forge"><span class="ni">⚗</span> Recipes &amp; Craft</button>
   <button class="nb" onclick="nav('buildings')" data-page="buildings"><span class="ni">⬡</span> Buildings &amp; Skills</button>
   <div class="nav-sec">Rites</div>
-  <button class="nb" onclick="nav('trees')" data-page="trees"><span class="ni">✶</span> Tree Builder</button>
+  <button class="nb" onclick="nav('trees');tbNavActivate()" data-page="trees"><span class="ni">✶</span> Tree Builder</button>
 <button class="nb" onclick="nav('broadcast')" data-page="broadcast"><span class="ni">✦</span> Proclamation</button>
   <button class="nb" onclick="nav('tarot')" data-page="tarot"><span class="ni">🜃</span> Tarot Arcana</button>
   <div class="sb-seekers"><div class="sb-seekers-lbl">Seekers</div><div id="sidebar-players"><span style="font-family:var(--ff-b);font-style:italic;font-size:0.79rem;color:var(--ash);">Consulting the ether…</span></div></div>
@@ -3943,43 +4004,82 @@ function tbOnTouchEnd() { _tbTouchPan = null; _tbTouchPinchDist = null; }
 function tbRenderEdges() {
   const svg = document.getElementById('tb-svg');
   if (!svg) return;
-  // Remove old static edges
   svg.querySelectorAll('.tb-edge-group').forEach(g => g.remove());
-  // Arrowhead defs
   if (!svg.querySelector('defs')) {
-    svg.innerHTML = `<defs>
+    const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+    defs.innerHTML = `
       <marker id="tb-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
         <path d="M0,0 L0,6 L8,3 z" class="tb-edge-arrow"/>
-      </marker>
-    </defs>`;
+      </marker>`;
+    svg.appendChild(defs);
   }
+
   TB.edges.forEach((edge, i) => {
-    const fn = TB.nodes[edge.from], tn = TB.nodes[edge.to];
-    if (!fn || !tn) return;
-    const fEl = document.getElementById('tbnode-' + edge.from);
-    const tEl = document.getElementById('tbnode-' + edge.to);
-    if (!fEl || !tEl) return;
-    const fx = fn.x * TB.scale + TB.pan.x + fEl.offsetWidth * TB.scale / 2;
-    const fy = fn.y * TB.scale + TB.pan.y + fEl.offsetHeight * TB.scale;
-    const tx = tn.x * TB.scale + TB.pan.x + tEl.offsetWidth * TB.scale / 2;
-    const ty = tn.y * TB.scale + TB.pan.y;
-    const my = (fy + ty) / 2;
+    const fn=TB.nodes[edge.from], tn=TB.nodes[edge.to];
+    if (!fn||!tn) return;
+    const fEl=document.getElementById('tbnode-'+edge.from);
+    const tEl=document.getElementById('tbnode-'+edge.to);
+    if (!fEl||!tEl) return;
+
+    const fx = fn.x*TB.scale+TB.pan.x + fEl.offsetWidth*TB.scale/2;
+    const fy = fn.y*TB.scale+TB.pan.y + fEl.offsetHeight*TB.scale;
+    const tx = tn.x*TB.scale+TB.pan.x + tEl.offsetWidth*TB.scale/2;
+    const ty = tn.y*TB.scale+TB.pan.y;
+    const my = (fy+ty)/2;
+    const pathD = `M${fx},${fy} C${fx},${my} ${tx},${my} ${tx},${ty}`;
+
     const g = document.createElementNS('http://www.w3.org/2000/svg','g');
     g.className.baseVal = 'tb-edge-group';
-    // Clickable hitbox
-    const hit = document.createElementNS('http://www.w3.org/2000/svg','path');
-    hit.setAttribute('d',`M${fx},${fy} C${fx},${my} ${tx},${my} ${tx},${ty}`);
-    hit.setAttribute('stroke','transparent'); hit.setAttribute('stroke-width','12'); hit.setAttribute('fill','none');
-    hit.style.cursor = 'pointer';
-    hit.addEventListener('click', (ev) => { ev.stopPropagation(); if (confirm('Remove this connection?')) { TB.edges.splice(i,1); tbRenderEdges(); tbRenderMinimap(); if(TB.selected)tbOpenInspector(TB.selected); } });
-    hit.addEventListener('mouseenter', () => path.classList.add('hovered'));
-    hit.addEventListener('mouseleave', () => path.classList.remove('hovered'));
-    // Visible path
+
+    // Visible edge path — dashed if conditional
     const path = document.createElementNS('http://www.w3.org/2000/svg','path');
-    path.setAttribute('d',`M${fx},${fy} C${fx},${my} ${tx},${my} ${tx},${ty}`);
+    path.setAttribute('d', pathD);
     path.className.baseVal = 'tb-edge';
+    if (edge.condition) path.setAttribute('stroke-dasharray', '8 4');
     path.setAttribute('marker-end','url(#tb-arrow)');
-    g.appendChild(path); g.appendChild(hit);
+
+    // Transparent wider hit zone
+    const hit = document.createElementNS('http://www.w3.org/2000/svg','path');
+    hit.setAttribute('d', pathD);
+    hit.setAttribute('stroke','transparent');
+    hit.setAttribute('stroke-width','14');
+    hit.setAttribute('fill','none');
+    hit.style.cursor = 'pointer';
+    hit.addEventListener('mouseenter', () => { path.classList.add('hovered'); condBg&&condBg.classList.add('hovered'); });
+    hit.addEventListener('mouseleave', () => { path.classList.remove('hovered'); condBg&&condBg.classList.remove('hovered'); });
+    hit.addEventListener('click', (ev) => { ev.stopPropagation(); tbOpenEdgeModal(i, ev.clientX, ev.clientY); });
+
+    g.appendChild(path);
+
+    // Condition label at midpoint of curve
+    let condBg = null;
+    if (edge.condition || edge.label) {
+      const lbl = edge.label || tbCondShortLabel(edge.condition);
+      const mx2 = (fx + tx) / 2;
+      const my2 = my;
+
+      // Detect condition type for color
+      const condType = tbCondType(edge.condition||'');
+
+      // Background rect (SVG foreignObject doesn't work well — use rect+text)
+      const textW = Math.max(60, lbl.length * 6.5 + 14);
+      condBg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      condBg.setAttribute('x', mx2 - textW/2);
+      condBg.setAttribute('y', my2 - 11);
+      condBg.setAttribute('width', textW);
+      condBg.setAttribute('height', 18);
+      condBg.className.baseVal = `tb-edge-cond-bg cond-${condType}`;
+      g.appendChild(condBg);
+
+      const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+      text.setAttribute('x', mx2);
+      text.setAttribute('y', my2 + 0.5);
+      text.className.baseVal = 'tb-edge-label';
+      text.textContent = lbl;
+      g.appendChild(text);
+    }
+
+    g.appendChild(hit);
     svg.appendChild(g);
   });
 }
@@ -4176,12 +4276,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Override nav to init tree builder on first open
-const _tbNavOriginal = window.nav;
+// Tree builder init — triggered from nav button onclick, no nav override needed
 let _tbInitDone = false;
-function nav(n) {
-  _tbNavOriginal?.(n);
-  if (n === 'trees' && !_tbInitDone) { _tbInitDone = true; setTimeout(tbInit, 50); }
-  if (n === 'trees') tbLoadTreeList().catch(()=>{});
+function tbNavActivate() {
+  if (!_tbInitDone) { _tbInitDone = true; setTimeout(tbInit, 50); }
+  tbLoadTreeList().catch(()=>{});
 }
 
 
