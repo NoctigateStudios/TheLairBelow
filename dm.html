@@ -130,6 +130,95 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
 .check-row{border:1px solid rgba(201,168,76,0.15);padding:0.7rem 0.8rem;margin-bottom:0.5rem;background:var(--deep);position:relative;}
 .check-row-del{position:absolute;top:0.4rem;right:0.5rem;background:none;border:none;color:var(--ash);cursor:pointer;font-size:0.9rem;}
 
+/* ══ TREE BUILDER ══════════════════════════════════════════ */
+#page-trees { position:relative; display:flex; flex-direction:column; height:calc(100vh - 2rem); padding:0; }
+#page-trees .pg-head { padding:1.2rem 1.5rem 0.8rem; flex-shrink:0; }
+
+/* Toolbar */
+#tb-toolbar { flex-shrink:0; display:flex; flex-wrap:wrap; align-items:center; gap:0.6rem; padding:0.6rem 1.5rem; background:rgba(10,8,15,0.8); border-bottom:1px solid var(--border); }
+#tb-type-tabs { display:flex; gap:0.3rem; flex-wrap:wrap; }
+.tb-tab { background:none; border:1px solid var(--stone); color:var(--mist); padding:0.3rem 0.7rem; font-family:var(--ff-h); font-size:0.48rem; letter-spacing:0.1em; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.tb-tab:hover { border-color:var(--gold-dim); color:var(--bone); }
+.tb-tab.active { border-color:var(--gold); color:var(--gold); background:rgba(201,168,76,0.08); }
+#tb-tree-controls { display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; margin-left:auto; }
+#tb-tree-sel, #tb-tree-name { background:var(--abyss); border:1px solid var(--stone); color:var(--bone); padding:0.3rem 0.5rem; font-family:var(--ff-b); font-size:0.78rem; outline:none; }
+#tb-tree-sel:focus, #tb-tree-name:focus { border-color:var(--gold-dim); }
+
+/* Workspace */
+#tb-workspace { flex:1; position:relative; overflow:hidden; background:var(--void); background-image: radial-gradient(circle, rgba(201,168,76,0.04) 1px, transparent 1px); background-size:32px 32px; cursor:default; user-select:none; }
+#tb-svg { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1; overflow:visible; }
+#tb-canvas { position:absolute; top:0; left:0; width:100%; height:100%; z-index:2; }
+#tb-empty-hint { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; pointer-events:none; transition:opacity 0.3s; }
+
+/* Nodes */
+.tb-node {
+  position:absolute; z-index:10;
+  min-width:140px; max-width:180px;
+  background:var(--shadow); border:1px solid var(--stone);
+  font-family:var(--ff-h); cursor:move;
+  transition:border-color 0.15s, box-shadow 0.15s;
+  border-radius:2px;
+}
+.tb-node:hover { border-color:var(--gold-dim); box-shadow:0 0 16px rgba(201,168,76,0.12); }
+.tb-node.selected { border-color:var(--gold); box-shadow:0 0 20px rgba(201,168,76,0.22); z-index:20; }
+.tb-node.is-root { border-color:var(--dm-bright); box-shadow:0 0 18px rgba(168,85,247,0.2); }
+
+/* Node color variants by type */
+.tb-node.type-quest   { border-color:rgba(212,137,10,0.5); }
+.tb-node.type-skill   { border-color:rgba(61,61,170,0.5); }
+.tb-node.type-class   { border-color:rgba(123,47,255,0.5); }
+.tb-node.type-building{ border-color:rgba(45,122,95,0.5); }
+
+.tb-node-head { display:flex; align-items:center; gap:0.5rem; padding:0.55rem 0.65rem; border-bottom:1px solid rgba(201,168,76,0.1); }
+.tb-node-icon { font-size:0.9rem; flex-shrink:0; opacity:0.7; }
+.tb-node-label { font-size:0.68rem; letter-spacing:0.04em; color:var(--bone); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tb-node-root-badge { font-size:0.36rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--dm-bright); border:1px solid rgba(168,85,247,0.4); padding:0.08rem 0.3rem; flex-shrink:0; }
+
+.tb-node-body { padding:0.35rem 0.65rem 0.5rem; }
+.tb-node-desc { font-family:var(--ff-b); font-style:italic; font-size:0.7rem; color:var(--mist); line-height:1.4; margin-bottom:0.25rem; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.tb-node-req  { font-size:0.52rem; color:var(--gold-dim); letter-spacing:0.04em; }
+.tb-node-cat  { display:inline-block; font-size:0.42rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--mist); border:1px solid var(--stone); padding:0.06rem 0.28rem; margin-top:0.2rem; }
+
+/* Connection ports */
+.tb-port { position:absolute; width:14px; height:14px; background:var(--stone); border:2px solid var(--ash); border-radius:50%; cursor:crosshair; transition:all 0.15s; z-index:30; }
+.tb-port:hover { background:var(--gold); border-color:var(--gold-bright); box-shadow:0 0 8px rgba(201,168,76,0.5); transform:scale(1.3); }
+.tb-port-out { bottom:-7px; left:50%; transform:translateX(-50%); }
+.tb-port-in  { top:-7px;    left:50%; transform:translateX(-50%); }
+.tb-port-out:hover { transform:translateX(-50%) scale(1.3); }
+.tb-port-in:hover  { transform:translateX(-50%) scale(1.3); }
+
+/* SVG edges */
+.tb-edge { fill:none; stroke:var(--gold-dim); stroke-width:1.5; opacity:0.6; }
+.tb-edge.hovered { stroke:var(--gold); opacity:1; stroke-width:2; cursor:pointer; }
+.tb-edge-arrow { fill:var(--gold-dim); }
+
+/* Inspector panel */
+.tb-inspector-closed { display:none; }
+#tb-inspector {
+  position:absolute; right:0; top:0; bottom:0; width:260px;
+  background:linear-gradient(180deg,var(--abyss) 0%,var(--void) 100%);
+  border-left:1px solid var(--border); z-index:50;
+  display:flex; flex-direction:column; padding:1rem; gap:0.6rem; overflow-y:auto;
+}
+#tb-inspector.tb-inspector-closed { display:none; }
+#tb-inspector-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.2rem; font-family:var(--ff-h); font-size:0.75rem; letter-spacing:0.08em; color:var(--gold); }
+#tb-inspector .fld label { font-size:0.46rem; letter-spacing:0.12em; }
+#tb-inspector input, #tb-inspector textarea, #tb-inspector select { width:100%; background:var(--shadow); border:1px solid var(--stone); color:var(--bone); padding:0.35rem 0.45rem; font-family:var(--ff-b); font-size:0.78rem; outline:none; resize:vertical; }
+#tb-inspector input:focus, #tb-inspector textarea:focus { border-color:var(--gold-dim); }
+
+/* Minimap */
+#tb-minimap { position:absolute; bottom:1rem; left:1rem; z-index:40; border:1px solid var(--border); background:rgba(5,4,7,0.88); padding:0.3rem; }
+#tb-minimap-canvas { display:block; }
+
+/* Drag preview edge */
+#tb-drag-edge { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5; }
+
+/* Context menu */
+#tb-ctx { position:fixed; z-index:999; background:var(--deep); border:1px solid var(--border); min-width:160px; display:none; }
+.tb-ctx-item { padding:0.5rem 0.8rem; font-family:var(--ff-h); font-size:0.58rem; letter-spacing:0.06em; cursor:pointer; color:var(--bone); display:flex; align-items:center; gap:0.5rem; }
+.tb-ctx-item:hover { background:rgba(201,168,76,0.08); color:var(--gold); }
+.tb-ctx-sep { border-top:1px solid var(--border); margin:0.2rem 0; }
+
 </style>
 </head>
 <body>
@@ -159,7 +248,8 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
   <button class="nb" onclick="nav('forge')" data-page="forge"><span class="ni">⚗</span> Recipes &amp; Craft</button>
   <button class="nb" onclick="nav('buildings')" data-page="buildings"><span class="ni">⬡</span> Buildings &amp; Skills</button>
   <div class="nav-sec">Rites</div>
-  <button class="nb" onclick="nav('broadcast')" data-page="broadcast"><span class="ni">✦</span> Proclamation</button>
+  <button class="nb" onclick="nav('trees')" data-page="trees"><span class="ni">✶</span> Tree Builder</button>
+<button class="nb" onclick="nav('broadcast')" data-page="broadcast"><span class="ni">✦</span> Proclamation</button>
   <button class="nb" onclick="nav('tarot')" data-page="tarot"><span class="ni">🜃</span> Tarot Arcana</button>
   <div class="sb-seekers"><div class="sb-seekers-lbl">Seekers</div><div id="sidebar-players"><span style="font-family:var(--ff-b);font-style:italic;font-size:0.79rem;color:var(--ash);">Consulting the ether…</span></div></div>
 </nav>
@@ -3445,6 +3535,711 @@ async function hardDeleteCharacter() {
   } catch(e) { log('Error: '+e.message,'err'); }
 }
 
+
+// ══════════════════════════════════════════════════════════════
+// TREE BUILDER
+// ══════════════════════════════════════════════════════════════
+const TB = {
+  nodes: {},          // id → node data
+  edges: [],          // [{from, to}]
+  selected: null,     // selected node id
+  type: 'quest',      // current tree type
+  pan: {x:0, y:0},   // canvas pan offset
+  scale: 1,           // zoom
+  dragging: null,     // {id, ox, oy}
+  connecting: null,   // {fromId, el}
+  counter: 0,
+  currentTreeKey: null,
+
+  ICONS: { quest:'○', skill:'✦', class:'◈', building:'⚗', custom:'◇' },
+  FB_PATH: 'world/trees',
+};
+
+// ── Init ────────────────────────────────────────────────────
+function tbInit() {
+  const ws = document.getElementById('tb-workspace');
+  if (!ws) return;
+  ws.addEventListener('mousedown', tbOnWsMouseDown);
+  ws.addEventListener('mousemove', tbOnWsMouseMove);
+  ws.addEventListener('mouseup',   tbOnWsMouseUp);
+  ws.addEventListener('wheel',     tbOnWheel, { passive:false });
+  ws.addEventListener('contextmenu', tbOnCtxMenu);
+
+  // Touch support
+  ws.addEventListener('touchstart', tbOnTouchStart, { passive:false });
+  ws.addEventListener('touchmove',  tbOnTouchMove,  { passive:false });
+  ws.addEventListener('touchend',   tbOnTouchEnd);
+
+  document.addEventListener('click', () => hideTbCtx());
+  tbLoadTreeList();
+  tbRenderEdges();
+}
+
+// ── Node creation ─────────────────────────────────────────
+function tbAddNode(x, y) {
+  const id = 'n' + (++TB.counter) + '_' + Date.now().toString(36);
+  const ws = document.getElementById('tb-workspace');
+  const cx = (ws.offsetWidth  / 2 - TB.pan.x) / TB.scale;
+  const cy = (ws.offsetHeight / 2 - TB.pan.y) / TB.scale;
+  TB.nodes[id] = {
+    id, label: 'New Node', desc: '', cat: TB.type, req: '', key: id,
+    x: x !== undefined ? x : cx + (Math.random()-0.5)*80,
+    y: y !== undefined ? y : cy + (Math.random()-0.5)*80,
+    isRoot: Object.keys(TB.nodes).length === 0,
+  };
+  tbRenderNode(id);
+  tbSelectNode(id);
+  tbUpdateHint();
+  tbRenderMinimap();
+}
+
+function tbRenderNode(id) {
+  const n = TB.nodes[id];
+  if (!n) return;
+  let el = document.getElementById('tbnode-' + id);
+  const isNew = !el;
+  if (isNew) {
+    el = document.createElement('div');
+    el.id = 'tbnode-' + id;
+    el.className = 'tb-node';
+    document.getElementById('tb-canvas').appendChild(el);
+    // Port OUT (bottom)
+    const portOut = document.createElement('div');
+    portOut.className = 'tb-port tb-port-out';
+    portOut.dataset.nodeId = id;
+    portOut.dataset.portType = 'out';
+    portOut.addEventListener('mousedown', tbOnPortMouseDown);
+    portOut.addEventListener('touchstart', tbOnPortTouchStart, { passive:false });
+    el.appendChild(portOut);
+    // Port IN (top)
+    const portIn = document.createElement('div');
+    portIn.className = 'tb-port tb-port-in';
+    portIn.dataset.nodeId = id;
+    portIn.dataset.portType = 'in';
+    el.appendChild(portIn);
+    // Drag
+    el.addEventListener('mousedown', tbOnNodeMouseDown);
+    el.addEventListener('touchstart', tbOnNodeTouchStart, { passive:false });
+    el.addEventListener('dblclick', () => tbSelectNode(id));
+  }
+  const icon = TB.ICONS[n.cat] || TB.ICONS.custom;
+  const typeCls = 'type-' + (n.cat || 'custom');
+  el.className = `tb-node ${typeCls}${n.isRoot ? ' is-root' : ''}${TB.selected === id ? ' selected' : ''}`;
+  el.innerHTML = `
+    <div class="tb-node-head">
+      <span class="tb-node-icon">${icon}</span>
+      <span class="tb-node-label">${n.label || 'Untitled'}</span>
+      ${n.isRoot ? '<span class="tb-node-root-badge">Root</span>' : ''}
+    </div>
+    <div class="tb-node-body">
+      ${n.desc ? `<div class="tb-node-desc">${n.desc}</div>` : ''}
+      ${n.req  ? `<div class="tb-node-req">⚑ ${n.req}</div>` : ''}
+      ${n.cat  ? `<span class="tb-node-cat">${n.cat}</span>` : ''}
+    </div>`;
+
+  // Re-append ports (innerHTML wipes them)
+  let pOut = document.querySelector(`#tbnode-${id} .tb-port-out`);
+  if (!pOut) {
+    pOut = document.createElement('div');
+    pOut.className = 'tb-port tb-port-out';
+    pOut.dataset.nodeId = id; pOut.dataset.portType = 'out';
+    pOut.addEventListener('mousedown', tbOnPortMouseDown);
+    pOut.addEventListener('touchstart', tbOnPortTouchStart, { passive:false });
+    el.appendChild(pOut);
+  }
+  let pIn = document.querySelector(`#tbnode-${id} .tb-port-in`);
+  if (!pIn) {
+    pIn = document.createElement('div');
+    pIn.className = 'tb-port tb-port-in';
+    pIn.dataset.nodeId = id; pIn.dataset.portType = 'in';
+    el.appendChild(pIn);
+  }
+
+  tbSetNodePos(id);
+}
+
+function tbSetNodePos(id) {
+  const n = TB.nodes[id];
+  const el = document.getElementById('tbnode-' + id);
+  if (!n || !el) return;
+  const px = n.x * TB.scale + TB.pan.x;
+  const py = n.y * TB.scale + TB.pan.y;
+  el.style.transform = `translate(${px}px, ${py}px) scale(${TB.scale})`;
+  el.style.transformOrigin = 'top left';
+}
+
+function tbUpdateAllPositions() {
+  Object.keys(TB.nodes).forEach(tbSetNodePos);
+  tbRenderEdges();
+  tbRenderMinimap();
+}
+
+// ── Selection ────────────────────────────────────────────
+function tbSelectNode(id) {
+  if (TB.selected) {
+    const prev = document.getElementById('tbnode-' + TB.selected);
+    if (prev) prev.classList.remove('selected');
+  }
+  TB.selected = id;
+  if (id) {
+    const el = document.getElementById('tbnode-' + id);
+    if (el) el.classList.add('selected');
+    tbOpenInspector(id);
+  } else {
+    tbCloseInspector();
+  }
+}
+
+function tbOpenInspector(id) {
+  const n = TB.nodes[id];
+  if (!n) return;
+  const insp = document.getElementById('tb-inspector');
+  insp.classList.remove('tb-inspector-closed');
+  document.getElementById('tbi-label').value = n.label || '';
+  document.getElementById('tbi-desc').value  = n.desc  || '';
+  document.getElementById('tbi-cat').value   = n.cat   || '';
+  document.getElementById('tbi-req').value   = n.req   || '';
+  document.getElementById('tbi-key').value   = n.key   || id;
+  document.getElementById('tb-inspector-title').textContent = n.label || 'Node';
+  // Connections
+  const connected = TB.edges.filter(e => e.from === id || e.to === id)
+    .map(e => e.from === id ? '→ ' + (TB.nodes[e.to]?.label || e.to) : '← ' + (TB.nodes[e.from]?.label || e.from));
+  document.getElementById('tbi-connections').textContent = connected.length ? connected.join(', ') : 'None';
+}
+
+function tbCloseInspector() {
+  document.getElementById('tb-inspector')?.classList.add('tb-inspector-closed');
+  if (TB.selected) {
+    const el = document.getElementById('tbnode-' + TB.selected);
+    if (el) el.classList.remove('selected');
+    TB.selected = null;
+  }
+}
+
+function tbUpdateNode(field, value) {
+  if (!TB.selected) return;
+  TB.nodes[TB.selected][field] = value;
+  if (field === 'label') document.getElementById('tb-inspector-title').textContent = value || 'Node';
+  tbRenderNode(TB.selected);
+}
+
+function tbSetRoot() {
+  if (!TB.selected) return;
+  Object.keys(TB.nodes).forEach(id => { TB.nodes[id].isRoot = false; tbRenderNode(id); });
+  TB.nodes[TB.selected].isRoot = true;
+  tbRenderNode(TB.selected);
+}
+
+function tbDeleteNode() {
+  if (!TB.selected) return;
+  const id = TB.selected;
+  const el = document.getElementById('tbnode-' + id);
+  if (el) el.remove();
+  delete TB.nodes[id];
+  TB.edges = TB.edges.filter(e => e.from !== id && e.to !== id);
+  TB.selected = null;
+  tbCloseInspector();
+  tbRenderEdges();
+  tbUpdateHint();
+  tbRenderMinimap();
+}
+
+// ── Dragging nodes ────────────────────────────────────────
+function tbOnNodeMouseDown(e) {
+  if (e.target.classList.contains('tb-port')) return;
+  e.stopPropagation();
+  const id = e.currentTarget.id.replace('tbnode-', '');
+  tbSelectNode(id);
+  const n = TB.nodes[id];
+  if (!n) return;
+  const startX = e.clientX, startY = e.clientY;
+  const origX = n.x, origY = n.y;
+  function onMove(ev) {
+    const dx = (ev.clientX - startX) / TB.scale;
+    const dy = (ev.clientY - startY) / TB.scale;
+    n.x = origX + dx; n.y = origY + dy;
+    tbSetNodePos(id); tbRenderEdges(); tbRenderMinimap();
+  }
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+function tbOnNodeTouchStart(e) {
+  if (e.target.classList.contains('tb-port')) return;
+  e.preventDefault(); e.stopPropagation();
+  const id = e.currentTarget.id.replace('tbnode-', '');
+  tbSelectNode(id);
+  const n = TB.nodes[id]; if (!n) return;
+  const t0 = e.touches[0];
+  const startX = t0.clientX, startY = t0.clientY;
+  const origX = n.x, origY = n.y;
+  function onMove(ev) {
+    const t = ev.touches[0];
+    n.x = origX + (t.clientX - startX) / TB.scale;
+    n.y = origY + (t.clientY - startY) / TB.scale;
+    tbSetNodePos(id); tbRenderEdges(); tbRenderMinimap();
+  }
+  function onEnd() {
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onEnd);
+  }
+  document.addEventListener('touchmove', onMove, { passive:false });
+  document.addEventListener('touchend', onEnd);
+}
+
+// ── Port connection dragging ───────────────────────────────
+function tbOnPortMouseDown(e) {
+  e.stopPropagation(); e.preventDefault();
+  const fromId = e.currentTarget.dataset.nodeId;
+  const ws = document.getElementById('tb-workspace');
+  const wsRect = ws.getBoundingClientRect();
+  // Draw a live SVG line
+  const svg = document.getElementById('tb-svg');
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  line.setAttribute('stroke', 'var(--gold)'); line.setAttribute('stroke-width','2');
+  line.setAttribute('fill','none'); line.setAttribute('stroke-dasharray','6 3');
+  svg.appendChild(line);
+
+  function getNodeCenter(id) {
+    const n = TB.nodes[id]; if (!n) return {x:0,y:0};
+    const el = document.getElementById('tbnode-' + id);
+    return { x: n.x * TB.scale + TB.pan.x + el.offsetWidth * TB.scale / 2,
+             y: n.y * TB.scale + TB.pan.y + el.offsetHeight * TB.scale / 2 };
+  }
+  function drawLine(x2, y2) {
+    const c = getNodeCenter(fromId);
+    const mx = (c.x + x2) / 2;
+    line.setAttribute('d', `M${c.x},${c.y} C${mx},${c.y} ${mx},${y2} ${x2},${y2}`);
+  }
+
+  function onMove(ev) {
+    drawLine(ev.clientX - wsRect.left, ev.clientY - wsRect.top);
+    // Highlight possible target ports
+    document.querySelectorAll('.tb-port-in').forEach(p => {
+      const pr = p.getBoundingClientRect();
+      const dist = Math.hypot(ev.clientX - (pr.left+pr.width/2), ev.clientY - (pr.top+pr.height/2));
+      p.style.background = dist < 24 ? 'var(--gold)' : '';
+    });
+  }
+  function onUp(ev) {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    line.remove();
+    document.querySelectorAll('.tb-port-in').forEach(p => p.style.background = '');
+    // Find target
+    const els = document.elementsFromPoint(ev.clientX, ev.clientY);
+    const portEl = els.find(el => el.classList.contains('tb-port-in') && el.dataset.nodeId !== fromId);
+    if (portEl) {
+      const toId = portEl.dataset.nodeId;
+      const already = TB.edges.find(e => e.from===fromId && e.to===toId);
+      if (!already) {
+        TB.edges.push({from: fromId, to: toId});
+        tbRenderEdges();
+        tbRenderMinimap();
+        if (TB.selected) tbOpenInspector(TB.selected);
+      }
+    }
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+function tbOnPortTouchStart(e) {
+  e.preventDefault(); e.stopPropagation();
+  const fromId = e.currentTarget.dataset.nodeId;
+  const ws = document.getElementById('tb-workspace');
+  const wsRect = ws.getBoundingClientRect();
+  const svg = document.getElementById('tb-svg');
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  line.setAttribute('stroke','var(--gold)'); line.setAttribute('stroke-width','2');
+  line.setAttribute('fill','none'); line.setAttribute('stroke-dasharray','6 3');
+  svg.appendChild(line);
+
+  function getCenter(id) {
+    const n=TB.nodes[id]; const el=document.getElementById('tbnode-'+id);
+    return {x:n.x*TB.scale+TB.pan.x+el.offsetWidth*TB.scale/2, y:n.y*TB.scale+TB.pan.y+el.offsetHeight*TB.scale/2};
+  }
+  function onMove(ev) {
+    const t=ev.touches[0];
+    const c=getCenter(fromId);
+    const x2=t.clientX-wsRect.left, y2=t.clientY-wsRect.top;
+    const mx=(c.x+x2)/2;
+    line.setAttribute('d',`M${c.x},${c.y} C${mx},${c.y} ${mx},${y2} ${x2},${y2}`);
+  }
+  function onEnd(ev) {
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onEnd);
+    line.remove();
+    const t = ev.changedTouches[0];
+    const els = document.elementsFromPoint(t.clientX, t.clientY);
+    const portEl = els.find(el => el.classList.contains('tb-port-in') && el.dataset.nodeId !== fromId);
+    if (portEl) {
+      const toId = portEl.dataset.nodeId;
+      if (!TB.edges.find(e=>e.from===fromId&&e.to===toId)) {
+        TB.edges.push({from:fromId, to:toId});
+        tbRenderEdges(); tbRenderMinimap();
+      }
+    }
+  }
+  document.addEventListener('touchmove', onMove, {passive:false});
+  document.addEventListener('touchend', onEnd);
+}
+
+// ── Pan & zoom ─────────────────────────────────────────────
+function tbOnWsMouseDown(e) {
+  if (e.target !== document.getElementById('tb-workspace') &&
+      e.target !== document.getElementById('tb-canvas') &&
+      e.target !== document.getElementById('tb-svg')) return;
+  if (TB.selected) tbCloseInspector();
+  const startX = e.clientX - TB.pan.x;
+  const startY = e.clientY - TB.pan.y;
+  function onMove(ev) { TB.pan.x = ev.clientX - startX; TB.pan.y = ev.clientY - startY; tbUpdateAllPositions(); }
+  function onUp()     { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+function tbOnWsMouseMove(){}
+function tbOnWsMouseUp(){}
+
+function tbOnWheel(e) {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.1 : 0.91;
+  TB.scale = Math.max(0.3, Math.min(2.5, TB.scale * factor));
+  tbUpdateAllPositions();
+}
+
+// Touch pan/pinch
+let _tbTouchPan = null, _tbTouchPinchDist = null;
+function tbOnTouchStart(e) {
+  if (e.touches.length === 1) {
+    const tgt = e.target;
+    if (tgt.classList.contains('tb-node') || tgt.closest('.tb-node')) return;
+    _tbTouchPan = { startX: e.touches[0].clientX - TB.pan.x, startY: e.touches[0].clientY - TB.pan.y };
+  } else if (e.touches.length === 2) {
+    _tbTouchPinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+  }
+}
+function tbOnTouchMove(e) {
+  if (e.touches.length === 1 && _tbTouchPan) {
+    e.preventDefault();
+    TB.pan.x = e.touches[0].clientX - _tbTouchPan.startX;
+    TB.pan.y = e.touches[0].clientY - _tbTouchPan.startY;
+    tbUpdateAllPositions();
+  } else if (e.touches.length === 2 && _tbTouchPinchDist) {
+    e.preventDefault();
+    const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    TB.scale = Math.max(0.3, Math.min(2.5, TB.scale * (d / _tbTouchPinchDist)));
+    _tbTouchPinchDist = d;
+    tbUpdateAllPositions();
+  }
+}
+function tbOnTouchEnd() { _tbTouchPan = null; _tbTouchPinchDist = null; }
+
+// ── Edge rendering ─────────────────────────────────────────
+function tbRenderEdges() {
+  const svg = document.getElementById('tb-svg');
+  if (!svg) return;
+  // Remove old static edges
+  svg.querySelectorAll('.tb-edge-group').forEach(g => g.remove());
+  // Arrowhead defs
+  if (!svg.querySelector('defs')) {
+    svg.innerHTML = `<defs>
+      <marker id="tb-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" class="tb-edge-arrow"/>
+      </marker>
+    </defs>`;
+  }
+  TB.edges.forEach((edge, i) => {
+    const fn = TB.nodes[edge.from], tn = TB.nodes[edge.to];
+    if (!fn || !tn) return;
+    const fEl = document.getElementById('tbnode-' + edge.from);
+    const tEl = document.getElementById('tbnode-' + edge.to);
+    if (!fEl || !tEl) return;
+    const fx = fn.x * TB.scale + TB.pan.x + fEl.offsetWidth * TB.scale / 2;
+    const fy = fn.y * TB.scale + TB.pan.y + fEl.offsetHeight * TB.scale;
+    const tx = tn.x * TB.scale + TB.pan.x + tEl.offsetWidth * TB.scale / 2;
+    const ty = tn.y * TB.scale + TB.pan.y;
+    const my = (fy + ty) / 2;
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.className.baseVal = 'tb-edge-group';
+    // Clickable hitbox
+    const hit = document.createElementNS('http://www.w3.org/2000/svg','path');
+    hit.setAttribute('d',`M${fx},${fy} C${fx},${my} ${tx},${my} ${tx},${ty}`);
+    hit.setAttribute('stroke','transparent'); hit.setAttribute('stroke-width','12'); hit.setAttribute('fill','none');
+    hit.style.cursor = 'pointer';
+    hit.addEventListener('click', (ev) => { ev.stopPropagation(); if (confirm('Remove this connection?')) { TB.edges.splice(i,1); tbRenderEdges(); tbRenderMinimap(); if(TB.selected)tbOpenInspector(TB.selected); } });
+    hit.addEventListener('mouseenter', () => path.classList.add('hovered'));
+    hit.addEventListener('mouseleave', () => path.classList.remove('hovered'));
+    // Visible path
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M${fx},${fy} C${fx},${my} ${tx},${my} ${tx},${ty}`);
+    path.className.baseVal = 'tb-edge';
+    path.setAttribute('marker-end','url(#tb-arrow)');
+    g.appendChild(path); g.appendChild(hit);
+    svg.appendChild(g);
+  });
+}
+
+// ── Context menu ───────────────────────────────────────────
+function tbOnCtxMenu(e) {
+  e.preventDefault();
+  const ctx = document.getElementById('tb-ctx');
+  if (!ctx) return;
+  // Find if clicked on a node
+  const nodeEl = e.target.closest('.tb-node');
+  const id = nodeEl ? nodeEl.id.replace('tbnode-','') : null;
+  ctx.innerHTML = id ? `
+    <div class="tb-ctx-item" onclick="tbSelectNode('${id}');hideTbCtx()">✎ Inspect Node</div>
+    <div class="tb-ctx-item" onclick="tbSetRoot();hideTbCtx()">⬡ Set as Root</div>
+    <div class="tb-ctx-sep"></div>
+    <div class="tb-ctx-item" onclick="tbDuplicateNode('${id}');hideTbCtx()">⊕ Duplicate</div>
+    <div class="tb-ctx-sep"></div>
+    <div class="tb-ctx-item" style="color:var(--crimson-bright)" onclick="TB.selected='${id}';tbDeleteNode();hideTbCtx()">✕ Delete Node</div>
+  ` : `
+    <div class="tb-ctx-item" onclick="tbAddNode(${(e.clientX - document.getElementById('tb-workspace').getBoundingClientRect().left - TB.pan.x)/TB.scale}, ${(e.clientY - document.getElementById('tb-workspace').getBoundingClientRect().top - TB.pan.y)/TB.scale});hideTbCtx()">+ Add Node here</div>
+    <div class="tb-ctx-item" onclick="tbFitView();hideTbCtx()">⊡ Fit View</div>
+    <div class="tb-ctx-sep"></div>
+    <div class="tb-ctx-item" onclick="tbSaveTree();hideTbCtx()">↑ Save Tree</div>
+  `;
+  ctx.style.display = 'block';
+  ctx.style.left = e.clientX + 'px';
+  ctx.style.top  = e.clientY + 'px';
+}
+function hideTbCtx() { const c=document.getElementById('tb-ctx'); if(c)c.style.display='none'; }
+
+function tbDuplicateNode(id) {
+  const n = TB.nodes[id]; if (!n) return;
+  const newId = 'n'+(++TB.counter)+'_'+Date.now().toString(36);
+  TB.nodes[newId] = { ...n, id:newId, x:n.x+40, y:n.y+40, isRoot:false };
+  tbRenderNode(newId); tbSelectNode(newId); tbRenderMinimap();
+}
+
+// ── Fit View ───────────────────────────────────────────────
+function tbFitView() {
+  const ids = Object.keys(TB.nodes); if (!ids.length) return;
+  const xs = ids.map(id => TB.nodes[id].x), ys = ids.map(id => TB.nodes[id].y);
+  const minX=Math.min(...xs)-80, minY=Math.min(...ys)-80;
+  const maxX=Math.max(...xs)+220, maxY=Math.max(...ys)+120;
+  const ws = document.getElementById('tb-workspace');
+  const scaleX = ws.offsetWidth  / (maxX - minX);
+  const scaleY = ws.offsetHeight / (maxY - minY);
+  TB.scale = Math.max(0.3, Math.min(1.5, Math.min(scaleX, scaleY) * 0.85));
+  TB.pan.x = -minX * TB.scale + (ws.offsetWidth  - (maxX-minX)*TB.scale) / 2;
+  TB.pan.y = -minY * TB.scale + (ws.offsetHeight - (maxY-minY)*TB.scale) / 2;
+  tbUpdateAllPositions();
+}
+
+// ── Minimap ────────────────────────────────────────────────
+function tbRenderMinimap() {
+  const canvas = document.getElementById('tb-minimap-canvas'); if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const ids = Object.keys(TB.nodes); if (!ids.length) return;
+  const xs = ids.map(id=>TB.nodes[id].x), ys=ids.map(id=>TB.nodes[id].y);
+  const minX=Math.min(...xs)-20, maxX=Math.max(...xs)+180;
+  const minY=Math.min(...ys)-20, maxY=Math.max(...ys)+80;
+  const sx=(maxX-minX)||1, sy=(maxY-minY)||1;
+  const scale = Math.min(W/sx, H/sy)*0.9;
+  const offX=(W-sx*scale)/2, offY=(H-sy*scale)/2;
+  // Edges
+  ctx.strokeStyle='rgba(201,168,76,0.3)'; ctx.lineWidth=1;
+  TB.edges.forEach(e => {
+    const fn=TB.nodes[e.from], tn=TB.nodes[e.to]; if(!fn||!tn) return;
+    ctx.beginPath();
+    ctx.moveTo((fn.x-minX)*scale+offX,(fn.y-minY)*scale+offY);
+    ctx.lineTo((tn.x-minX)*scale+offX,(tn.y-minY)*scale+offY);
+    ctx.stroke();
+  });
+  // Nodes
+  ids.forEach(id => {
+    const n=TB.nodes[id];
+    const mx=(n.x-minX)*scale+offX, my=(n.y-minY)*scale+offY;
+    ctx.fillStyle = n.isRoot ? 'rgba(168,85,247,0.7)' : 'rgba(201,168,76,0.5)';
+    ctx.fillRect(mx,my,Math.max(4,140*scale),Math.max(3,60*scale));
+    if (TB.selected===id) { ctx.strokeStyle='var(--gold)'; ctx.lineWidth=1; ctx.strokeRect(mx,my,140*scale,60*scale); }
+  });
+}
+
+// ── Hint toggle ────────────────────────────────────────────
+function tbUpdateHint() {
+  const hint = document.getElementById('tb-empty-hint');
+  if (hint) hint.style.opacity = Object.keys(TB.nodes).length ? '0' : '1';
+}
+
+// ── Tree type ──────────────────────────────────────────────
+function tbSetType(type) {
+  TB.type = type;
+  document.querySelectorAll('.tb-tab').forEach(t => t.classList.remove('active'));
+  event?.currentTarget?.classList.add('active');
+}
+
+// ── New tree ───────────────────────────────────────────────
+function tbNewTree() {
+  if (Object.keys(TB.nodes).length && !confirm('Clear the current tree?')) return;
+  TB.nodes = {}; TB.edges = []; TB.selected = null; TB.currentTreeKey = null;
+  TB.pan = {x:0,y:0}; TB.scale = 1; TB.counter = 0;
+  document.getElementById('tb-canvas').innerHTML = '';
+  document.getElementById('tb-svg').innerHTML = '';
+  document.getElementById('tb-tree-name').value = '';
+  document.getElementById('tb-tree-sel').value = '';
+  tbCloseInspector();
+  tbUpdateHint();
+  tbRenderEdges();
+  tbRenderMinimap();
+}
+
+// ── Save to Firebase ───────────────────────────────────────
+async function tbSaveTree() {
+  const name = document.getElementById('tb-tree-name').value.trim();
+  if (!name) { toast('Enter a tree name first.'); return; }
+  const key = TB.currentTreeKey || name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  TB.currentTreeKey = key;
+  const data = {
+    name, type: TB.type,
+    nodes: TB.nodes,
+    edges: TB.edges,
+    updatedAt: new Date().toISOString(),
+  };
+  try {
+    await fbPut(`${TB.FB_PATH}/${key}`, data);
+    log(`Tree "${name}" saved to ${TB.FB_PATH}/${key}`, 'ok');
+    toast(`✓ Tree "${name}" saved.`);
+    await tbLoadTreeList();
+    document.getElementById('tb-tree-sel').value = key;
+  } catch(e) { log('Tree save error: '+e.message,'err'); toast('✗ Save failed: '+e.message); }
+}
+
+// ── Load tree list from Firebase ───────────────────────────
+async function tbLoadTreeList() {
+  try {
+    const data = await fbGet(TB.FB_PATH);
+    const sel = document.getElementById('tb-tree-sel'); if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— new tree —</option>';
+    if (data) {
+      Object.entries(data).forEach(([key, t]) => {
+        const opt = document.createElement('option');
+        opt.value = key; opt.textContent = (t.name||key) + ' ['+t.type+']';
+        sel.appendChild(opt);
+      });
+    }
+    if (cur) sel.value = cur;
+  } catch(e) {}
+}
+
+// ── Load a tree ────────────────────────────────────────────
+async function tbLoadTree(key) {
+  if (!key) { tbNewTree(); return; }
+  try {
+    const data = await fbGet(`${TB.FB_PATH}/${key}`);
+    if (!data) { toast('Tree not found.'); return; }
+    // Clear canvas
+    document.getElementById('tb-canvas').innerHTML='';
+    document.getElementById('tb-svg').innerHTML='';
+    TB.nodes = data.nodes || {};
+    TB.edges = data.edges || [];
+    TB.type  = data.type  || 'custom';
+    TB.currentTreeKey = key;
+    TB.selected = null;
+    TB.pan = {x:0,y:0}; TB.scale = 1;
+    document.getElementById('tb-tree-name').value = data.name || key;
+    // Set active tab
+    document.querySelectorAll('.tb-tab').forEach(t => { t.classList.remove('active'); if(t.textContent.trim().toLowerCase().includes(TB.type)) t.classList.add('active'); });
+    // Render nodes
+    Object.keys(TB.nodes).forEach(id => { TB.counter++; tbRenderNode(id); });
+    tbCloseInspector();
+    tbRenderEdges();
+    tbUpdateHint();
+    setTimeout(tbFitView, 100);
+    tbRenderMinimap();
+    log(`Tree "${data.name}" loaded.`,'ok');
+  } catch(e) { log('Tree load error: '+e.message,'err'); toast('✗ Load failed.'); }
+}
+
+// ── Init when page shown ───────────────────────────────────
+const _origNav = typeof nav === 'function' ? nav : null;
+// Hook into nav to init tree builder on first visit
+document.addEventListener('DOMContentLoaded', () => {
+  // Add context menu element if not present
+  if (!document.getElementById('tb-ctx')) {
+    const ctx = document.createElement('div');
+    ctx.id = 'tb-ctx'; ctx.className = 'tb-ctx-panel';
+    // Inline minimal style needed
+    ctx.style.cssText = 'position:fixed;z-index:9999;background:var(--deep);border:1px solid var(--border);min-width:160px;display:none;';
+    document.body.appendChild(ctx);
+  }
+});
+
+// Override nav to init tree builder on first open
+const _tbNavOriginal = window.nav;
+let _tbInitDone = false;
+function nav(n) {
+  _tbNavOriginal?.(n);
+  if (n === 'trees' && !_tbInitDone) { _tbInitDone = true; setTimeout(tbInit, 50); }
+  if (n === 'trees') tbLoadTreeList().catch(()=>{});
+}
+
+
 </script>
+
+<!-- ══ TREE BUILDER PAGE ══ -->
+<div id="page-trees" class="page">
+<div class="pg-head">
+  <div class="pg-title">Tree Builder</div>
+  <div class="pg-desc">Design progression trees for quest chains, buildings, skills, classes and prestige paths. Drag nodes to connect them. Save trees to Firebase under <code style="color:var(--gold-dim)">world/trees/{key}</code>.</div>
+</div>
+<div id="tb-toolbar">
+  <div id="tb-type-tabs">
+    <button class="tb-tab active" onclick="tbSetType('quest',this)">⬡ Quest Chains</button>
+    <button class="tb-tab" onclick="tbSetType('skill',this)">✦ Skill Trees</button>
+    <button class="tb-tab" onclick="tbSetType('class',this)">◈ Classes</button>
+    <button class="tb-tab" onclick="tbSetType('building',this)">⚗ Buildings</button>
+    <button class="tb-tab" onclick="tbSetType('custom',this)">◇ Custom</button>
+  </div>
+  <div id="tb-tree-controls">
+    <select id="tb-tree-sel" onchange="tbLoadTree(this.value)"><option value="">— new tree —</option></select>
+    <input id="tb-tree-name" type="text" placeholder="Tree name…" style="width:160px;">
+    <button class="btn b-seal" onclick="tbAddNode()">+ Node</button>
+    <button class="btn b-rune" onclick="tbSaveTree()">↑ Save</button>
+    <button class="btn" onclick="tbNewTree()" style="border-color:var(--ash);color:var(--pale);">✕ Clear</button>
+    <button class="btn" onclick="tbFitView()" style="font-size:0.48rem;">⊡ Fit</button>
+  </div>
+</div>
+<div id="tb-workspace">
+  <svg id="tb-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div id="tb-canvas"></div>
+  <div id="tb-empty-hint">
+    <div style="font-family:var(--ff-h);font-size:1.1rem;color:var(--stone);letter-spacing:0.1em;">Click <strong style="color:var(--gold)">+ Node</strong> to begin</div>
+    <div style="font-size:0.8rem;color:var(--ash);margin-top:0.5rem;">Drag nodes to reposition &nbsp;·&nbsp; Drag from ● to connect &nbsp;·&nbsp; Right-click for options</div>
+  </div>
+</div>
+<div id="tb-inspector" class="tb-inspector-closed">
+  <div id="tb-inspector-head">
+    <span id="tb-inspector-title">Node</span>
+    <button onclick="tbCloseInspector()" style="background:none;border:none;color:var(--mist);cursor:pointer;font-size:1.1rem;padding:0 0.3rem;">✕</button>
+  </div>
+  <div class="fld"><label>Label</label><input type="text" id="tbi-label" oninput="tbUpdateNode('label',this.value)" placeholder="Node name"></div>
+  <div class="fld"><label>Description</label><textarea id="tbi-desc" rows="2" oninput="tbUpdateNode('desc',this.value)" placeholder="What this unlocks or requires…"></textarea></div>
+  <div class="fld"><label>Type / Category</label><input type="text" id="tbi-cat" oninput="tbUpdateNode('cat',this.value)" placeholder="e.g. combat, story, prestige…"></div>
+  <div class="fld"><label>Cost / Requirement</label><input type="text" id="tbi-req" oninput="tbUpdateNode('req',this.value)" placeholder="e.g. 500 Solar, Level 3…"></div>
+  <div class="fld"><label>Firebase Key</label><input type="text" id="tbi-key" oninput="tbUpdateNode('key',this.value)" placeholder="auto-generated"></div>
+  <div style="display:flex;gap:0.5rem;margin-top:0.8rem;">
+    <button class="btn b-rune" onclick="tbSetRoot()" style="flex:1;font-size:0.5rem;">⬡ Set Root</button>
+    <button class="btn" onclick="tbDeleteNode()" style="flex:1;border-color:var(--crimson-bright);color:var(--crimson-bright);font-size:0.5rem;">✕ Delete</button>
+  </div>
+  <div style="margin-top:0.8rem;border-top:1px solid var(--border);padding-top:0.7rem;">
+    <div style="font-family:var(--ff-h);font-size:0.48rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--mist);margin-bottom:0.4rem;">Connections</div>
+    <div id="tbi-connections" style="font-size:0.75rem;color:var(--pale);line-height:1.6;"></div>
+  </div>
+</div>
+<div id="tb-minimap"><canvas id="tb-minimap-canvas" width="160" height="100"></canvas></div>
+<div id="tb-ctx"></div>
+</div>
+
 </body>
 </html>
