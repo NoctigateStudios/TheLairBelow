@@ -4036,7 +4036,7 @@ function tbOnTouchEnd() { _tbTouchPan = null; _tbTouchPinchDist = null; }
 function tbRenderEdges() {
   const svg = document.getElementById('tb-svg');
   if (!svg) return;
-  svg.querySelectorAll('.tb-edge-group').forEach(g => g.remove());
+  svg.querySelectorAll('.tb-edge-group, .tb-edge-btn').forEach(g => g.remove());
   if (!svg.querySelector('defs')) {
     const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
     defs.innerHTML = `<marker id="tb-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
@@ -4361,6 +4361,100 @@ function tbNavActivate() {
 }
 
 
+
+// ── Edge condition functions ─────────────────────────────────────────
+let _tbEdgeModalIdx = null;
+
+function tbCondType(cond) {
+  if (!cond) return 'default';
+  const c = cond.toLowerCase();
+  if (c.includes('level') || c.includes('xp')) return 'level';
+  if (/solar|lunar|jovian|martial|saturnine|venusian|mercurial/.test(c)) return 'resource';
+  if (c.includes('quest:')) return 'quest';
+  if (c.includes('skill:')) return 'skill';
+  if (c.includes('trait:')) return 'trait';
+  if (c.includes('has:') || c.includes('stress')) return 'resource';
+  return 'default';
+}
+
+function tbCondShortLabel(cond) {
+  if (!cond) return '';
+  return cond.length > 22 ? cond.slice(0, 20) + '…' : cond;
+}
+
+function tbOpenEdgeModal(edgeIdx, clientX, clientY) {
+  _tbEdgeModalIdx = edgeIdx;
+  const edge = TB.edges[edgeIdx];
+  if (!edge) return;
+  const modal = document.getElementById('tb-edge-modal');
+  if (!modal) return;
+  const ws = document.getElementById('tb-workspace');
+  const wsRect = ws.getBoundingClientRect();
+  document.getElementById('tb-edge-cond').value = edge.condition || '';
+  document.getElementById('tb-edge-label-txt').value = edge.label || '';
+  document.getElementById('tb-edge-logic').value = edge.logic || 'AND';
+  const fn = TB.nodes[edge.from]?.label || edge.from;
+  const tn = TB.nodes[edge.to]?.label   || edge.to;
+  document.getElementById('tb-edge-modal-title').textContent =
+    (fn.length > 14 ? fn.slice(0,13)+'…' : fn) + ' → ' + (tn.length > 14 ? tn.slice(0,13)+'…' : tn);
+  let mx = clientX - wsRect.left;
+  let my = clientY - wsRect.top;
+  if (mx + 300 > ws.offsetWidth)  mx = ws.offsetWidth  - 310;
+  if (my + 360 > ws.offsetHeight) my = ws.offsetHeight - 370;
+  if (mx < 8) mx = 8; if (my < 8) my = 8;
+  modal.style.left = mx + 'px'; modal.style.top = my + 'px';
+  modal.classList.add('open');
+}
+
+function tbCloseEdgeModal() {
+  document.getElementById('tb-edge-modal')?.classList.remove('open');
+  _tbEdgeModalIdx = null;
+}
+
+function tbEdgeCondChanged() {
+  const cond = document.getElementById('tb-edge-cond')?.value.trim() || '';
+  const lblEl = document.getElementById('tb-edge-label-txt');
+  if (lblEl && !lblEl.value) lblEl.placeholder = tbCondShortLabel(cond) || 'Short label';
+}
+
+function tbCondInsert(snippet) {
+  const inp = document.getElementById('tb-edge-cond'); if (!inp) return;
+  inp.value = inp.value ? inp.value + ' && ' + snippet : snippet;
+  inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length);
+  tbEdgeCondChanged();
+}
+
+function tbEdgeCondSave() {
+  if (_tbEdgeModalIdx === null) return;
+  const cond  = document.getElementById('tb-edge-cond')?.value.trim()      || '';
+  const label = document.getElementById('tb-edge-label-txt')?.value.trim() || '';
+  const logic = document.getElementById('tb-edge-logic')?.value             || 'AND';
+  TB.edges[_tbEdgeModalIdx].condition = cond;
+  TB.edges[_tbEdgeModalIdx].label     = label;
+  TB.edges[_tbEdgeModalIdx].logic     = logic;
+  tbCloseEdgeModal(); tbRenderEdges(); tbRenderMinimap();
+}
+
+function tbEdgeCondClear() {
+  if (_tbEdgeModalIdx === null) return;
+  TB.edges[_tbEdgeModalIdx].condition = '';
+  TB.edges[_tbEdgeModalIdx].label     = '';
+  tbCloseEdgeModal(); tbRenderEdges();
+}
+
+function tbDeleteEdge() {
+  if (_tbEdgeModalIdx === null) return;
+  if (!confirm('Remove this connection?')) return;
+  TB.edges.splice(_tbEdgeModalIdx, 1);
+  tbCloseEdgeModal(); tbRenderEdges(); tbRenderMinimap();
+  if (TB.selected) tbOpenInspector(TB.selected);
+}
+
+document.addEventListener('click', (e) => {
+  const modal = document.getElementById('tb-edge-modal');
+  if (modal?.classList.contains('open') && !modal.contains(e.target)) tbCloseEdgeModal();
+});
+
 </script>
 
 <!-- ══ TREE BUILDER PAGE ══ -->
@@ -4415,7 +4509,50 @@ function tbNavActivate() {
 </div>
 <div id="tb-minimap"><canvas id="tb-minimap-canvas" width="160" height="100"></canvas></div>
 <div id="tb-ctx"></div>
+
+<!-- ── Edge condition modal ── -->
+<div id="tb-edge-modal">
+  <div id="tb-edge-modal-title" style="font-family:var(--ff-h);font-size:0.62rem;letter-spacing:0.1em;color:var(--gold);margin-bottom:0.6rem;text-transform:uppercase;">Branch Condition</div>
+  <div style="font-family:var(--ff-b);font-style:italic;font-size:0.72rem;color:var(--mist);margin-bottom:0.7rem;line-height:1.5;">Define when this branch is available. Leave empty for an open connection.</div>
+  <div style="font-family:var(--ff-h);font-size:0.42rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);margin-bottom:0.3rem;">Quick insert</div>
+  <div class="tb-cond-chips">
+    <span class="tb-cond-chip" onclick="tbCondInsert('Level >= ')">Level</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('Solar >= ')">Solar</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('Lunar >= ')">Lunar</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('Martial >= ')">Martial</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('has:')">Has Item</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('skill:')">Skill</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('trait:')">Trait</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('quest:')">Quest</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('xp >= ')">XP</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('stress < ')">Stress</span>
+  </div>
+  <div class="fld" style="margin-bottom:0.5rem;">
+    <label style="font-family:var(--ff-h);font-size:0.44rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);display:block;margin-bottom:0.25rem;">Condition</label>
+    <input type="text" id="tb-edge-cond" placeholder="e.g.  Level >= 3  |  Solar >= 500  |  quest:descent == resolved" 
+           style="width:100%;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.35rem 0.45rem;font-family:var(--ff-b);font-size:0.78rem;outline:none;"
+           oninput="tbEdgeCondChanged()">
+  </div>
+  <div class="fld" style="margin-bottom:0.5rem;">
+    <label style="font-family:var(--ff-h);font-size:0.44rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);display:block;margin-bottom:0.25rem;">Label on arrow (optional)</label>
+    <input type="text" id="tb-edge-label-txt" placeholder="Short label"
+           style="width:100%;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.35rem 0.45rem;font-family:var(--ff-b);font-size:0.78rem;outline:none;">
+  </div>
+  <div class="fld" style="margin-bottom:0.8rem;">
+    <label style="font-family:var(--ff-h);font-size:0.44rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);display:block;margin-bottom:0.25rem;">Logic</label>
+    <select id="tb-edge-logic" style="width:100%;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.3rem 0.4rem;font-family:var(--ff-b);font-size:0.78rem;outline:none;">
+      <option value="AND">AND — all must be true</option>
+      <option value="OR">OR — any one is enough</option>
+    </select>
+  </div>
+  <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+    <button class="btn b-seal" onclick="tbEdgeCondSave()" style="flex:1;">✓ Apply</button>
+    <button class="btn" onclick="tbEdgeCondClear()" style="border-color:var(--ash);color:var(--mist);">✕ Clear</button>
+    <button class="btn" onclick="tbCloseEdgeModal()" style="border-color:var(--stone);color:var(--ash);font-size:0.48rem;">Cancel</button>
+  </div>
+  <button class="btn" onclick="tbDeleteEdge()" style="width:100%;border-color:var(--crimson-bright);color:var(--crimson-bright);font-size:0.48rem;">✕ Remove this connection</button>
+</div>
+
 </div>
 
 </body>
-</html>
