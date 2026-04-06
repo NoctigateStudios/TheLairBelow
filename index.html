@@ -4643,7 +4643,94 @@
   .acolyte-avail-toggle { font-family:var(--ff-heading);font-size: 0.51rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.2rem 0.5rem;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;transition:all 0.2s;margin-top:0.3rem; }
   .acolyte-avail-toggle.active { border-color:var(--viridian-bright);color:var(--viridian-bright);background:rgba(45,122,95,0.08); }
 
-  </style>
+  
+  /* ── TREE PROGRESS UI ────────────────────────────────── */
+  .tp-tree { margin-bottom: 1.2rem; }
+  .tp-tree-name {
+    font-family: var(--ff-heading); font-size: 0.52rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text-secondary); margin-bottom: 0.5rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .tp-tree-name::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .tp-node {
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.75rem;
+    margin-bottom: 0.4rem;
+    position: relative;
+    transition: border-color 0.18s, background 0.18s;
+  }
+  .tp-node.tp-completed {
+    border-color: rgba(45,122,95,0.35);
+    background: rgba(45,122,95,0.04);
+  }
+  .tp-node.tp-active {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.05);
+  }
+  .tp-node.tp-locked {
+    opacity: 0.45;
+  }
+  .tp-node.tp-available {
+    border-color: rgba(201,168,76,0.4);
+    cursor: pointer;
+  }
+  .tp-node.tp-available:active { background: rgba(201,168,76,0.08); }
+
+  .tp-node-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem; }
+  .tp-node-status {
+    font-family: var(--ff-heading); font-size: 0.65rem;
+    flex-shrink: 0; width: 1.1rem; text-align: center;
+  }
+  .tp-node-label {
+    font-family: var(--ff-heading); font-size: 0.7rem;
+    letter-spacing: 0.04em; color: var(--text-primary); flex: 1;
+  }
+  .tp-node-cat {
+    font-family: var(--ff-heading); font-size: 0.38rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-secondary); border: 1px solid var(--border);
+    padding: 0.06rem 0.28rem;
+  }
+  .tp-node-desc {
+    font-family: var(--ff-body); font-style: italic;
+    font-size: 0.75rem; color: var(--text-secondary); line-height: 1.45;
+    margin-bottom: 0.28rem;
+  }
+  .tp-node-req {
+    font-family: var(--ff-heading); font-size: 0.44rem;
+    letter-spacing: 0.06em; color: var(--gold-dim); margin-bottom: 0.3rem;
+  }
+  .tp-node-cond {
+    font-family: var(--ff-heading); font-size: 0.42rem;
+    letter-spacing: 0.06em; color: var(--amber-bright);
+    margin-bottom: 0.3rem;
+  }
+  .tp-advance-btn {
+    width: 100%; padding: 0.45rem;
+    font-family: var(--ff-heading); font-size: 0.48rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    border: 1px solid rgba(201,168,76,0.35); background: none;
+    color: var(--gold); cursor: pointer; transition: all 0.15s;
+    margin-top: 0.35rem;
+  }
+  .tp-advance-btn:active { background: rgba(201,168,76,0.1); }
+  .tp-advance-btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+  .tp-advance-btn.tp-btn-building { border-color: rgba(45,122,95,0.4); color: var(--viridian-bright); }
+  .tp-advance-btn.tp-btn-class    { border-color: rgba(123,47,255,0.4); color: var(--dm-bright); }
+
+  .tp-edge-label {
+    font-family: var(--ff-heading); font-size: 0.38rem;
+    letter-spacing: 0.08em; color: var(--amber-bright);
+    padding-left: 1.6rem; margin-bottom: 0.15rem;
+  }
+  .tp-edge-arrow {
+    padding-left: 0.9rem; color: var(--stone);
+    font-size: 0.7rem; line-height: 1;
+  }
+
+</style>
 </head>
 <body>
 
@@ -4808,6 +4895,12 @@
         </div>
       </div>
 
+      <!-- QUEST TREE PROGRESS -->
+      <div id="quest-tree-section" style="display:none;margin-top:1rem;">
+        <div class="section-label">Questlines</div>
+        <div id="quest-tree-list"></div>
+      </div>
+
     </div>
     <!-- FIELD PANEL -->
     <div id="panel-field" class="tab-panel">
@@ -4855,6 +4948,11 @@
           <div class="char-xp-label">— / — XP</div>
         </div>
         <div id="player-roster-toggle" class="acol-roster-toggle" onclick="togglePlayerRoster(this)">◇ Roster</div>
+      </div>
+      <!-- CLASS / PRESTIGE TREE -->
+      <div id="class-tree-section" style="display:none;margin-bottom:0.9rem;">
+        <div class="section-label">Class Path</div>
+        <div id="class-tree-list"></div>
       </div>
 
       <!-- Derived combat stats -->
@@ -4962,6 +5060,12 @@
         <div style="font-family:var(--ff-body);font-style:italic;font-size: 0.82rem;color:var(--text-secondary);padding:0.6rem 0;grid-column:1/-1;">
           Consulting the lair…
         </div>
+      </div>
+
+      <!-- BUILDING TREE UPGRADES (shown when DM defined a tree for this building) -->
+      <div id="building-tree-section" style="display:none;margin-top:0.8rem;">
+        <div class="section-label">Building Paths</div>
+        <div id="building-tree-list"></div>
       </div>
 
       <div class="section-label">Research Queue</div>
@@ -5380,6 +5484,9 @@
   let playerName = '';
   let playerCoven = '';
   let inventory = {};
+  let _treeProgress = {};
+  let _worldTrees   = {};
+  let _treesLoaded  = false;
   let availableAcolytes = {};
   let nearbyPlayers = {};
   let otherPlayerMarkers = {};
@@ -5436,6 +5543,7 @@
         } catch(e) { console.error('Auto-load failed:', e); }
       }, 800);
       setTimeout(restoreBorrowedAcolytes, 1000);
+    setTimeout(tpOnGameReady, 1500);
     } catch(e) {
       console.error('enterGame error:', e);
       alert('Error starting game: ' + e.message);
@@ -7423,6 +7531,7 @@
       research: _researchData || { active: null, progress: 0, queue: [] },
       inventory: { ...inventory },
       availableAcolytes: { ...availableAcolytes },
+      treeProgress: { ...(_treeProgress || {}) },
       // Persist combat state so player returns to same combat on reload
       combatState: _CS ? {
         title: _CS.title,
@@ -7537,6 +7646,7 @@
       renderAcolyteCards(_acolytesData);
     }
     renderCharacterSkills();
+    setTimeout(renderAllTreeProgress, 200);
 
     // Available acolytes
     if (state.availableAcolytes) {
@@ -7546,6 +7656,9 @@
         if (btn) { btn.textContent = 'Share with Coven: ' + (on ? 'On' : 'Off'); btn.classList.toggle('active', on); }
       });
     }
+
+    // Tree progress
+    if (state.treeProgress) _treeProgress = { ...state.treeProgress };
 
     // Lair
     if (state.lair && Object.keys(state.lair.buildings || {}).length > 0) {
@@ -11635,6 +11748,374 @@ async function refreshFieldEventCards() {
     persistState().catch(()=>{});
     advanceTurn();
   }
+
+
+
+// ══════════════════════════════════════════════════════════════════════
+// TREE PROGRESS SYSTEM
+// Handles quest trees, building trees, and class trees in-game.
+//
+// Firebase: world/trees/{treeKey} = { name, type, nodes:{}, edges:[] }
+// Save:     saves/{id}/treeProgress/{treeKey}/{nodeId} = 'completed'|'active'
+//
+// node states: locked → available → active → completed
+// ══════════════════════════════════════════════════════════════════════
+
+// _treeProgress, _worldTrees, _treesLoaded declared globally above
+
+// ── Load all trees from Firebase ─────────────────────────────────────
+async function loadWorldTrees() {
+  try {
+    const res = await fetch(`${FB_URL}/world/trees.json?cb=${Date.now()}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data && !data.error) {
+      _worldTrees = data;
+      _treesLoaded = true;
+      renderAllTreeProgress();
+    }
+  } catch(e) { console.error('loadWorldTrees:', e); }
+}
+
+// ── Evaluate a condition string against player state ─────────────────
+function tpEvalCondition(condStr) {
+  if (!condStr || !condStr.trim()) return true;   // no condition = open
+
+  // Support AND / OR at top level (split on &&  / ||)
+  if (condStr.includes('&&')) {
+    return condStr.split('&&').every(c => tpEvalCondition(c.trim()));
+  }
+  if (condStr.includes('||')) {
+    return condStr.split('||').some(c => tpEvalCondition(c.trim()));
+  }
+
+  const c   = condStr.trim();
+  const cLo = c.toLowerCase();
+
+  // Level >= N
+  const levelM = cLo.match(/^level\s*(>=|<=|>|<|=|==)\s*(\d+)$/);
+  if (levelM) {
+    const lv = _characterData?.level || 1;
+    return tpCompare(lv, levelM[1], parseInt(levelM[2]));
+  }
+
+  // XP >= N
+  const xpM = cLo.match(/^xp\s*(>=|<=|>|<|=|==)\s*(\d+)$/);
+  if (xpM) return tpCompare(_characterData?.xp || 0, xpM[1], parseInt(xpM[2]));
+
+  // Resource (Solar|Lunar|Jovian|Martial|Saturnine|Venusian|Mercurial) >= N
+  const resNames = ['solar','lunar','jovian','martial','saturnine','venusian','mercurial'];
+  const resM = cLo.match(/^(solar|lunar|jovian|martial|saturnine|venusian|mercurial)\s*(>=|<=|>|<|=|==)\s*(\d+)$/);
+  if (resM) {
+    const idx = resNames.indexOf(resM[1]);
+    if (idx >= 0) return tpCompare(values[idx] || 0, resM[2], parseInt(resM[3]));
+  }
+
+  // stress < N
+  const stressM = cLo.match(/^stress\s*(>=|<=|>|<|=|==)\s*(\d+)$/);
+  if (stressM) return tpCompare(_characterData?.stress || 0, stressM[1], parseInt(stressM[2]));
+
+  // quest:key == resolved|completed|active
+  const questM = cLo.match(/^quest:(\S+)\s*(==|=)\s*(\S+)$/);
+  if (questM) {
+    // Check treeProgress for quest nodes with that key, or DM event read state
+    const qKey = questM[1], qVal = questM[3];
+    const prog = _treeProgress[qKey];
+    if (prog) {
+      // If any node is in the required state
+      return Object.values(prog).some(v => v === qVal);
+    }
+    return false;
+  }
+
+  // skill:key — player has the skill
+  const skillM = cLo.match(/^skill:(\S+)$/);
+  if (skillM) {
+    return (_characterData?.skills || []).some(s => (s.key||s) === skillM[1]);
+  }
+
+  // trait:key
+  const traitM = cLo.match(/^trait:(\S+)$/);
+  if (traitM) {
+    return (_characterData?.traits || []).includes(traitM[1]);
+  }
+
+  // has:itemKey
+  const hasM = cLo.match(/^has:(\S+)$/);
+  if (hasM) return (inventory[hasM[1]] || 0) > 0;
+
+  // building:key >= level
+  const buildM = cLo.match(/^building:(\S+)\s*(>=|<=|>|<|=|==)\s*(\d+)$/);
+  if (buildM) {
+    const bl = (_lairData?.buildings || {})[buildM[1]] || 0;
+    return tpCompare(bl, buildM[2], parseInt(buildM[3]));
+  }
+
+  console.warn('tpEvalCondition: unrecognised condition:', c);
+  return true;  // fail-open for unknown conditions
+}
+
+function tpCompare(a, op, b) {
+  if (op === '>='  || op === '=') return a >= b;
+  if (op === '<=' ) return a <= b;
+  if (op === '>'  ) return a > b;
+  if (op === '<'  ) return a < b;
+  if (op === '==' ) return a == b;
+  return false;
+}
+
+// ── Compute node state for a given tree ──────────────────────────────
+function tpGetNodeState(tree, nodeId) {
+  const prog = _treeProgress[tree.key || tree.name] || {};
+
+  if (prog[nodeId] === 'completed') return 'completed';
+  if (prog[nodeId] === 'active')    return 'active';
+
+  const node = tree.nodes[nodeId];
+  if (!node) return 'locked';
+
+  // Root node: always available if not yet completed
+  if (node.isRoot) return 'available';
+
+  // Non-root: need at least one parent completed AND edge condition met
+  const parentEdges = (tree.edges || []).filter(e => e.to === nodeId);
+  if (!parentEdges.length) return 'available'; // no parents = available
+
+  for (const edge of parentEdges) {
+    const parentState = tpGetNodeState(tree, edge.from);
+    if (parentState === 'completed' || parentState === 'active') {
+      // Check edge condition
+      if (tpEvalCondition(edge.condition)) return 'available';
+    }
+  }
+  return 'locked';
+}
+
+// ── Render all tree sections ──────────────────────────────────────────
+function renderAllTreeProgress() {
+  if (!_treesLoaded) return;
+  renderQuestTrees();
+  renderBuildingTrees();
+  renderClassTrees();
+}
+
+// ── QUEST TREES ───────────────────────────────────────────────────────
+function renderQuestTrees() {
+  const section = document.getElementById('quest-tree-section');
+  const list    = document.getElementById('quest-tree-list');
+  if (!section || !list) return;
+
+  const questTrees = Object.entries(_worldTrees)
+    .filter(([,t]) => t.type === 'quest')
+    .map(([k,t]) => ({...t, key:k}));
+
+  if (!questTrees.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  list.innerHTML = questTrees.map(tree => tpRenderTree(tree, 'quest')).join('');
+}
+
+// ── BUILDING TREES ────────────────────────────────────────────────────
+function renderBuildingTrees() {
+  const section = document.getElementById('building-tree-section');
+  const list    = document.getElementById('building-tree-list');
+  if (!section || !list) return;
+
+  const buildingTrees = Object.entries(_worldTrees)
+    .filter(([,t]) => t.type === 'building')
+    .map(([k,t]) => ({...t, key:k}));
+
+  if (!buildingTrees.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  list.innerHTML = buildingTrees.map(tree => tpRenderTree(tree, 'building')).join('');
+}
+
+// ── CLASS TREES ───────────────────────────────────────────────────────
+function renderClassTrees() {
+  const section = document.getElementById('class-tree-section');
+  const list    = document.getElementById('class-tree-list');
+  if (!section || !list) return;
+
+  const classKey  = (_characterData?.classKey || '').toLowerCase();
+  const classTrees = Object.entries(_worldTrees)
+    .filter(([k,t]) => t.type === 'class' &&
+      (!t.classKey || t.classKey.toLowerCase() === classKey))
+    .map(([k,t]) => ({...t, key:k}));
+
+  if (!classTrees.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  list.innerHTML = classTrees.map(tree => tpRenderTree(tree, 'class')).join('');
+}
+
+// ── Render a single tree as a linear progress chain ──────────────────
+function tpRenderTree(tree, typeHint) {
+  const nodes  = tree.nodes  || {};
+  const edges  = tree.edges  || [];
+  const tkey   = tree.key;
+
+  // Topological sort: find root → children order
+  const ordered = tpTopoSort(nodes, edges);
+
+  const nodesHtml = ordered.map((nodeId, idx) => {
+    const node  = nodes[nodeId];
+    const state = tpGetNodeState(tree, nodeId);
+
+    // Find edge from previous node to this one (for condition display)
+    const inEdge = edges.find(e => e.to === nodeId);
+
+    const statusIcon = state === 'completed' ? '✓'
+                     : state === 'active'    ? '◎'
+                     : state === 'available' ? '○'
+                     : '·';
+
+    const btnText = typeHint === 'building' ? 'Upgrade Building'
+                  : typeHint === 'class'    ? 'Choose Path'
+                  : 'Advance Quest';
+    const btnCls  = typeHint === 'building' ? 'tp-btn-building'
+                  : typeHint === 'class'    ? 'tp-btn-class' : '';
+
+    const canAdvance = state === 'available';
+    const condOk     = !inEdge?.condition || tpEvalCondition(inEdge.condition);
+
+    return `
+      ${idx > 0 ? `
+        <div class="tp-edge-arrow">↓</div>
+        ${inEdge?.condition ? `<div class="tp-edge-cond">⚑ ${inEdge.condition}</div>` : ''}
+      ` : ''}
+      <div class="tp-node tp-${state}" data-nodeid="${nodeId}" data-treekey="${tkey}">
+        <div class="tp-node-header">
+          <span class="tp-node-status">${statusIcon}</span>
+          <span class="tp-node-label">${node.label || nodeId}</span>
+          ${node.cat ? `<span class="tp-node-cat">${node.cat}</span>` : ''}
+        </div>
+        ${node.desc ? `<div class="tp-node-desc">${node.desc}</div>` : ''}
+        ${node.req  ? `<div class="tp-node-req">⚑ Requires: ${node.req}</div>` : ''}
+        ${canAdvance && inEdge?.condition && !condOk
+          ? `<div class="tp-node-cond">⚑ Not met: ${inEdge.condition}</div>` : ''}
+        ${canAdvance ? `
+          <button class="tp-advance-btn ${btnCls}"
+            onclick="tpAdvanceNode('${tkey}','${nodeId}','${typeHint}')"
+            ${!condOk ? 'disabled' : ''}>
+            ${btnText}${!condOk ? ' — Condition not met' : ''}
+          </button>` : ''}
+        ${state === 'completed' ? `
+          <div style="font-family:var(--ff-heading);font-size:0.42rem;letter-spacing:0.12em;
+               color:var(--viridian-bright);margin-top:0.25rem;">✓ Completed</div>` : ''}
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="tp-tree">
+      <div class="tp-tree-name">${tree.name || tkey}</div>
+      ${nodesHtml}
+    </div>`;
+}
+
+// ── Topological sort: root first, leaves last ─────────────────────────
+function tpTopoSort(nodes, edges) {
+  const allIds = Object.keys(nodes);
+  const visited = new Set();
+  const result  = [];
+
+  // Find root(s)
+  const roots = allIds.filter(id => nodes[id].isRoot);
+  if (!roots.length) roots.push(allIds[0]); // fallback
+
+  function visit(id) {
+    if (visited.has(id)) return;
+    visited.add(id);
+    result.push(id);
+    // Find children
+    edges.filter(e => e.from === id).forEach(e => visit(e.to));
+  }
+  roots.forEach(visit);
+  // Add any unreachable nodes at end
+  allIds.filter(id => !visited.has(id)).forEach(id => { result.push(id); });
+  return result;
+}
+
+// ── Advance a node: mark active → completed, unlock children ─────────
+async function tpAdvanceNode(treeKey, nodeId, typeHint) {
+  const tree = _worldTrees[treeKey];
+  if (!tree) return;
+  const state = tpGetNodeState(tree, nodeId);
+  if (state !== 'available') { toast('This node is not yet available.'); return; }
+
+  // Check edge condition one more time
+  const inEdge = (tree.edges||[]).find(e => e.to === nodeId);
+  if (inEdge?.condition && !tpEvalCondition(inEdge.condition)) {
+    toast('Condition not met: ' + inEdge.condition); return;
+  }
+
+  // Spend resources if req is defined (simple parsing: "500 Solar")
+  const node = tree.nodes[nodeId];
+  if (node.req) {
+    const resM = node.req.match(/(\d+)\s*(Solar|Lunar|Jovian|Martial|Saturnine|Venusian|Mercurial)/i);
+    if (resM) {
+      const amount = parseInt(resM[1]);
+      const resIdx = ['solar','lunar','jovian','martial','saturnine','venusian','mercurial']
+        .indexOf(resM[2].toLowerCase());
+      if (resIdx >= 0) {
+        if ((values[resIdx]||0) < amount) {
+          toast(`Not enough ${resM[2]}. Need ${amount}.`); return;
+        }
+        values[resIdx] -= amount;
+        document.querySelectorAll('.resource-pill .res-value')
+          .forEach((el,i) => { el.textContent = Math.floor(values[i]); });
+      }
+    }
+  }
+
+  // Mark node as completed in treeProgress
+  if (!_treeProgress[treeKey]) _treeProgress[treeKey] = {};
+  _treeProgress[treeKey][nodeId] = 'completed';
+
+  // Apply side effects by tree type
+  if (typeHint === 'building') {
+    // Use the node's key as building key if it matches a world building
+    const buildingKey = node.key || nodeId;
+    if (_lairData?.buildings !== undefined) {
+      _lairData.buildings[buildingKey] = (_lairData.buildings[buildingKey] || 0) + 1;
+      renderLairBuildings(_lairData.buildings);
+    }
+    toast(`✓ ${node.label} — building path advanced.`);
+  } else if (typeHint === 'quest') {
+    // Append a journal entry
+    appendWorldEventToJournal({
+      title: node.label,
+      desc:  node.desc,
+      type:  'story',
+      id:    treeKey + '_' + nodeId,
+    }, 'completed');
+    toast(`✓ Quest advanced: ${node.label}`);
+  } else if (typeHint === 'class') {
+    // Apply class node bonus if defined in node.bonus field
+    if (node.bonus && _characterData) {
+      // node.bonus = e.g. "fortitude+2,wrath+1"
+      node.bonus.split(',').forEach(part => {
+        const bm = part.trim().match(/^(\w+)\s*([+-])\s*(\d+)$/);
+        if (bm && _characterData.stats?.[bm[1]] !== undefined) {
+          _characterData.stats[bm[1]] += parseInt(bm[2]+bm[3]);
+        }
+      });
+    }
+    toast(`✓ Class path chosen: ${node.label}`);
+  }
+
+  // Re-render trees and save
+  renderAllTreeProgress();
+  persistState().catch(()=>{});
+}
+
+// ── Hook into existing enterGame / applyGameState ─────────────────────
+// Called after game starts — load trees and render
+function tpOnGameReady() {
+  loadWorldTrees();
+}
+
+
 
 </script>
 
