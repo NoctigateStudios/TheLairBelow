@@ -154,7 +154,7 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
 
 /* Workspace */
 #tb-workspace { flex:1; position:relative; overflow:hidden; background:var(--void); background-image: radial-gradient(circle, rgba(201,168,76,0.04) 1px, transparent 1px); background-size:32px 32px; cursor:default; user-select:none; }
-#tb-svg { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1; overflow:visible; }
+#tb-svg { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:3; overflow:visible; }
 #tb-canvas { position:absolute; top:0; left:0; width:100%; height:100%; z-index:2; }
 #tb-empty-hint { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; pointer-events:none; transition:opacity 0.3s; }
 
@@ -197,6 +197,30 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
 
 /* SVG edges */
 .tb-edge { fill:none; stroke:var(--gold-dim); stroke-width:1.5; opacity:0.6; }
+.tb-edge-hit { fill:none; stroke:transparent; stroke-width:20; pointer-events:stroke; cursor:pointer; }
+.tb-edge-hit:hover + .tb-edge-visible { stroke:var(--gold); opacity:1; }
+.tb-edge-btn {
+  cursor: pointer;
+  pointer-events: all;
+}
+.tb-edge-btn-bg {
+  fill: var(--shadow);
+  stroke: var(--gold-dim);
+  stroke-width: 1;
+  rx: 3;
+  transition: fill 0.15s;
+}
+.tb-edge-btn-bg:hover { fill: rgba(201,168,76,0.15); stroke: var(--gold); }
+.tb-edge-btn-icon {
+  fill: var(--mist);
+  font-family: var(--ff-h);
+  font-size: 11px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+.tb-edge-btn:hover .tb-edge-btn-bg { fill: rgba(201,168,76,0.2); stroke: var(--gold); }
+.tb-edge-btn:hover .tb-edge-btn-icon { fill: var(--gold); }
 .tb-edge.hovered { stroke:var(--gold); opacity:1; stroke-width:2; cursor:pointer; }
 .tb-edge-arrow { fill:var(--gold-dim); }
 
@@ -4015,9 +4039,8 @@ function tbRenderEdges() {
   svg.querySelectorAll('.tb-edge-group').forEach(g => g.remove());
   if (!svg.querySelector('defs')) {
     const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
-    defs.innerHTML = `
-      <marker id="tb-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-        <path d="M0,0 L0,6 L8,3 z" class="tb-edge-arrow"/>
+    defs.innerHTML = `<marker id="tb-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="rgba(201,168,76,0.5)"/>
       </marker>`;
     svg.appendChild(defs);
   }
@@ -4036,59 +4059,105 @@ function tbRenderEdges() {
     const my = (fy+ty)/2;
     const pathD = `M${fx},${fy} C${fx},${my} ${tx},${my} ${tx},${ty}`;
 
+    // Midpoint of the cubic bezier at t=0.5
+    const mx2 = 0.125*fx + 0.375*fx + 0.375*tx + 0.125*tx;
+    const my2 = 0.125*fy + 0.375*my + 0.375*my + 0.125*ty;
+
     const g = document.createElementNS('http://www.w3.org/2000/svg','g');
     g.className.baseVal = 'tb-edge-group';
+    g.style.pointerEvents = 'none'; // group itself non-interactive
 
-    // Visible edge path — dashed if conditional
+    // Visible edge line
     const path = document.createElementNS('http://www.w3.org/2000/svg','path');
     path.setAttribute('d', pathD);
-    path.className.baseVal = 'tb-edge';
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke', edge.condition ? 'var(--amber-bright)' : 'var(--gold-dim)');
+    path.setAttribute('stroke-width', '1.5');
+    path.setAttribute('opacity', edge.condition ? '0.8' : '0.55');
     if (edge.condition) path.setAttribute('stroke-dasharray', '8 4');
     path.setAttribute('marker-end','url(#tb-arrow)');
-
-    // Transparent wider hit zone
-    const hit = document.createElementNS('http://www.w3.org/2000/svg','path');
-    hit.setAttribute('d', pathD);
-    hit.setAttribute('stroke','transparent');
-    hit.setAttribute('stroke-width','14');
-    hit.setAttribute('fill','none');
-    hit.style.cursor = 'pointer';
-    hit.addEventListener('mouseenter', () => { path.classList.add('hovered'); condBg&&condBg.classList.add('hovered'); });
-    hit.addEventListener('mouseleave', () => { path.classList.remove('hovered'); condBg&&condBg.classList.remove('hovered'); });
-    hit.addEventListener('click', (ev) => { ev.stopPropagation(); tbOpenEdgeModal(i, ev.clientX, ev.clientY); });
-
+    path.style.pointerEvents = 'none';
     g.appendChild(path);
 
-    // Condition label at midpoint of curve
-    let condBg = null;
+    // Condition label pill (if set)
     if (edge.condition || edge.label) {
       const lbl = edge.label || tbCondShortLabel(edge.condition);
-      const mx2 = (fx + tx) / 2;
-      const my2 = my;
-
-      // Detect condition type for color
       const condType = tbCondType(edge.condition||'');
+      const colors = {level:'#d4890a',resource:'#c9a84c',quest:'#a855f7',skill:'#3d3daa',trait:'#2d7a5f',default:'#c9a84c'};
+      const col = colors[condType]||colors.default;
+      const tw = Math.max(60, lbl.length * 6.5 + 16);
 
-      // Background rect (SVG foreignObject doesn't work well — use rect+text)
-      const textW = Math.max(60, lbl.length * 6.5 + 14);
-      condBg = document.createElementNS('http://www.w3.org/2000/svg','rect');
-      condBg.setAttribute('x', mx2 - textW/2);
-      condBg.setAttribute('y', my2 - 11);
-      condBg.setAttribute('width', textW);
-      condBg.setAttribute('height', 18);
-      condBg.className.baseVal = `tb-edge-cond-bg cond-${condType}`;
-      g.appendChild(condBg);
+      const condG = document.createElementNS('http://www.w3.org/2000/svg','g');
+      condG.style.pointerEvents = 'none';
 
-      const text = document.createElementNS('http://www.w3.org/2000/svg','text');
-      text.setAttribute('x', mx2);
-      text.setAttribute('y', my2 + 0.5);
-      text.className.baseVal = 'tb-edge-label';
-      text.textContent = lbl;
-      g.appendChild(text);
+      const bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      bg.setAttribute('x', mx2 - tw/2); bg.setAttribute('y', my2 - 10);
+      bg.setAttribute('width', tw); bg.setAttribute('height', 18);
+      bg.setAttribute('rx', 3); bg.setAttribute('fill','var(--deep)');
+      bg.setAttribute('stroke', col); bg.setAttribute('stroke-width','1');
+      condG.appendChild(bg);
+
+      const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+      txt.setAttribute('x', mx2); txt.setAttribute('y', my2 + 1);
+      txt.setAttribute('fill', col);
+      txt.setAttribute('font-family','Cinzel,serif'); txt.setAttribute('font-size','9');
+      txt.setAttribute('text-anchor','middle'); txt.setAttribute('dominant-baseline','middle');
+      txt.setAttribute('letter-spacing','0.04em');
+      txt.textContent = lbl;
+      condG.appendChild(txt);
+      g.appendChild(condG);
     }
 
-    g.appendChild(hit);
     svg.appendChild(g);
+
+    // ── Clickable ✎ button — rendered as a separate SVG group with pointer-events ──
+    // Must be a sibling of g (not child) so pointer-events work independently
+    const btnG = document.createElementNS('http://www.w3.org/2000/svg','g');
+    btnG.className.baseVal = 'tb-edge-btn';
+    btnG.style.pointerEvents = 'all';
+    btnG.style.cursor = 'pointer';
+
+    const BW = 26, BH = 18;
+    const btnX = mx2 - BW/2, btnY = my2 + 14; // below the condition label / midpoint
+
+    const btnBg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    btnBg.setAttribute('x', btnX); btnBg.setAttribute('y', btnY);
+    btnBg.setAttribute('width', BW); btnBg.setAttribute('height', BH);
+    btnBg.setAttribute('rx', 3);
+    btnBg.setAttribute('fill', edge.condition ? 'rgba(201,168,76,0.15)' : 'rgba(30,24,50,0.85)');
+    btnBg.setAttribute('stroke', edge.condition ? 'var(--gold)' : 'var(--stone)');
+    btnBg.setAttribute('stroke-width','1');
+    btnG.appendChild(btnBg);
+
+    const btnTxt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    btnTxt.setAttribute('x', mx2); btnTxt.setAttribute('y', btnY + BH/2 + 1);
+    btnTxt.setAttribute('fill', edge.condition ? 'var(--gold)' : 'var(--mist)');
+    btnTxt.setAttribute('font-family','Cinzel,serif'); btnTxt.setAttribute('font-size','10');
+    btnTxt.setAttribute('text-anchor','middle'); btnTxt.setAttribute('dominant-baseline','middle');
+    btnTxt.textContent = edge.condition ? '✎ cond' : '✎';
+    btnTxt.style.pointerEvents = 'none';
+    btnG.appendChild(btnTxt);
+
+    // Hover effect
+    btnG.addEventListener('mouseenter', () => {
+      btnBg.setAttribute('fill','rgba(201,168,76,0.22)');
+      btnBg.setAttribute('stroke','var(--gold)');
+      btnTxt.setAttribute('fill','var(--gold)');
+      path.setAttribute('stroke','var(--gold)'); path.setAttribute('opacity','0.9');
+    });
+    btnG.addEventListener('mouseleave', () => {
+      btnBg.setAttribute('fill', edge.condition ? 'rgba(201,168,76,0.15)' : 'rgba(30,24,50,0.85)');
+      btnBg.setAttribute('stroke', edge.condition ? 'var(--gold)' : 'var(--stone)');
+      btnTxt.setAttribute('fill', edge.condition ? 'var(--gold)' : 'var(--mist)');
+      path.setAttribute('stroke', edge.condition ? 'var(--amber-bright)' : 'var(--gold-dim)');
+      path.setAttribute('opacity', edge.condition ? '0.8' : '0.55');
+    });
+    btnG.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      tbOpenEdgeModal(i, ev.clientX, ev.clientY);
+    });
+
+    svg.appendChild(btnG);
   });
 }
 
@@ -4318,8 +4387,8 @@ function tbNavActivate() {
   </div>
 </div>
 <div id="tb-workspace">
-  <svg id="tb-svg" xmlns="http://www.w3.org/2000/svg"></svg>
   <div id="tb-canvas"></div>
+  <svg id="tb-svg" xmlns="http://www.w3.org/2000/svg"></svg>
   <div id="tb-empty-hint">
     <div style="font-family:var(--ff-h);font-size:1.1rem;color:var(--stone);letter-spacing:0.1em;">Click <strong style="color:var(--gold)">+ Node</strong> to begin</div>
     <div style="font-size:0.8rem;color:var(--ash);margin-top:0.5rem;">Drag nodes to reposition &nbsp;·&nbsp; Drag from ● to connect &nbsp;·&nbsp; Right-click for options</div>
