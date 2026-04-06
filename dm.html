@@ -3793,6 +3793,14 @@ function tbOpenInspector(id) {
   document.getElementById('tbi-cat').value   = n.cat   || '';
   document.getElementById('tbi-req').value   = n.req   || '';
   document.getElementById('tbi-key').value   = n.key   || id;
+  document.getElementById('tbi-buildingKey').value = n.buildingKey||'';
+  document.getElementById('tbi-actions').value  = n.actions||'';
+  document.getElementById('tbi-produces').value = n.produces||'';
+  document.getElementById('tbi-lat').value      = n.lat||'';
+  document.getElementById('tbi-lng').value      = n.lng||'';
+  document.getElementById('tbi-skillKey').value = n.skillKey||'';
+  document.getElementById('tbi-xpThreshold').value = n.xpThreshold||'';
+  document.getElementById('tbi-bonus').value    = n.bonus||'';
   document.getElementById('tb-inspector-title').textContent = n.label || 'Node';
   // Connections
   const connected = TB.edges.filter(e => e.from === id || e.to === id)
@@ -4278,6 +4286,8 @@ async function tbSaveTree() {
   TB.currentTreeKey = key;
   const data = {
     name, type: TB.type,
+    buildingKey: TB.type==='building' ? (document.getElementById('tbi-buildingKey')?.value||'') : undefined,
+    skillKey: TB.type==='skill' ? (document.getElementById('tbi-skillKey')?.value||'') : undefined,
     nodes: TB.nodes,
     edges: TB.edges,
     updatedAt: new Date().toISOString(),
@@ -4498,6 +4508,48 @@ document.addEventListener('click', (e) => {
   <div class="fld"><label>Type / Category</label><input type="text" id="tbi-cat" oninput="tbUpdateNode('cat',this.value)" placeholder="e.g. combat, story, prestige…"></div>
   <div class="fld"><label>Cost / Requirement</label><input type="text" id="tbi-req" oninput="tbUpdateNode('req',this.value)" placeholder="e.g. 500 Solar, Level 3…"></div>
   <div class="fld"><label>Firebase Key</label><input type="text" id="tbi-key" oninput="tbUpdateNode('key',this.value)" placeholder="auto-generated"></div>
+
+  <div style="border-top:1px solid var(--border);margin:0.7rem 0 0.5rem;padding-top:0.5rem;">
+    <div style="font-family:var(--ff-h);font-size:0.44rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--mist);margin-bottom:0.4rem;">Type-specific fields</div>
+  </div>
+
+  <!-- Building tree fields -->
+  <div class="fld" id="tbi-building-key-wrap">
+    <label>Building Key (for building trees)</label>
+    <input type="text" id="tbi-buildingKey" oninput="tbUpdateNode('buildingKey',this.value)" placeholder="e.g. alchemical-forge">
+  </div>
+  <div class="fld">
+    <label>Actions at this stage</label>
+    <input type="text" id="tbi-actions" oninput="tbUpdateNode('actions',this.value)" placeholder="e.g. Craft weapons, Brew potions">
+  </div>
+  <div class="fld">
+    <label>Produces (passive output)</label>
+    <input type="text" id="tbi-produces" oninput="tbUpdateNode('produces',this.value)" placeholder="e.g. +2 Solar/hour">
+  </div>
+
+  <!-- Quest tree fields -->
+  <div class="fld">
+    <label>Lat / Lng (quest map marker)</label>
+    <div style="display:flex;gap:0.4rem;">
+      <input type="text" id="tbi-lat" oninput="tbUpdateNode('lat',this.value)" placeholder="Latitude" style="flex:1;">
+      <input type="text" id="tbi-lng" oninput="tbUpdateNode('lng',this.value)" placeholder="Longitude" style="flex:1;">
+    </div>
+  </div>
+
+  <!-- Skill / class tree fields -->
+  <div class="fld">
+    <label>Skill Key (for skill trees)</label>
+    <input type="text" id="tbi-skillKey" oninput="tbUpdateNode('skillKey',this.value)" placeholder="e.g. annichilito-">
+  </div>
+  <div class="fld">
+    <label>XP Threshold (skill mastery)</label>
+    <input type="number" id="tbi-xpThreshold" oninput="tbUpdateNode('xpThreshold',this.value?+this.value:undefined)" placeholder="e.g. 10" min="0">
+  </div>
+  <div class="fld">
+    <label>Bonus on unlock (e.g. fortitude+2, skill:annichilito)</label>
+    <input type="text" id="tbi-bonus" oninput="tbUpdateNode('bonus',this.value)" placeholder="stat+N, skill:key, trait:key">
+  </div>
+
   <div style="display:flex;gap:0.5rem;margin-top:0.8rem;">
     <button class="btn b-rune" onclick="tbSetRoot()" style="flex:1;font-size:0.5rem;">⬡ Set Root</button>
     <button class="btn" onclick="tbDeleteNode()" style="flex:1;border-color:var(--crimson-bright);color:var(--crimson-bright);font-size:0.5rem;">✕ Delete</button>
