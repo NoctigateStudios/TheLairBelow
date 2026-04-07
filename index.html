@@ -4835,12 +4835,6 @@
         <div class="section-label">Nearby Seekers</div>
         <div id="nearby-players-cards"></div>
       </div>
-      <!-- QUEST TREE ACTIVE NODES — shown as missable cards above events -->
-      <div id="quest-nodes-section" style="display:none;">
-        <div class="section-label">Active Questlines</div>
-        <div id="quest-nodes-list"></div>
-      </div>
-
       <div class="section-label" id="field-events-label">Obligations &amp; Omens</div>
       <div id="field-events-list">
         <div style="font-family:var(--ff-body);font-style:italic;font-size: 0.82rem;color:var(--text-secondary);padding:0.5rem 0;">The field is quiet. The ether holds its breath.</div>
@@ -4861,18 +4855,6 @@
           <div class="char-xp-label">— / — XP</div>
         </div>
         <div id="player-roster-toggle" class="acol-roster-toggle" onclick="togglePlayerRoster(this)">◇ Roster</div>
-      </div>
-
-      <!-- CLASS / PRESTIGE TREE -->
-      <div id="class-tree-section" style="display:none;margin-bottom:1rem;">
-        <div class="section-label">Class Path</div>
-        <div id="class-tree-list"></div>
-      </div>
-
-      <!-- SKILL TREES — one per learned skill -->
-      <div id="skill-tree-section" style="display:none;margin-bottom:1rem;">
-        <div class="section-label">Skill Mastery</div>
-        <div id="skill-tree-list"></div>
       </div>
 
       <!-- Derived combat stats -->
@@ -4976,10 +4958,6 @@
 
       <div class="section-label">Lair Depth I — The Antechamber</div>
 
-      <!-- TREE-DRIVEN BUILDINGS: shown when DM defined building trees -->
-      <div id="building-tree-grid"></div>
-
-      <!-- LEGACY building grid: shown for buildings NOT in any tree -->
       <div class="building-grid" id="lair-building-grid">
         <div style="font-family:var(--ff-body);font-style:italic;font-size: 0.82rem;color:var(--text-secondary);padding:0.6rem 0;grid-column:1/-1;">
           Consulting the lair…
@@ -5406,6 +5384,7 @@
   let _worldTrees   = {};
   let _treesLoaded  = false;
   let _skillXp      = {};
+  let _qualities    = {};   // { qualityKey: number } — Fallen London style
   let availableAcolytes = {};
   let nearbyPlayers = {};
   let otherPlayerMarkers = {};
@@ -5462,7 +5441,6 @@
         } catch(e) { console.error('Auto-load failed:', e); }
       }, 800);
       setTimeout(restoreBorrowedAcolytes, 1000);
-    setTimeout(tpOnGameReady, 1800);
     } catch(e) {
       console.error('enterGame error:', e);
       alert('Error starting game: ' + e.message);
@@ -5581,11 +5559,46 @@
   }
 
   // Full resolution pipeline: skill checks → combat → reward → cleanup
+
+  // ── Quality grants — Fallen London style tracking ─────────────────────
+  // Write quality values from event.grants to player save
+  async function applyEventGrants(ev, outcome) {
+    // outcome: 'win' | 'lose' | 'always' (always runs too)
+    if (!ev?.grants) return;
+    let changed = false;
+    // Always grants
+    if (ev.grants.always) {
+      Object.entries(ev.grants.always).forEach(([k, v]) => {
+        _qualities[k] = (_qualities[k] || 0) + v;
+        changed = true;
+      });
+    }
+    // Outcome-specific grants
+    const outcomeGrants = ev.grants[outcome];
+    if (outcomeGrants) {
+      Object.entries(outcomeGrants).forEach(([k, v]) => {
+        _qualities[k] = (_qualities[k] || 0) + v;
+        changed = true;
+      });
+    }
+    if (changed) {
+      // Show what was granted
+      const all = { ...(ev.grants.always||{}), ...(outcomeGrants||{}) };
+      const msg = Object.entries(all).map(([k,v]) => `${k} ${v>0?'+':''}${v}`).join(' · ');
+      if (msg) combatLog ? void 0 : toast('Quality: ' + msg);
+      // Check if any tree nodes unlocked
+      renderAllTreeProgress?.();
+      // Persist
+      persistState().catch(()=>{});
+    }
+  }
+
   async function runEventResolution(ev, evId) {
     // 1. Skill checks
     if (ev.skillChecks && ev.skillChecks.length) {
       const passed = await runSkillChecks(ev.skillChecks);
       if (!passed) {
+        applyEventGrants(ev, 'lose');
         applyCheckFailurePenalty(ev);
         deleteWorldEventAfterResolve(ev, evId);
         return;
@@ -5611,6 +5624,7 @@
 
     // 4. Gather / story — apply reward and toast
     if (ev.rewardRes) applyDmEventReward(ev);
+    applyEventGrants(ev, 'win');
     toast(ev.actionText || 'The moment settles into memory. Something has shifted.');
     deleteWorldEventAfterResolve(ev, evId);
   }
@@ -6550,7 +6564,6 @@
   }
 
   function executeSkill(sk,actor,targets){
-    if(sk._key&&actor?.isPlayer)tpOnSkillUsed(sk._key);
     if(!sk||!actor||!targets.length)return;
     const cat=sk.category||sk.cat||'attack';
     if(sk.cost?.mana)actor.mana=Math.max(0,(actor.mana||0)-sk.cost.mana);
@@ -7453,6 +7466,7 @@
       availableAcolytes: { ...availableAcolytes },
       treeProgress: { ...(_treeProgress||{}) },
       skillXp:      { ...(_skillXp||{}) },
+      qualities:    { ...(_qualities||{}) },
       // Persist combat state so player returns to same combat on reload
       combatState: _CS ? {
         title: _CS.title,
@@ -7567,7 +7581,6 @@
       renderAcolyteCards(_acolytesData);
     }
     renderCharacterSkills();
-    setTimeout(renderAllTreeProgress, 300);
 
     // Available acolytes
     if (state.availableAcolytes) {
@@ -7578,9 +7591,10 @@
       });
     }
 
-    // Tree progress & skill XP
+    // Tree progress, skill XP, qualities
     if (state.treeProgress) _treeProgress = { ...state.treeProgress };
-    if (state.skillXp) _skillXp = { ...state.skillXp };
+    if (state.skillXp)      _skillXp      = { ...state.skillXp };
+    if (state.qualities)    _qualities    = { ...state.qualities };
 
     // Lair
     if (state.lair && Object.keys(state.lair.buildings || {}).length > 0) {
@@ -7777,91 +7791,36 @@
   }
 
   function renderLairBuildings(playerBuildings) {
-    if (!_worldBuildings) return;
+    const grid = document.getElementById('lair-building-grid') || document.querySelector('#panel-lair .building-grid');
+    if (!grid || !_worldBuildings) return;
+    // Player save uses 'forge' but world key is 'alchemical-forge' — normalise both ways
     const nb = Object.assign({}, playerBuildings || {});
-    if (nb.forge && !nb['alchemical-forge'])  nb['alchemical-forge'] = nb.forge;
-    if (nb['alchemical-forge'] && !nb.forge)  nb.forge = nb['alchemical-forge'];
-
-    // Which buildings are covered by a tree?
-    const treeByBuilding = {};
-    Object.entries(_worldTrees || {}).forEach(([tKey, tree]) => {
-      if (tree.type === 'building' && tree.buildingKey) treeByBuilding[tree.buildingKey] = { tKey, tree };
-    });
-
-    const treeGrid   = document.getElementById('building-tree-grid');
-    const legacyGrid = document.getElementById('lair-building-grid');
-
-    // ── Tree-driven buildings ──────────────────────────────────────────
-    if (treeGrid) {
-      treeGrid.innerHTML = Object.entries(treeByBuilding).map(([bKey, { tKey, tree }]) => {
-        const b       = _worldBuildings[bKey]; if (!b) return '';
-        const prog    = _treeProgress[tKey] || {};
-        const nodes   = tree.nodes || {};
-        const edges   = tree.edges || [];
-        const ordered = tpTopoSort(nodes, edges);
-        const doneIds = ordered.filter(id => prog[id] === 'completed');
-        const curId   = doneIds[doneIds.length - 1] || ordered[0];
-        const curNode = nodes[curId] || {};
-        const nextId  = ordered[ordered.indexOf(curId) + 1];
-        const nextNode= nextId ? nodes[nextId] : null;
-        const nextEdge= nextId ? (edges.find(e => e.to === nextId) || null) : null;
-        const isBuilt = (nb[bKey] || 0) > 0 || doneIds.length > 0;
-        const condMet = !nextEdge?.condition || tpEvalCondition(nextEdge.condition);
-        const clickFn = isBuilt ? getLairBuildingAction(bKey) : '';
-
-        return `<div class="building-card${isBuilt?'':' locked'}" ${clickFn?`onclick="${clickFn}" style="cursor:pointer"`:''}>
-          <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.25rem;">
-            <span style="font-family:var(--ff-heading);font-size:0.9rem;opacity:0.8;">${b.icon||'⚗'}</span>
-            <div style="flex:1;">
-              <div class="building-name">${b.name||bKey}</div>
-              <div class="building-level">${isBuilt ? '▦ '+( curNode.label||'Active') : 'Not yet built'}</div>
-            </div>
-          </div>
-          <p class="building-desc">${curNode.desc||b.desc||''}</p>
-          ${curNode.actions?`<div style="font-family:var(--ff-heading);font-size:0.46rem;letter-spacing:0.1em;color:var(--viridian-bright);margin-top:0.22rem;">▷ ${curNode.actions}</div>`:''}
-          ${curNode.produces?`<div style="font-family:var(--ff-heading);font-size:0.44rem;letter-spacing:0.08em;color:var(--gold-dim);margin-top:0.12rem;">⚗ ${curNode.produces}</div>`:''}
-          ${isBuilt&&clickFn?`<div style="font-family:var(--ff-heading);font-size:0.5rem;color:var(--text-secondary);margin-top:0.3rem;letter-spacing:0.1em;">→ Open</div>`:''}
-          ${isBuilt&&nextNode?`<button onclick="event.stopPropagation();tpAdvanceBuilding('${tKey}','${nextId}')" ${condMet?'':'disabled'}
-            style="margin-top:0.5rem;width:100%;font-family:var(--ff-heading);font-size:0.49rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.45rem;border:1px solid ${condMet?'rgba(201,168,76,0.35)':'var(--border)'};background:none;color:${condMet?'var(--gold)':'var(--stone)'};cursor:${condMet?'pointer':'not-allowed'};">
-            Upgrade → ${nextNode.label}${nextNode.req?' — '+nextNode.req:''}${!condMet&&nextEdge?.condition?' ('+nextEdge.condition+')':''}
-          </button>`:''}
-          ${!isBuilt?`<button onclick="event.stopPropagation();tpAdvanceBuilding('${tKey}','${curId}')"
-            style="margin-top:0.5rem;width:100%;font-family:var(--ff-heading);font-size:0.49rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.45rem;border:1px solid rgba(45,122,95,0.4);background:none;color:var(--viridian-bright);cursor:pointer;">
-            Build${curNode.req?' — '+curNode.req:''}
-          </button>`:''}
-        </div>`;
-      }).join('');
-    }
-
-    // ── Legacy buildings (no tree) ─────────────────────────────────────
-    if (legacyGrid) {
-      legacyGrid.innerHTML = Object.entries(_worldBuildings)
-        .filter(([key]) => !treeByBuilding[key])
-        .map(([key, b]) => {
-          const lvl  = nb[key] || 0, maxLvl = b.maxLevel || 3, locked = lvl === 0;
-          const clickFn = !locked ? getLairBuildingAction(key) : '';
-          const upgCost = b.upgradeCost && lvl < maxLvl && b.upgradeCost[lvl] ? b.upgradeCost[lvl] : null;
-          const upgEffect = b.effects && b.effects[lvl] ? b.effects[lvl] : null;
-          return `<div class="building-card${locked?' locked':''}" ${clickFn?`onclick="${clickFn}" style="cursor:pointer"`:''}>
-            <span class="building-level">${locked?'Locked':'Lv. '+lvl+' / '+maxLvl}</span>
-            <div class="building-name">${b.name||key}</div>
-            <p class="building-desc">${b.desc||''}</p>
-            ${!locked&&upgEffect?`<div style="font-family:var(--ff-body);font-style:italic;font-size:0.72rem;color:var(--viridian-bright);margin-top:0.25rem;line-height:1.4;">${upgEffect}</div>`:''}
-            ${!locked&&clickFn?`<div style="font-family:var(--ff-heading);font-size:0.5rem;color:var(--text-secondary);margin-top:0.35rem;letter-spacing:0.1em;">→ Open</div>`:''}
-            ${!locked&&lvl<maxLvl&&upgCost?`<button onclick="event.stopPropagation();upgradeBuilding('${key}',${upgCost})" style="margin-top:0.5rem;font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.6rem;border:1px solid rgba(201,168,76,0.3);background:none;color:var(--gold);cursor:pointer;width:100%;">Upgrade — ${upgCost} ♄ Saturnine</button>`:''}
-            ${locked?`<div style="font-family:var(--ff-heading);font-size:0.5rem;color:var(--text-secondary);margin-top:0.3rem;letter-spacing:0.08em;">Not yet excavated</div>`:''}
-          </div>`;
-        }).join('');
-    }
-  }
-
-  function getLairBuildingAction(key) {
-    if (key === 'alchemical-forge' || key === 'forge') return 'openForge()';
-    if (key === 'scriptorium')    return 'openScriptorium()';
-    if (key === 'altar')          return "switchTab('arcana')";
-    if (key === 'scrying-chamber') return 'openScryingChamber()';
-    if (key === 'ossuary')        return 'openOssuary()';
-    return '';
+    if (nb.forge && !nb['alchemical-forge'])       nb['alchemical-forge'] = nb.forge;
+    if (nb['alchemical-forge'] && !nb.forge)       nb.forge = nb['alchemical-forge'];
+    grid.innerHTML = Object.entries(_worldBuildings).map(([key, b]) => {
+      const lvl    = nb[key] || 0;
+      const maxLvl = b.maxLevel || 3;
+      const locked = lvl === 0;
+      const isForge = key === 'alchemical-forge' || key === 'forge';
+      const isScriptorium = key === 'scriptorium';
+      const isAltar = key === 'altar';
+      const isScrying = key === 'scrying-chamber';
+      const isOssuary = key === 'ossuary';
+      const clickFn = !locked ? (isForge ? 'openForge()' : isScriptorium ? 'openScriptorium()' : isAltar ? "switchTab('arcana')" : isScrying ? 'openScryingChamber()' : isOssuary ? 'openOssuary()' : '') : '';
+      const clickAttr = clickFn ? `onclick="${clickFn}" style="cursor:pointer"` : '';
+      // Build upgrade cost display
+      const upgradeCost = b.upgradeCost && lvl < maxLvl && b.upgradeCost[lvl] ? b.upgradeCost[lvl] : null;
+      const upgradeEffect = b.effects && b.effects[lvl] ? b.effects[lvl] : null;
+      return `<div class="building-card ${locked?'locked':''}" ${clickAttr}>
+        <span class="building-level">${locked ? 'Locked' : 'Lv. '+lvl+' / '+maxLvl}</span>
+        <div class="building-name">${b.name || key}</div>
+        <p class="building-desc">${b.desc || ''}</p>
+        ${!locked&&upgradeEffect?`<div style="font-family:var(--ff-body);font-style:italic;font-size:0.72rem;color:var(--viridian-bright);margin-top:0.25rem;line-height:1.4;">${upgradeEffect}</div>`:''}
+        ${!locked&&clickFn?`<div style="font-family:var(--ff-heading);font-size:0.5rem;color:var(--text-secondary);margin-top:0.35rem;letter-spacing:0.1em;">→ Open</div>`:''}
+        ${!locked&&lvl<maxLvl&&upgradeCost?`<button onclick="event.stopPropagation();upgradeBuilding('${key}',${upgradeCost})" style="margin-top:0.5rem;font-family:var(--ff-heading);font-size:0.5rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.6rem;border:1px solid rgba(201,168,76,0.3);background:none;color:var(--gold);cursor:pointer;width:100%;">Upgrade — ${upgradeCost} ♄ Saturnine</button>`:''}
+        ${locked?`<div style="font-family:var(--ff-heading);font-size:0.5rem;color:var(--text-secondary);margin-top:0.3rem;letter-spacing:0.08em;">Not yet excavated</div>`:''}
+      </div>`;
+    }).join('');
   }
 
   let _worldBuildings = null;
@@ -11077,6 +11036,7 @@ async function refreshFieldEventCards() {
 
       // XP to player
       const totalXp = _CS.combatants.filter(c => c.side==='enemy').reduce((s,e) => s+(e.xpReward||50), 0);
+      if(_CS?._sourceEvent)applyEventGrants(_CS._sourceEvent,'win');
       if (_characterData && totalXp) {
         _characterData.xp = (_characterData.xp||0) + totalXp;
         combatLog('+' + totalXp + ' XP', 'system');
@@ -11103,6 +11063,7 @@ async function refreshFieldEventCards() {
 
       if (playerDied || fullRout) {
         combatLog('✗ The company falls.', 'hit');
+        if(_CS?._sourceEvent)applyEventGrants(_CS._sourceEvent,'lose');
         document.getElementById('combat-skill-grid').innerHTML = '';
         document.getElementById('combat-actor-label').textContent = '';
         if (_CS._sourceEvent) {
@@ -11725,450 +11686,6 @@ async function refreshFieldEventCards() {
     persistState().catch(()=>{});
     advanceTurn();
   }
-
-
-
-// ══════════════════════════════════════════════════════════════════════
-// TREE SYSTEM — Quest, Building, Skill, Class progression
-// ══════════════════════════════════════════════════════════════════════
-
-// _treeProgress, _worldTrees, _treesLoaded, _skillXp declared as globals
-
-// ── Boot hook ─────────────────────────────────────────────────────────
-function tpOnGameReady() {
-  loadWorldTrees();
-}
-
-// ── Load trees from Firebase ──────────────────────────────────────────
-async function loadWorldTrees() {
-  try {
-    const res = await fetch(`${FB_URL}/world/trees.json?cb=${Date.now()}`);
-    if (!res.ok) return;
-    const d = await res.json();
-    if (d && !d.error) { _worldTrees = d; _treesLoaded = true; renderAllTreeProgress(); }
-  } catch(e) { console.error('loadWorldTrees:', e); }
-}
-
-// ── Condition evaluator ───────────────────────────────────────────────
-function tpEvalCondition(condStr) {
-  if (!condStr || !condStr.trim()) return true;
-  if (condStr.includes('&&')) return condStr.split('&&').every(c => tpEvalCondition(c.trim()));
-  if (condStr.includes('||')) return condStr.split('||').some(c  => tpEvalCondition(c.trim()));
-  const c = condStr.trim(), lo = c.toLowerCase();
-  const RES = ['solar','lunar','jovian','martial','saturnine','venusian','mercurial'];
-
-  let m;
-  if ((m = lo.match(/^level\s*(>=?|<=?|==?)\s*(\d+)$/)))  return tpCmp(_characterData?.level||1, m[1], +m[2]);
-  if ((m = lo.match(/^xp\s*(>=?|<=?|==?)\s*(\d+)$/)))     return tpCmp(_characterData?.xp||0, m[1], +m[2]);
-  if ((m = lo.match(/^stress\s*(>=?|<=?|==?)\s*(\d+)$/))) return tpCmp(_characterData?.stress||0, m[1], +m[2]);
-  if ((m = lo.match(new RegExp(`^(${RES.join('|')})\\s*(>=?|<=?|==?)\\s*(\\d+)$`)))) return tpCmp(values[RES.indexOf(m[1])]||0, m[2], +m[3]);
-  if ((m = lo.match(/^quest:(\S+)\s*(==?)\s*(\S+)$/))) return Object.values(_treeProgress[m[1]]||{}).some(v=>v===m[3]);
-  if ((m = lo.match(/^skill:(\S+)$/)))   return (_characterData?.skills||[]).some(s=>(s.key||s)===m[1]);
-  if ((m = lo.match(/^trait:(\S+)$/)))   return (_characterData?.traits||[]).includes(m[1]);
-  if ((m = lo.match(/^has:(\S+)$/)))     return (inventory[m[1]]||0) > 0;
-  if ((m = lo.match(/^building:(\S+)\s*(>=?|<=?|==?)\s*(\d+)$/))) return tpCmp((_lairData?.buildings||{})[m[1]]||0, m[2], +m[3]);
-  if ((m = lo.match(/^skillxp:(\S+)\s*(>=?|<=?|==?)\s*(\d+)$/))) return tpCmp(_skillXp[m[1]]||0, m[2], +m[3]);
-  return true;
-}
-function tpCmp(a, op, b) {
-  if (op==='>'||op==='gt') return a>b; if (op==='<') return a<b;
-  if (op==='>='||op==='=') return a>=b; if (op==='<=') return a<=b;
-  if (op==='=='||op==='=') return a==b; return false;
-}
-
-// ── Topological sort ──────────────────────────────────────────────────
-function tpTopoSort(nodes, edges) {
-  const all = Object.keys(nodes), visited = new Set(), result = [];
-  const roots = all.filter(id => nodes[id]?.isRoot);
-  if (!roots.length && all.length) roots.push(all[0]);
-  function visit(id) {
-    if (visited.has(id)) return; visited.add(id); result.push(id);
-    (edges||[]).filter(e=>e.from===id).forEach(e=>visit(e.to));
-  }
-  roots.forEach(visit);
-  all.filter(id=>!visited.has(id)).forEach(id=>result.push(id));
-  return result;
-}
-
-// ── Node state ────────────────────────────────────────────────────────
-function tpGetNodeState(tree, nodeId) {
-  const prog = _treeProgress[tree.key||tree.name]||{};
-  if (prog[nodeId]==='completed') return 'completed';
-  const node = (tree.nodes||{})[nodeId]; if (!node) return 'locked';
-  if (node.isRoot) return 'available';
-  const parents = (tree.edges||[]).filter(e=>e.to===nodeId);
-  if (!parents.length) return 'available';
-  for (const e of parents) {
-    const ps = tpGetNodeState(tree, e.from);
-    if ((ps==='completed') && tpEvalCondition(e.condition)) return 'available';
-  }
-  return 'locked';
-}
-
-// ── Spend resources from a req string ────────────────────────────────
-function tpSpendReq(reqStr) {
-  if (!reqStr) return true;
-  const RES_IDX = {solar:0,lunar:1,jovian:2,martial:3,saturnine:4,venusian:5,mercurial:6};
-  const parts = reqStr.split(',').map(s=>s.trim());
-  for (const part of parts) {
-    const m = part.match(/(\d+)\s+(\w+)/i);
-    if (!m) continue;
-    const amt = +m[1], resKey = m[2].toLowerCase();
-    const idx = RES_IDX[resKey];
-    if (idx === undefined) continue;
-    if ((values[idx]||0) < amt) { toast(`Not enough ${m[2]}. Need ${amt}.`); return false; }
-  }
-  // Deduct
-  for (const part of parts) {
-    const m = part.match(/(\d+)\s+(\w+)/i);
-    if (!m) continue;
-    const idx = RES_IDX[m[2].toLowerCase()];
-    if (idx !== undefined) {
-      values[idx] -= +m[1];
-      document.querySelectorAll('.resource-pill .res-value').forEach((el,i)=>{el.textContent=Math.floor(values[i]);});
-    }
-  }
-  return true;
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// QUEST TREES — nodes appear as map markers + field cards
-// ══════════════════════════════════════════════════════════════════════
-let _questMarkers = {};   // treeKey_nodeId → leaflet marker
-
-function renderQuestNodes() {
-  if (!_treesLoaded || !_characterData) return;
-  const section = document.getElementById('quest-nodes-section');
-  const list    = document.getElementById('quest-nodes-list');
-  if (!section||!list) return;
-
-  const questTrees = Object.entries(_worldTrees)
-    .filter(([,t])=>t.type==='quest')
-    .map(([k,t])=>({...t,key:k}));
-
-  // Remove old quest markers from map
-  Object.values(_questMarkers).forEach(m=>{ try{m.remove();}catch(e){} });
-  _questMarkers = {};
-
-  if (!questTrees.length) { section.style.display='none'; return; }
-  section.style.display='block';
-
-  const cards = [];
-  questTrees.forEach(tree => {
-    const nodes = tree.nodes||{}, edges = tree.edges||[];
-    const ordered = tpTopoSort(nodes, edges);
-    ordered.forEach(nodeId => {
-      const state = tpGetNodeState(tree, nodeId);
-      if (state !== 'available') return;
-      const node = nodes[nodeId];
-      const inEdge = edges.find(e=>e.to===nodeId);
-      // Add map marker if lat/lng defined
-      if (node.lat && node.lng && typeof L !== 'undefined' && map) {
-        try {
-          const icon = L.divIcon({
-            className: '',
-            html: `<div class="llair-mission story dm-placed quest-node-marker" title="${node.label}"></div>`,
-            iconSize: [16,16], iconAnchor:[8,8], popupAnchor:[0,-14]
-          });
-          const mKey = tree.key+'_'+nodeId;
-          const marker = L.marker([+node.lat, +node.lng], {icon}).addTo(map);
-          const popupHtml = `<div class="popup-title">${node.label}</div>
-            <div style="font-family:var(--ff-body);font-style:italic;font-size:0.78rem;color:var(--pale);margin:0.3rem 0;">${node.desc||''}</div>
-            ${node.choices?.length ? '<div style="margin-top:0.3rem;">'+node.choices.map((ch,i)=>`<button class="popup-btn" onclick="tpQuestChoice('${tree.key}','${nodeId}',${i})">${ch.label||'Choose'}</button>`).join('')+'</div>'
-              : `<button class="popup-btn" onclick="tpAdvanceQuest('${tree.key}','${nodeId}')">Advance</button>`}`;
-          marker.bindPopup(popupHtml);
-          _questMarkers[mKey] = marker;
-        } catch(e) {}
-      }
-      // Build field card
-      const color = 'var(--indigo-bright)';
-      const hasChoices = node.choices && node.choices.length > 0;
-      cards.push(`<div class="mission-card" style="--mission-color:${color}">
-        <div class="mission-header">
-          <span class="mission-title">✦ ${node.label}</span>
-          <span class="mission-badge" style="color:var(--indigo-bright);">quest</span>
-        </div>
-        <p class="mission-desc">${node.desc||''}</p>
-        ${inEdge?.condition?`<div style="font-family:var(--ff-heading);font-size:0.44rem;letter-spacing:0.08em;color:var(--amber-bright);margin-bottom:0.3rem;">⚑ ${inEdge.condition}</div>`:''}
-        ${node.lat&&node.lng?`<div style="font-family:var(--ff-heading);font-size:0.44rem;color:var(--gold-dim);margin-bottom:0.3rem;cursor:pointer;" onclick="flyToEventLocation(${node.lat},${node.lng})">◎ ${(+node.lat).toFixed(4)}, ${(+node.lng).toFixed(4)}</div>`:''}
-        ${hasChoices
-          ? node.choices.map((ch,i)=>`<button onclick="tpQuestChoice('${tree.key}','${nodeId}',${i})" style="margin-top:0.35rem;width:100%;font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.42rem;border:1px solid rgba(61,61,170,0.4);background:none;color:var(--indigo-bright);cursor:pointer;">${ch.label||'Choose'}</button>`).join('')
-          : `<button onclick="tpAdvanceQuest('${tree.key}','${nodeId}')" style="margin-top:0.35rem;width:100%;font-family:var(--ff-heading);font-size:0.48rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.42rem;border:1px solid rgba(61,61,170,0.4);background:none;color:var(--indigo-bright);cursor:pointer;">→ Advance Questline</button>`}
-      </div>`);
-    });
-  });
-
-  list.innerHTML = cards.length ? cards.join('') :
-    `<div style="font-family:var(--ff-body);font-style:italic;font-size:0.82rem;color:var(--text-secondary);padding:0.5rem 0;">No active quest nodes.</div>`;
-}
-
-function tpAdvanceQuest(treeKey, nodeId) {
-  const tree = _worldTrees[treeKey]; if (!tree) return;
-  if (tpGetNodeState(tree, nodeId) !== 'available') { toast('Not available yet.'); return; }
-  const node = (tree.nodes||{})[nodeId];
-  if (node.req && !tpSpendReq(node.req)) return;
-  if (!_treeProgress[treeKey]) _treeProgress[treeKey] = {};
-  _treeProgress[treeKey][nodeId] = 'completed';
-  appendWorldEventToJournal({ title: node.label, desc: node.desc, type: 'story', id: treeKey+'_'+nodeId }, 'completed');
-  toast('✦ Quest advanced: ' + node.label);
-  renderAllTreeProgress();
-  persistState().catch(()=>{});
-}
-
-function tpQuestChoice(treeKey, nodeId, choiceIdx) {
-  const tree = _worldTrees[treeKey]; if (!tree) return;
-  const node = (tree.nodes||{})[nodeId]; if (!node) return;
-  const choice = (node.choices||[])[choiceIdx]; if (!choice) return;
-  if (!_treeProgress[treeKey]) _treeProgress[treeKey] = {};
-  _treeProgress[treeKey][nodeId] = 'completed';
-  _treeProgress[treeKey][nodeId+'_choice'] = choiceIdx;
-  if (choice.reward) applyDmEventReward({ rewardRes: choice.reward });
-  appendWorldEventToJournal({ title: node.label+': '+choice.label, desc: choice.desc||node.desc, type: 'story', id: treeKey+'_'+nodeId+'_'+choiceIdx }, 'completed');
-  toast('✦ ' + choice.label);
-  renderAllTreeProgress();
-  persistState().catch(()=>{});
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// BUILDING TREES — handled in renderLairBuildings
-// ══════════════════════════════════════════════════════════════════════
-function tpAdvanceBuilding(treeKey, nodeId) {
-  const tree = _worldTrees[treeKey]; if (!tree) return;
-  const state = tpGetNodeState(tree, nodeId);
-  if (state !== 'available') { toast('Not available yet.'); return; }
-  const node = (tree.nodes||{})[nodeId]; if (!node) return;
-  const inEdge = (tree.edges||[]).find(e=>e.to===nodeId);
-  if (inEdge?.condition && !tpEvalCondition(inEdge.condition)) { toast('Condition not met: '+inEdge.condition); return; }
-  if (node.req && !tpSpendReq(node.req)) return;
-  if (!_treeProgress[treeKey]) _treeProgress[treeKey] = {};
-  _treeProgress[treeKey][nodeId] = 'completed';
-  // Update lair building level
-  const bKey = tree.buildingKey;
-  if (bKey && _lairData) {
-    if (!_lairData.buildings) _lairData.buildings = {};
-    _lairData.buildings[bKey] = (_lairData.buildings[bKey]||0) + 1;
-    updateCaps();
-  }
-  toast('⚗ Building upgraded: ' + node.label);
-  renderLairBuildings(_lairData?.buildings||{});
-  persistState().catch(()=>{});
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// SKILL TREES — XP-driven per-skill progression
-// ══════════════════════════════════════════════════════════════════════
-function tpAddSkillXp(skillKey, amount) {
-  if (!skillKey || skillKey === 'basic') return;
-  _skillXp[skillKey] = (_skillXp[skillKey]||0) + (amount||1);
-  renderSkillTrees();
-  // Check if a skill tree node unlocked
-  checkSkillTreeUnlocks(skillKey);
-}
-
-function checkSkillTreeUnlocks(skillKey) {
-  Object.entries(_worldTrees||{}).forEach(([tKey, tree]) => {
-    if (tree.type !== 'skill' || tree.skillKey !== skillKey) return;
-    const ordered = tpTopoSort(tree.nodes||{}, tree.edges||[]);
-    ordered.forEach(nodeId => {
-      if (tpGetNodeState(tree, nodeId) === 'available') {
-        const node = (tree.nodes||{})[nodeId];
-        const xpNeeded = node.xpThreshold || node.xpRequired || 0;
-        if (xpNeeded && (_skillXp[skillKey]||0) >= xpNeeded && !node.choices?.length) {
-          // Auto-unlock if no player choice needed
-          if (!_treeProgress[tKey]) _treeProgress[tKey] = {};
-          _treeProgress[tKey][nodeId] = 'completed';
-          toast(`✦ Skill evolved: ${node.label}`);
-          if (node.bonus) applyNodeBonus(node.bonus);
-          renderAllTreeProgress();
-          persistState().catch(()=>{});
-        }
-      }
-    });
-  });
-}
-
-function renderSkillTrees() {
-  if (!_treesLoaded) return;
-  const section = document.getElementById('skill-tree-section');
-  const list    = document.getElementById('skill-tree-list');
-  if (!section||!list) return;
-
-  const skillTrees = Object.entries(_worldTrees)
-    .filter(([,t])=>t.type==='skill')
-    .map(([k,t])=>({...t,key:k}));
-
-  if (!skillTrees.length) { section.style.display='none'; return; }
-  section.style.display='block';
-
-  list.innerHTML = skillTrees.map(tree => {
-    const nodes   = tree.nodes||{}, edges = tree.edges||[];
-    const ordered = tpTopoSort(nodes, edges);
-    const skillKey = tree.skillKey||tree.key;
-    const totalXp  = _skillXp[skillKey]||0;
-
-    const nodeCards = ordered.map((nodeId,idx) => {
-      const node  = nodes[nodeId];
-      const state = tpGetNodeState(tree, nodeId);
-      const xpThresh = node.xpThreshold||node.xpRequired||0;
-      const xpPct = xpThresh > 0 ? Math.min(100, Math.round((totalXp/xpThresh)*100)) : 100;
-      const inEdge = edges.find(e=>e.to===nodeId);
-      const hasChoices = node.choices?.length > 0;
-      const canAdvance = state === 'available';
-
-      return `<div style="border-left:2px solid ${state==='completed'?'var(--viridian-bright)':state==='available'?'var(--gold)':'var(--stone)'};padding:0.45rem 0.6rem;margin-bottom:0.35rem;background:rgba(255,255,255,0.01);opacity:${state==='locked'?0.4:1};">
-        <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.15rem;">
-          <span style="font-family:var(--ff-heading);font-size:0.65rem;color:${state==='completed'?'var(--viridian-bright)':state==='available'?'var(--gold)':'var(--stone)'};">${state==='completed'?'✓':state==='available'?'○':'·'}</span>
-          <span style="font-family:var(--ff-heading);font-size:0.7rem;color:var(--bone);">${node.label||nodeId}</span>
-          ${xpThresh>0&&state!=='completed'?`<span style="font-family:var(--ff-heading);font-size:0.42rem;color:var(--text-secondary);margin-left:auto;">${totalXp}/${xpThresh} XP</span>`:''}
-        </div>
-        ${node.desc?`<div style="font-family:var(--ff-body);font-style:italic;font-size:0.72rem;color:var(--mist);">${node.desc}</div>`:''}
-        ${node.bonus?`<div style="font-family:var(--ff-heading);font-size:0.44rem;letter-spacing:0.08em;color:var(--viridian-bright);margin-top:0.12rem;">+${node.bonus}</div>`:''}
-        ${xpThresh>0&&state!=='completed'?`<div style="height:2px;background:var(--border);margin-top:0.2rem;"><div style="height:100%;width:${xpPct}%;background:var(--gold);transition:width 0.4s;"></div></div>`:''}
-        ${canAdvance&&hasChoices?node.choices.map((ch,i)=>`<button onclick="tpSkillChoice('${tree.key}','${nodeId}',${i})" style="margin-top:0.3rem;width:100%;font-family:var(--ff-heading);font-size:0.46rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.38rem;border:1px solid rgba(61,61,170,0.4);background:none;color:var(--indigo-bright);cursor:pointer;">${ch.label}</button>`).join(''):''}
-        ${canAdvance&&!hasChoices&&xpThresh>0&&totalXp>=xpThresh?`<button onclick="tpSkillChoice('${tree.key}','${nodeId}',0)" style="margin-top:0.3rem;width:100%;font-family:var(--ff-heading);font-size:0.46rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.38rem;border:1px solid rgba(45,122,95,0.4);background:none;color:var(--viridian-bright);cursor:pointer;">Unlock Evolution</button>`:'' }
-      </div>`;
-    }).join('');
-
-    const xpForCurrent = (() => {
-      const next = ordered.find(id=>tpGetNodeState(tree,id)==='available');
-      return next ? ((nodes[next]?.xpThreshold||nodes[next]?.xpRequired||0)) : 0;
-    })();
-
-    return `<div style="margin-bottom:1rem;">
-      <div style="font-family:var(--ff-heading);font-size:0.52rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.4rem;display:flex;align-items:center;gap:0.5rem;">
-        ${tree.name||skillKey}
-        <span style="color:var(--gold-dim);">${totalXp} XP used</span>
-        <span style="flex:1;height:1px;background:var(--border);display:block;"></span>
-      </div>
-      ${nodeCards}
-    </div>`;
-  }).join('');
-}
-
-function tpSkillChoice(treeKey, nodeId, choiceIdx) {
-  const tree = _worldTrees[treeKey]; if (!tree) return;
-  const node = (tree.nodes||{})[nodeId]; if (!node) return;
-  const choice = (node.choices||[])[choiceIdx];
-  if (!_treeProgress[treeKey]) _treeProgress[treeKey] = {};
-  _treeProgress[treeKey][nodeId] = 'completed';
-  _treeProgress[treeKey][nodeId+'_choice'] = choiceIdx;
-  const bonus = choice?.bonus||node.bonus||'';
-  if (bonus) applyNodeBonus(bonus);
-  toast('✦ Skill evolved: '+(choice?.label||node.label));
-  renderAllTreeProgress();
-  persistState().catch(()=>{});
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// CLASS TREES — specialisation / prestige paths
-// ══════════════════════════════════════════════════════════════════════
-function renderClassTrees() {
-  if (!_treesLoaded) return;
-  const section = document.getElementById('class-tree-section');
-  const list    = document.getElementById('class-tree-list');
-  if (!section||!list) return;
-  const classKey = (_characterData?.classKey||'').toLowerCase();
-  const trees = Object.entries(_worldTrees)
-    .filter(([,t])=>t.type==='class'&&(!t.classKey||t.classKey.toLowerCase()===classKey))
-    .map(([k,t])=>({...t,key:k}));
-  if (!trees.length) { section.style.display='none'; return; }
-  section.style.display='block';
-  list.innerHTML = trees.map(tree => {
-    const nodes   = tree.nodes||{}, edges = tree.edges||[];
-    const ordered = tpTopoSort(nodes, edges);
-    return `<div style="margin-bottom:0.8rem;">
-      <div style="font-family:var(--ff-heading);font-size:0.52rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.4rem;">${tree.name}</div>
-      ${ordered.map((nodeId,idx) => {
-        const node  = nodes[nodeId], state = tpGetNodeState(tree, nodeId);
-        const canAdvance = state === 'available';
-        const hasChoices = node.choices?.length > 0;
-        const inEdge = edges.find(e=>e.to===nodeId);
-        const condMet = !inEdge?.condition || tpEvalCondition(inEdge.condition);
-        return `<div style="border-left:2px solid ${state==='completed'?'var(--dm-bright)':state==='available'?'var(--gold)':'var(--stone)'};padding:0.45rem 0.6rem;margin-bottom:0.3rem;opacity:${state==='locked'?0.38:1};">
-          <div style="display:flex;align-items:center;gap:0.4rem;">
-            <span style="font-family:var(--ff-heading);font-size:0.65rem;color:${state==='completed'?'var(--dm-bright)':state==='available'?'var(--gold)':'var(--stone)'};">${state==='completed'?'✓':state==='available'?'○':'·'}</span>
-            <span style="font-family:var(--ff-heading);font-size:0.7rem;color:var(--bone);">${node.label||nodeId}</span>
-          </div>
-          ${node.desc?`<div style="font-family:var(--ff-body);font-style:italic;font-size:0.72rem;color:var(--mist);margin-top:0.1rem;">${node.desc}</div>`:''}
-          ${node.bonus?`<div style="font-family:var(--ff-heading);font-size:0.44rem;color:var(--dm-bright);margin-top:0.1rem;">+${node.bonus}</div>`:''}
-          ${canAdvance&&condMet?hasChoices
-            ?node.choices.map((ch,i)=>`<button onclick="tpClassChoice('${tree.key}','${nodeId}',${i})" style="margin-top:0.3rem;width:100%;font-family:var(--ff-heading);font-size:0.46rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.38rem;border:1px solid rgba(123,47,255,0.4);background:none;color:var(--dm-bright);cursor:pointer;">${ch.label}</button>`).join('')
-            :`<button onclick="tpClassChoice('${tree.key}','${nodeId}',0)" style="margin-top:0.3rem;width:100%;font-family:var(--ff-heading);font-size:0.46rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.38rem;border:1px solid rgba(123,47,255,0.4);background:none;color:var(--dm-bright);cursor:pointer;">Choose Path</button>`
-          :''}
-          ${canAdvance&&!condMet?`<div style="font-family:var(--ff-heading);font-size:0.42rem;color:var(--amber-bright);margin-top:0.2rem;">⚑ ${inEdge.condition}</div>`:''}
-        </div>`;
-      }).join('')}
-    </div>`;
-  }).join('');
-}
-
-function tpClassChoice(treeKey, nodeId, choiceIdx) {
-  const tree = _worldTrees[treeKey]; if (!tree) return;
-  const node = (tree.nodes||{})[nodeId]; if (!node) return;
-  const choice = (node.choices||[])[choiceIdx];
-  if (node.req && !tpSpendReq(node.req)) return;
-  if (!_treeProgress[treeKey]) _treeProgress[treeKey] = {};
-  _treeProgress[treeKey][nodeId] = 'completed';
-  _treeProgress[treeKey][nodeId+'_choice'] = choiceIdx;
-  const bonus = choice?.bonus||node.bonus||'';
-  if (bonus) applyNodeBonus(bonus);
-  toast('◈ Class path unlocked: '+(choice?.label||node.label));
-  renderAllTreeProgress();
-  persistState().catch(()=>{});
-}
-
-// ── Apply stat/skill bonuses from a node ──────────────────────────────
-function applyNodeBonus(bonusStr) {
-  if (!bonusStr || !_characterData) return;
-  bonusStr.split(',').forEach(part => {
-    part = part.trim();
-    // stat+N  e.g. fortitude+2
-    let m = part.match(/^(\w+)([+-])(\d+)$/);
-    if (m && _characterData.stats?.[m[1]] !== undefined) {
-      _characterData.stats[m[1]] = Math.max(0, (_characterData.stats[m[1]]||0) + parseInt(m[2]+m[3]));
-      return;
-    }
-    // skill:key  e.g. skill:annichilito
-    m = part.match(/^skill:(\S+)$/);
-    if (m) {
-      if (!_characterData.skills) _characterData.skills = [];
-      if (!_characterData.skills.find(s=>(s.key||s)===m[1])) _characterData.skills.push({ key: m[1] });
-    }
-    // trait:key
-    m = part.match(/^trait:(\S+)$/);
-    if (m) {
-      if (!_characterData.traits) _characterData.traits = [];
-      if (!_characterData.traits.includes(m[1])) _characterData.traits.push(m[1]);
-    }
-  });
-  // Rerender stats display
-  if (_characterData.stats) {
-    const STATS = ['fortitude','wrath','intuition','empathy','endurance','memory','cunning','speed'];
-    STATS.forEach(k => {
-      const v = _characterData.stats[k]; if (v===undefined) return;
-      document.getElementById('sv-'+k)?.textContent === undefined || (document.getElementById('sv-'+k).textContent = v);
-    });
-  }
-}
-
-// ── Master render ─────────────────────────────────────────────────────
-function renderAllTreeProgress() {
-  if (!_treesLoaded) return;
-  renderQuestNodes();
-  renderLairBuildings(_lairData?.buildings||{});
-  renderSkillTrees();
-  renderClassTrees();
-}
-
-// ── Hook skill XP into selectSkill / executeSkill ─────────────────────
-// Called after a skill is used in combat
-function tpOnSkillUsed(skillKey) {
-  if (!skillKey || skillKey === 'basic') return;
-  tpAddSkillXp(skillKey, 1);
-  persistState().catch(()=>{});
-}
-
-
 
 </script>
 

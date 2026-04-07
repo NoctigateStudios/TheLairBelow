@@ -434,6 +434,7 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
   <div class="wiz-step" id="wstep-3" onclick="wizGo(3)">3 · Checks</div>
   <div class="wiz-step" id="wstep-4" onclick="wizGo(4)">4 · Combat</div>
   <div class="wiz-step" id="wstep-5" onclick="wizGo(5)">5 · Reward</div>
+  <div class="wiz-step" id="wstep-6" onclick="wizGo(6)">6 · Qualities</div>
 </div>
 
 <!-- Step 1: Core narrative -->
@@ -570,13 +571,55 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
 </div>
 <div class="fld"><label>Marker Name</label><input type="text" id="evt-marker" placeholder="optional"></div>
 </div>
+<!-- Step 6: Quest Qualities -->
+<div id="wiz-panel-6" class="wiz-panel">
+<div class="panel">
+  <div class="ph">Quest Qualities <span style="font-weight:normal;color:var(--ash);font-size:0.85em;">(Fallen London style tracking)</span></div>
+  <p style="font-family:var(--ff-b);font-style:italic;font-size:0.85rem;color:var(--mist);margin-bottom:0.8rem;line-height:1.6;">
+    Qualities are named numbers saved on the player. Use them to gate tree nodes — e.g. when a player wins a combat, grant <strong>combat-won: 1</strong>, then require <code style="color:var(--dm-bright)">quality:combat-won >= 1</code> in the tree builder condition.
+    <br>Different outcomes (win/lose, choice A/B) can grant different qualities.
+  </p>
+
+  <div style="font-family:var(--ff-h);font-size:0.52rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem;">On Success / Victory</div>
+  <div id="wiz-grants-win-list"></div>
+  <button class="btn b-seal" onclick="addWizGrant('win')" style="width:100%;margin-bottom:0.8rem;font-size:0.49rem;">+ Add Quality Grant (Win)</button>
+
+  <div style="font-family:var(--ff-h);font-size:0.52rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--crimson-bright);margin-bottom:0.5rem;">On Failure / Defeat</div>
+  <div id="wiz-grants-lose-list"></div>
+  <button class="btn b-seal" onclick="addWizGrant('lose')" style="width:100%;margin-bottom:0.8rem;font-size:0.49rem;border-color:rgba(139,26,26,0.4);color:var(--crimson-bright);">+ Add Quality Grant (Lose)</button>
+
+  <div style="font-family:var(--ff-h);font-size:0.52rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);margin-bottom:0.5rem;">Always (regardless of outcome)</div>
+  <div id="wiz-grants-always-list"></div>
+  <button class="btn b-seal" onclick="addWizGrant('always')" style="width:100%;font-size:0.49rem;border-color:var(--stone);">+ Add Quality Grant (Always)</button>
+
+  <div style="margin-top:0.8rem;border-top:1px solid var(--border);padding-top:0.6rem;">
+    <div style="font-family:var(--ff-h);font-size:0.5rem;letter-spacing:0.1em;color:var(--mist);margin-bottom:0.4rem;">Quick insert — common quality patterns:</div>
+    <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
+      <button class="btn" onclick="addWizGrantQuick('win','combat-won',1)" style="font-size:0.44rem;padding:0.2rem 0.5rem;">combat-won: 1</button>
+      <button class="btn" onclick="addWizGrantQuick('lose','combat-lost',1)" style="font-size:0.44rem;padding:0.2rem 0.5rem;border-color:var(--crimson-bright);color:var(--crimson-bright);">combat-lost: 1</button>
+      <button class="btn" onclick="addWizGrantQuick('win','quest-explored',1)" style="font-size:0.44rem;padding:0.2rem 0.5rem;">quest-explored: 1</button>
+      <button class="btn" onclick="addWizGrantQuick('always','event-seen',1)" style="font-size:0.44rem;padding:0.2rem 0.5rem;border-color:var(--stone);">event-seen: 1</button>
+    </div>
+  </div>
+</div>
+<div style="display:flex;gap:0.5rem;margin-top:0.6rem;">
+  <button class="btn b-seal" onclick="wizGo(5)">← Back</button>
+  <button class="btn b-rune" onclick="wizGo(7)">Next: Review →</button>
+</div>
+</div>
+
+<!-- Step 7: Summary & Send (was previously inline) -->
+<div id="wiz-panel-7" class="wiz-panel">
+
 <!-- Summary -->
 <div id="wiz-summary" class="panel" style="background:rgba(123,47,255,0.04);border-color:rgba(168,85,247,0.2);"></div>
 <div style="display:flex;gap:0.5rem;margin-top:0.6rem;">
 <button class="btn b-seal" onclick="wizGo(4)">← Back</button>
-<button class="btn b-rune" style="flex:1;padding:0.85rem;" onclick="pushEvent()">✦ Send Omen to Seeker(s)</button>
+<button class="btn b-rune" onclick="wizGo(6)">Next: Qualities →</button>
 </div>
 </div>
+
+</div><!-- end wiz-panel-7 -->
 
 <!-- Active omens sidebar -->
 <div class="panel" style="margin-top:1.2rem;"><div class="ph">Active Omens <button class="btn b-seal" style="padding:0.18rem 0.5rem;font-size:0.49rem;float:right;" onclick="loadActiveEvents()">↻</button></div>
@@ -1692,6 +1735,11 @@ async function pushEvent() {
   let enemies = [];
   try { enemies = JSON.parse(document.getElementById('wiz-enemies-data')?.value||'[]'); } catch(e) {}
 
+  // Collect quality grants from step 6
+  const grantsWin    = _wizGrants.win    || {};
+  const grantsLose   = _wizGrants.lose   || {};
+  const grantsAlways = _wizGrants.always || {};
+  const hasGrants = Object.keys(grantsWin).length || Object.keys(grantsLose).length || Object.keys(grantsAlways).length;
   const ev = {
     type, title, body,
     btn1: btn1 || 'Proceed',
@@ -2060,6 +2108,7 @@ async function saveMapEvt(){
   const ev={type,
     title:document.getElementById('mevt-title').value,
     desc:document.getElementById('mevt-desc').value,
+    grants: evGrants,
     reward:document.getElementById('mevt-reward').value||null,
     actionText:document.getElementById('mevt-action').value||null,
     enemies:enemies.length?enemies:null,
@@ -4464,6 +4513,144 @@ document.addEventListener('click', (e) => {
   const modal = document.getElementById('tb-edge-modal');
   if (modal?.classList.contains('open') && !modal.contains(e.target)) tbCloseEdgeModal();
 });
+
+
+// ══════════════════════════════════════════════════════════════════════
+// QUALITY GRANTS — Fallen London style tracking in event wizard
+// ══════════════════════════════════════════════════════════════════════
+let _wizGrants = { win: {}, lose: {}, always: {} };
+
+function addWizGrant(outcome) {
+  const listId = 'wiz-grants-' + outcome + '-list';
+  const list = document.getElementById(listId); if (!list) return;
+  const id = 'grant_' + outcome + '_' + Date.now();
+  const row = document.createElement('div');
+  row.id = id;
+  row.style.cssText = 'display:flex;gap:0.4rem;align-items:center;margin-bottom:0.35rem;';
+  const colors = { win:'var(--viridian-bright)', lose:'var(--crimson-bright)', always:'var(--mist)' };
+  row.innerHTML = `
+    <input type="text" placeholder="quality-key  (e.g. combat-won)" id="${id}-key"
+      style="flex:2;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.28rem 0.4rem;font-family:var(--ff-b);font-size:0.76rem;outline:none;">
+    <input type="number" value="1" min="-99" id="${id}-val"
+      style="flex:0.6;background:var(--shadow);border:1px solid var(--stone);color:${colors[outcome]};padding:0.28rem 0.4rem;font-family:var(--ff-h);font-size:0.78rem;outline:none;text-align:center;">
+    <button onclick="removeWizGrant('${id}','${outcome}')"
+      style="background:none;border:none;color:var(--ash);cursor:pointer;font-size:0.85rem;padding:0 0.2rem;">✕</button>`;
+  list.appendChild(row);
+  // Live-update _wizGrants on input
+  row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => syncWizGrants()));
+}
+
+function addWizGrantQuick(outcome, key, val) {
+  const listId = 'wiz-grants-' + outcome + '-list';
+  const list = document.getElementById(listId); if (!list) return;
+  const id = 'grant_' + outcome + '_' + Date.now();
+  const row = document.createElement('div');
+  row.id = id;
+  row.style.cssText = 'display:flex;gap:0.4rem;align-items:center;margin-bottom:0.35rem;';
+  const colors = { win:'var(--viridian-bright)', lose:'var(--crimson-bright)', always:'var(--mist)' };
+  row.innerHTML = `
+    <input type="text" value="${key}" id="${id}-key"
+      style="flex:2;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.28rem 0.4rem;font-family:var(--ff-b);font-size:0.76rem;outline:none;">
+    <input type="number" value="${val}" min="-99" id="${id}-val"
+      style="flex:0.6;background:var(--shadow);border:1px solid var(--stone);color:${colors[outcome]};padding:0.28rem 0.4rem;font-family:var(--ff-h);font-size:0.78rem;outline:none;text-align:center;">
+    <button onclick="removeWizGrant('${id}','${outcome}')"
+      style="background:none;border:none;color:var(--ash);cursor:pointer;font-size:0.85rem;padding:0 0.2rem;">✕</button>`;
+  list.appendChild(row);
+  row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => syncWizGrants()));
+  syncWizGrants();
+}
+
+function removeWizGrant(id, outcome) {
+  document.getElementById(id)?.remove();
+  syncWizGrants();
+}
+
+function syncWizGrants() {
+  ['win','lose','always'].forEach(outcome => {
+    _wizGrants[outcome] = {};
+    document.querySelectorAll(`[id^="grant_${outcome}_"]`).forEach(row => {
+      const key = row.querySelector(`[id$="-key"]`)?.value.trim();
+      const val = parseInt(row.querySelector(`[id$="-val"]`)?.value) || 0;
+      if (key) _wizGrants[outcome][key] = val;
+    });
+  });
+}
+
+function resetWizGrants() {
+  _wizGrants = { win: {}, lose: {}, always: {} };
+  ['win','lose','always'].forEach(o => {
+    const el = document.getElementById('wiz-grants-'+o+'-list');
+    if (el) el.innerHTML = '';
+  });
+}
+
+// Update buildWizSummary to include grants
+const _origBuildWizSummary = typeof buildWizSummary === 'function' ? buildWizSummary : null;
+function buildWizSummary() {
+  if (_origBuildWizSummary) _origBuildWizSummary();
+  syncWizGrants();
+  // Append grants preview to summary
+  const summary = document.getElementById('wiz-summary');
+  if (!summary) return;
+  const hasAny = Object.keys(_wizGrants.win).length || Object.keys(_wizGrants.lose).length || Object.keys(_wizGrants.always).length;
+  if (!hasAny) return;
+  const fmt = obj => Object.entries(obj).map(([k,v])=>`<span style="color:var(--gold-dim);font-family:var(--ff-h);font-size:0.52rem;">${k}</span> ${v>0?'+':''}${v}`).join(', ');
+  const row = document.createElement('div');
+  row.style.cssText = 'margin-top:0.5rem;border-top:1px solid var(--border);padding-top:0.5rem;';
+  row.innerHTML = `<div style="font-family:var(--ff-h);font-size:0.48rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:0.25rem;">Quality Grants</div>
+    ${Object.keys(_wizGrants.win).length    ? `<div style="font-size:0.72rem;color:var(--bone);margin-bottom:0.1rem;">✓ Win: ${fmt(_wizGrants.win)}</div>`:'' }
+    ${Object.keys(_wizGrants.lose).length   ? `<div style="font-size:0.72rem;color:var(--bone);margin-bottom:0.1rem;">✗ Lose: ${fmt(_wizGrants.lose)}</div>`:'' }
+    ${Object.keys(_wizGrants.always).length ? `<div style="font-size:0.72rem;color:var(--bone);">◈ Always: ${fmt(_wizGrants.always)}</div>`:'' }`;
+  summary.appendChild(row);
+}
+
+// Also add grants fields to the map event editor
+function addMapEventGrantsSection() {
+  const editor = document.getElementById('map-evt-editor');
+  if (!editor || editor.querySelector('#mevt-grants-section')) return;
+  const section = document.createElement('div');
+  section.id = 'mevt-grants-section';
+  section.style.cssText = 'margin-top:0.6rem;';
+  section.innerHTML = `<div class="ph" style="margin-top:0.4rem;">Quality Grants <span style="font-weight:normal;color:var(--ash);font-size:0.85em;">(optional)</span></div>
+    <p style="font-family:var(--ff-b);font-style:italic;font-size:0.82rem;color:var(--mist);margin-bottom:0.5rem;">Grant qualities on victory / defeat / always. Used to gate tree node conditions.</p>
+    <div style="font-family:var(--ff-h);font-size:0.48rem;letter-spacing:0.1em;color:var(--viridian-bright);margin-bottom:0.3rem;">On Win</div>
+    <div id="mevt-grants-win"></div>
+    <button class="btn b-seal" onclick="_addMapGrant('win')" style="width:100%;margin-bottom:0.5rem;font-size:0.48rem;">+ Win Grant</button>
+    <div style="font-family:var(--ff-h);font-size:0.48rem;letter-spacing:0.1em;color:var(--crimson-bright);margin-bottom:0.3rem;">On Lose</div>
+    <div id="mevt-grants-lose"></div>
+    <button class="btn b-seal" onclick="_addMapGrant('lose')" style="width:100%;margin-bottom:0.5rem;font-size:0.48rem;border-color:rgba(139,26,26,0.4);color:var(--crimson-bright);">+ Lose Grant</button>
+    <div style="font-family:var(--ff-h);font-size:0.48rem;letter-spacing:0.1em;color:var(--mist);margin-bottom:0.3rem;">Always</div>
+    <div id="mevt-grants-always"></div>
+    <button class="btn b-seal" onclick="_addMapGrant('always')" style="width:100%;font-size:0.48rem;border-color:var(--stone);">+ Always Grant</button>`;
+  const cancelBtn = editor.querySelector('button[onclick*="map-evt-editor"]');
+  if (cancelBtn) cancelBtn.parentElement.before(section);
+  else editor.appendChild(section);
+}
+
+function _addMapGrant(outcome) {
+  const listEl = document.getElementById('mevt-grants-'+outcome); if(!listEl) return;
+  const id = 'mgrant_'+outcome+'_'+Date.now();
+  const colors = {win:'var(--viridian-bright)',lose:'var(--crimson-bright)',always:'var(--mist)'};
+  const row = document.createElement('div'); row.id = id;
+  row.style.cssText = 'display:flex;gap:0.4rem;align-items:center;margin-bottom:0.3rem;';
+  row.innerHTML = `<input type="text" placeholder="quality-key" id="${id}-key" style="flex:2;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.26rem 0.4rem;font-family:var(--ff-b);font-size:0.76rem;outline:none;">
+    <input type="number" value="1" id="${id}-val" style="flex:0.6;background:var(--shadow);border:1px solid var(--stone);color:${colors[outcome]};padding:0.26rem 0.4rem;font-family:var(--ff-h);font-size:0.78rem;outline:none;text-align:center;">
+    <button onclick="document.getElementById('${id}').remove()" style="background:none;border:none;color:var(--ash);cursor:pointer;font-size:0.85rem;">✕</button>`;
+  listEl.appendChild(row);
+}
+
+function _collectMapGrants() {
+  const result = {win:{},lose:{},always:{}};
+  ['win','lose','always'].forEach(out=>{
+    document.querySelectorAll(`[id^="mgrant_${out}_"]`).forEach(row=>{
+      const k = row.querySelector('[id$="-key"]')?.value.trim();
+      const v = parseInt(row.querySelector('[id$="-val"]')?.value)||0;
+      if(k) result[out][k]=v;
+    });
+  });
+  const hasAny = Object.keys(result.win).length||Object.keys(result.lose).length||Object.keys(result.always).length;
+  return hasAny ? result : undefined;
+}
 
 </script>
 
