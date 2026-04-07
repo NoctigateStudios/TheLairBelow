@@ -2678,6 +2678,96 @@
   /* AVAILABLE ACOLYTE TOGGLE */
   .acolyte-avail-toggle { font-family:var(--ff-heading);font-size: 0.51rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.2rem 0.5rem;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;transition:all 0.2s;margin-top:0.3rem; }
   .acolyte-avail-toggle.active { border-color:var(--viridian-bright);color:var(--viridian-bright);background:rgba(45,122,95,0.08); }
+
+  /* ── Active Quest Tracker ─────────────────────────── */
+  .quest-tracker-card {
+    border: 1px solid rgba(201,168,76,0.25);
+    background: rgba(201,168,76,0.03);
+    padding: 0.7rem 0.8rem;
+    margin-bottom: 0.5rem;
+    position: relative;
+  }
+  .quest-tracker-card.paused {
+    border-color: var(--border);
+    background: transparent;
+    opacity: 0.6;
+  }
+  .qtc-header {
+    display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;
+  }
+  .qtc-type {
+    font-family: var(--ff-heading); font-size: 0.4rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--gold); border: 1px solid rgba(201,168,76,0.35);
+    padding: 0.06rem 0.3rem; flex-shrink: 0;
+  }
+  .qtc-title {
+    font-family: var(--ff-heading); font-size: 0.75rem; letter-spacing: 0.04em;
+    color: var(--text-primary); flex: 1;
+  }
+  .qtc-pause-btn {
+    background: none; border: none; cursor: pointer;
+    font-family: var(--ff-heading); font-size: 0.44rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-secondary); padding: 0.15rem 0.3rem;
+    flex-shrink: 0; transition: color 0.15s;
+  }
+  .qtc-pause-btn:active { color: var(--text-primary); }
+
+  .qtc-current-node {
+    border-left: 2px solid var(--gold-dim);
+    padding: 0.35rem 0.6rem;
+    margin-bottom: 0.3rem;
+    background: rgba(201,168,76,0.02);
+  }
+  .qtc-node-label {
+    font-family: var(--ff-heading); font-size: 0.62rem; letter-spacing: 0.04em;
+    color: var(--gold); margin-bottom: 0.12rem;
+  }
+  .qtc-node-desc {
+    font-family: var(--ff-body); font-style: italic; font-size: 0.72rem;
+    color: var(--text-secondary); line-height: 1.45;
+  }
+  .qtc-condition {
+    font-family: var(--ff-heading); font-size: 0.42rem; letter-spacing: 0.08em;
+    color: var(--amber-bright); margin-top: 0.2rem;
+  }
+  .qtc-choices {
+    display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.35rem;
+  }
+  .qtc-choice-btn {
+    width: 100%; padding: 0.4rem 0.6rem; text-align: left;
+    font-family: var(--ff-heading); font-size: 0.5rem; letter-spacing: 0.06em;
+    border: 1px solid rgba(201,168,76,0.25); background: none;
+    color: var(--text-primary); cursor: pointer; transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .qtc-choice-btn:active { background: rgba(201,168,76,0.08); border-color: var(--gold); }
+
+  .qtc-advance-btn {
+    width: 100%; padding: 0.42rem 0.6rem; margin-top: 0.35rem;
+    font-family: var(--ff-heading); font-size: 0.5rem; letter-spacing: 0.12em;
+    text-transform: uppercase; border: 1px solid rgba(201,168,76,0.35);
+    background: none; color: var(--gold); cursor: pointer;
+    transition: background 0.15s; -webkit-tap-highlight-color: transparent;
+  }
+  .qtc-advance-btn:active { background: rgba(201,168,76,0.1); }
+  .qtc-advance-btn:disabled { opacity: 0.35; pointer-events: none; }
+
+  .qtc-progress {
+    display: flex; align-items: center; gap: 0.4rem;
+    margin-top: 0.3rem; font-family: var(--ff-heading);
+    font-size: 0.42rem; letter-spacing: 0.06em; color: var(--text-secondary);
+  }
+  .qtc-progress-bar {
+    flex: 1; height: 2px; background: var(--border); overflow: hidden;
+  }
+  .qtc-progress-fill {
+    height: 100%; background: var(--gold-dim); transition: width 0.4s;
+  }
+  .qtc-complete-badge {
+    font-family: var(--ff-heading); font-size: 0.44rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--viridian-bright); margin-top: 0.3rem;
+  }
+
 </style>
 <style>
   /* ═══════════════════════════════════════════════════
@@ -4787,6 +4877,15 @@
         </div>
       </div>
 
+      <!-- ACTIVE QUESTS — always visible, persists across sessions -->
+      <div id="active-quests-section" style="display:none; margin-bottom:1rem;">
+        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Active Questlines</span>
+          <button onclick="refreshActiveQuests()" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-family:var(--ff-heading);font-size:0.44rem;letter-spacing:0.1em;text-transform:uppercase;">↻ refresh</button>
+        </div>
+        <div id="active-quests-list"></div>
+      </div>
+
       <!-- DM events prepend into journal-feed from Firebase -->
       <div id="journal-feed">
         <div id="journal-empty" style="font-family:var(--ff-body);font-style:italic;font-size: 0.85rem;color:var(--text-secondary);padding:1.2rem 0.2rem;line-height:1.7;">
@@ -5372,7 +5471,10 @@
   let playerName = '';
   let playerCoven = '';
   let inventory = {};
-  let _treeProgress = {};
+  let _treeProgress    = {};
+  let _activeQuestKeys = [];
+  let _pausedQuestKeys = [];
+  let _worldQuestlines = {};
   let _worldTrees   = {};
   let _treesLoaded  = false;
   let _skillXp      = {};
@@ -5433,6 +5535,7 @@
         } catch(e) { console.error('Auto-load failed:', e); }
       }, 800);
       setTimeout(restoreBorrowedAcolytes, 1000);
+    setTimeout(loadWorldData, 1600);
     } catch(e) {
       console.error('enterGame error:', e);
       alert('Error starting game: ' + e.message);
@@ -7387,7 +7490,17 @@
         _questlineKey: starting.key,
         _evtId: evId,
       };
+      // Override btn1 action to activate the questline
+      const origResolve = window.resolveJournalEvent;
       showDmEventModal(evId, ev);
+      // Hook: when player clicks "Begin", activate the questline
+      document.addEventListener('click', function onBeginClick(e) {
+        const btn = e.target.closest('button');
+        if (btn && btn.textContent.trim() === 'Begin' && starting.key) {
+          document.removeEventListener('click', onBeginClick);
+          setTimeout(() => activateQuestline(starting.key), 100);
+        }
+      }, { once: false, capture: false });
     } catch(e) { console.error('triggerStartingQuest:', e); }
   }
 
@@ -7615,6 +7728,7 @@
       renderAcolyteCards(_acolytesData);
     }
     renderCharacterSkills();
+    setTimeout(renderActiveQuests, 400);
 
     // Available acolytes
     if (state.availableAcolytes) {
@@ -7625,8 +7739,12 @@
       });
     }
 
-    // Tree progress, skill XP, qualities
-    if (state.treeProgress) _treeProgress = { ...state.treeProgress };
+    // Tree progress, skill XP, qualities, quest tracking
+    if (state.treeProgress)    _treeProgress    = { ...state.treeProgress };
+    if (state.skillXp)         _skillXp         = { ...state.skillXp };
+    if (state.qualities)       _qualities       = { ...state.qualities };
+    if (state.activeQuestKeys) _activeQuestKeys = [...state.activeQuestKeys];
+    if (state.pausedQuestKeys) _pausedQuestKeys = [...state.pausedQuestKeys];
     if (state.skillXp)      _skillXp      = { ...state.skillXp };
     if (state.qualities)    _qualities    = { ...state.qualities };
 
@@ -11752,6 +11870,282 @@ async function refreshFieldEventCards() {
     persistState().catch(()=>{});
     advanceTurn();
   }
+
+
+
+// ══════════════════════════════════════════════════════════════════════
+// QUEST SYSTEM — Persistent, session-resumable questlines
+// ══════════════════════════════════════════════════════════════════════
+
+// Quest globals declared in main scope above
+
+// ── Boot: load trees + questlines ────────────────────────────────────
+async function loadWorldData() {
+  try {
+    const [treesRes, qlRes] = await Promise.all([
+      fetch(`${FB_URL}/world/trees.json?cb=${Date.now()}`),
+      fetch(`${FB_URL}/world/questlines.json?cb=${Date.now()}`)
+    ]);
+    if (treesRes.ok) {
+      const d = await treesRes.json();
+      if (d && !d.error) { _worldTrees = d; _treesLoaded = true; }
+    }
+    if (qlRes.ok) {
+      const d = await qlRes.json();
+      if (d && !d.error) _worldQuestlines = d;
+    }
+    renderActiveQuests();
+  } catch(e) { console.error('loadWorldData:', e); }
+}
+
+// ── Called from triggerStartingQuest when player accepts ─────────────
+function activateQuestline(questKey) {
+  if (!questKey) return;
+  if (!_activeQuestKeys.includes(questKey)) {
+    _activeQuestKeys.push(questKey);
+    _pausedQuestKeys = _pausedQuestKeys.filter(k => k !== questKey);
+  }
+  // Ensure root node is seeded in treeProgress
+  const tree = _worldTrees[questKey];
+  if (tree) {
+    const rootId = Object.values(tree.nodes||{}).find(n => n.isRoot)?.id;
+    if (rootId && !(_treeProgress[questKey]||{})[rootId]) {
+      if (!_treeProgress[questKey]) _treeProgress[questKey] = {};
+      _treeProgress[questKey][rootId] = 'completed';
+    }
+  }
+  persistState().catch(()=>{});
+  renderActiveQuests();
+}
+
+function pauseQuestline(questKey) {
+  if (!_pausedQuestKeys.includes(questKey)) _pausedQuestKeys.push(questKey);
+  persistState().catch(()=>{});
+  renderActiveQuests();
+  toast('Quest paused — return to the Journal to continue.');
+}
+
+function resumeQuestline(questKey) {
+  _pausedQuestKeys = _pausedQuestKeys.filter(k => k !== questKey);
+  if (!_activeQuestKeys.includes(questKey)) _activeQuestKeys.push(questKey);
+  persistState().catch(()=>{});
+  renderActiveQuests();
+}
+
+// ── Main render ───────────────────────────────────────────────────────
+function renderActiveQuests() {
+  const section = document.getElementById('active-quests-section');
+  const list    = document.getElementById('active-quests-list');
+  if (!section || !list) return;
+
+  // Gather: active + paused + any tree with progress already in _treeProgress
+  const allKeys = new Set([
+    ..._activeQuestKeys,
+    ..._pausedQuestKeys,
+    ...Object.keys(_treeProgress)
+  ]);
+
+  // Filter to quest-type trees only
+  const questKeys = [...allKeys].filter(k => {
+    const tree = _worldTrees[k];
+    return tree && tree.type === 'quest';
+  });
+
+  if (!questKeys.length) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+
+  list.innerHTML = questKeys.map(key => renderQuestTrackerCard(key)).join('');
+}
+
+function renderQuestTrackerCard(questKey) {
+  const tree  = _worldTrees[questKey];
+  const ql    = _worldQuestlines[questKey];
+  if (!tree) return '';
+
+  const nodes   = tree.nodes || {};
+  const edges   = tree.edges || [];
+  const prog    = _treeProgress[questKey] || {};
+  const paused  = _pausedQuestKeys.includes(questKey);
+
+  // Topological order
+  const ordered = tpTopoSort(nodes, edges);
+  const total   = ordered.length;
+  const doneIds = ordered.filter(id => prog[id] === 'completed');
+  const done    = doneIds.length;
+
+  // Is quest complete?
+  const isComplete = done === total;
+
+  // Find the current active node (first available one)
+  const currentId = isComplete ? null : ordered.find(id => tpGetNodeState(tree, id, questKey) === 'available');
+  const currentNode = currentId ? nodes[currentId] : null;
+  const inEdge = currentId ? (edges.find(e => e.to === currentId) || null) : null;
+
+  // Title from questline doc or tree name
+  const title = ql?.title || tree.name || questKey;
+  const type  = ql?.type  || 'quest';
+
+  // Progress %
+  const pct = total ? Math.round((done / total) * 100) : 0;
+
+  const nodeHtml = isComplete
+    ? `<div class="qtc-complete-badge">✓ Questline complete</div>`
+    : currentNode
+    ? `<div class="qtc-current-node">
+        <div class="qtc-node-label">${currentNode.label || currentId}</div>
+        ${currentNode.desc ? `<div class="qtc-node-desc">${currentNode.desc}</div>` : ''}
+        ${inEdge?.condition ? `<div class="qtc-condition">⚑ ${inEdge.condition}</div>` : ''}
+        ${currentNode.choices?.length
+          ? `<div class="qtc-choices">${currentNode.choices.map((ch, i) => {
+              const condMet = !inEdge?.condition || tpEvalCondition(inEdge.condition);
+              return `<button class="qtc-choice-btn" ${condMet?'':'disabled'}
+                onclick="tpQuestChoice('${questKey}','${currentId}',${i})">${ch.label}</button>`;
+            }).join('')}</div>`
+          : (() => {
+              const condMet = !inEdge?.condition || tpEvalCondition(inEdge.condition);
+              return `<button class="qtc-advance-btn" ${condMet?'':'disabled'}
+                onclick="tpAdvanceQuest('${questKey}','${currentId}')">
+                ${condMet ? '→ Advance' : '✗ ' + (inEdge?.condition || 'Condition not met')}
+              </button>`;
+            })()
+        }
+      </div>`
+    : `<div class="qtc-node-desc" style="padding:0.3rem 0;opacity:0.5;">Waiting for conditions…</div>`;
+
+  return `
+    <div class="quest-tracker-card ${paused ? 'paused' : ''}" data-quest="${questKey}">
+      <div class="qtc-header">
+        <span class="qtc-type">${type}</span>
+        <span class="qtc-title">${title}</span>
+        <button class="qtc-pause-btn"
+          onclick="${paused ? `resumeQuestline('${questKey}')` : `pauseQuestline('${questKey}')`}">
+          ${paused ? '▷ Resume' : '⏸ Pause'}
+        </button>
+      </div>
+      ${!paused ? nodeHtml : `<div class="qtc-node-desc" style="padding:0.2rem 0;">Quest paused — tap Resume to continue.</div>`}
+      <div class="qtc-progress">
+        <span>${done}/${total} nodes</span>
+        <div class="qtc-progress-bar"><div class="qtc-progress-fill" style="width:${pct}%"></div></div>
+        <span>${pct}%</span>
+      </div>
+    </div>`;
+}
+
+// ── Helpers: topo sort and node state ─────────────────────────────────
+function tpTopoSort(nodes, edges) {
+  const all = Object.keys(nodes), visited = new Set(), result = [];
+  const roots = all.filter(id => nodes[id]?.isRoot);
+  if (!roots.length && all.length) roots.push(all[0]);
+  function visit(id) {
+    if (visited.has(id)) return;
+    visited.add(id); result.push(id);
+    (edges||[]).filter(e => e.from === id).forEach(e => visit(e.to));
+  }
+  roots.forEach(visit);
+  all.filter(id => !visited.has(id)).forEach(id => result.push(id));
+  return result;
+}
+
+function tpGetNodeState(tree, nodeId, treeKey) {
+  const prog = _treeProgress[treeKey || tree.name] || {};
+  if (prog[nodeId] === 'completed') return 'completed';
+  const node = (tree.nodes||{})[nodeId];
+  if (!node) return 'locked';
+  if (node.isRoot) return 'available';
+  const parents = (tree.edges||[]).filter(e => e.to === nodeId);
+  if (!parents.length) return 'available';
+  for (const e of parents) {
+    const ps = tpGetNodeState(tree, e.from, treeKey);
+    if (ps === 'completed' && tpEvalCondition(e.condition)) return 'available';
+  }
+  return 'locked';
+}
+
+function tpEvalCondition(condStr) {
+  if (!condStr || !condStr.trim()) return true;
+  if (condStr.includes('&&')) return condStr.split('&&').every(c => tpEvalCondition(c.trim()));
+  if (condStr.includes('||')) return condStr.split('||').some(c  => tpEvalCondition(c.trim()));
+  const c = condStr.trim(), lo = c.toLowerCase();
+  const RES = ['solar','lunar','jovian','martial','saturnine','venusian','mercurial'];
+  let m;
+  if ((m = lo.match(/^level\s*(>=?|<=?|==?)\s*(\d+)$/)))  return tpCmp(_characterData?.level||1,m[1],+m[2]);
+  if ((m = lo.match(/^xp\s*(>=?|<=?|==?)\s*(\d+)$/)))     return tpCmp(_characterData?.xp||0,m[1],+m[2]);
+  if ((m = lo.match(new RegExp(`^(${RES.join('|')})\\s*(>=?|<=?|==?)\\s*(\\d+)$`)))) return tpCmp(values[RES.indexOf(m[1])]||0,m[2],+m[3]);
+  if ((m = c.match(/^quality:([\w-]+)\s*(>=?|<=?|==?)\s*(-?\d+)$/i))) return tpCmp(_qualities[m[1]]||0,m[2],+m[3]);
+  if ((m = c.match(/^quality:([\w-]+)$/i))) return (_qualities[m[1]]||0) > 0;
+  if ((m = lo.match(/^skill:([\S]+)$/)))   return (_characterData?.skills||[]).some(s=>(s.key||s)===m[1]);
+  if ((m = lo.match(/^trait:([\S]+)$/)))   return (_characterData?.traits||[]).includes(m[1]);
+  if ((m = lo.match(/^has:([\S]+)$/)))     return (inventory[m[1]]||0) > 0;
+  return true;
+}
+function tpCmp(a,op,b){ if(op==='>='||op==='=')return a>=b; if(op==='<=')return a<=b; if(op==='>')return a>b; if(op==='<')return a<b; if(op==='=='||op==='=')return a==b; return false; }
+
+// ── Quest advancement ─────────────────────────────────────────────────
+function tpAdvanceQuest(treeKey, nodeId) {
+  const tree = _worldTrees[treeKey]; if (!tree) return;
+  if (tpGetNodeState(tree, nodeId, treeKey) !== 'available') { toast('Not available yet.'); return; }
+  const node = (tree.nodes||{})[nodeId];
+  const inEdge = (tree.edges||[]).find(e => e.to === nodeId);
+  if (inEdge?.condition && !tpEvalCondition(inEdge.condition)) { toast('Condition not met: ' + inEdge.condition); return; }
+  if (!_treeProgress[treeKey]) _treeProgress[treeKey] = {};
+  _treeProgress[treeKey][nodeId] = 'completed';
+  // Apply grants
+  if (node.bonus) applyNodeBonus(node.bonus);
+  // Journal entry
+  appendWorldEventToJournal({
+    title: node.label, desc: node.desc, type: 'story', id: treeKey+'_'+nodeId
+  }, 'completed');
+  toast(`✦ ${node.label}`);
+  renderActiveQuests();
+  persistState().catch(()=>{});
+}
+
+function tpQuestChoice(treeKey, nodeId, choiceIdx) {
+  const tree = _worldTrees[treeKey]; if (!tree) return;
+  const node = (tree.nodes||{})[nodeId]; if (!node) return;
+  const choice = (node.choices||[])[choiceIdx]; if (!choice) return;
+  if (!_treeProgress[treeKey]) _treeProgress[treeKey] = {};
+  _treeProgress[treeKey][nodeId] = 'completed';
+  _treeProgress[treeKey][nodeId+'_choice'] = choiceIdx;
+  if (choice.bonus) applyNodeBonus(choice.bonus);
+  appendWorldEventToJournal({
+    title: (node.label||'') + ': ' + choice.label,
+    desc: choice.desc || node.desc, type: 'story', id: treeKey+'_'+nodeId+'_'+choiceIdx
+  }, 'completed');
+  toast('✦ ' + choice.label);
+  renderActiveQuests();
+  persistState().catch(()=>{});
+}
+
+function applyNodeBonus(bonusStr) {
+  if (!bonusStr || !_characterData) return;
+  bonusStr.split(',').forEach(part => {
+    part = part.trim();
+    let m = part.match(/^(\w+)([+-])(\d+)$/);
+    if (m && _characterData.stats?.[m[1]] !== undefined) {
+      _characterData.stats[m[1]] = Math.max(0, (_characterData.stats[m[1]]||0) + parseInt(m[2]+m[3]));
+      toast(`${m[1]} ${m[2]}${m[3]}`);
+    }
+    m = part.match(/^skill:(\S+)$/);
+    if (m) {
+      if (!_characterData.skills) _characterData.skills = [];
+      if (!_characterData.skills.find(s=>(s.key||s)===m[1])) {
+        _characterData.skills.push({ key: m[1] });
+        toast(`✦ Skill unlocked: ${m[1]}`);
+      }
+    }
+  });
+}
+
+// ── Manual refresh ─────────────────────────────────────────────────────
+async function refreshActiveQuests() {
+  await loadWorldData();
+}
+
+
 
 </script>
 
