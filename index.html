@@ -2407,7 +2407,20 @@
   .recipe-craft-btn { font-family:var(--ff-heading);font-size: 0.7rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.5rem 1.2rem;border:1px solid var(--amber-bright);background:transparent;color:var(--amber-bright);cursor:pointer;transition:all 0.2s; }
   .recipe-craft-btn:active { background:rgba(212,137,10,0.15); }
   .recipe-craft-btn:disabled { opacity:0.35;cursor:default;border-color:var(--border);color:var(--text-secondary); }
-  .inventory-grid { display:grid;grid-template-columns:1fr 1fr;gap:0.6rem; }
+  /* Warehouse grid in Lair */
+  .warehouse-item {
+    border: 1px solid var(--border);
+    padding: 0.55rem 0.65rem;
+    display: flex; align-items: center; gap: 0.5rem;
+    cursor: pointer; transition: border-color 0.15s;
+  }
+  .warehouse-item:active { border-color: var(--gold-dim); }
+  .warehouse-item-icon { font-size: 1.1rem; flex-shrink: 0; }
+  .warehouse-item-name { font-family: var(--ff-heading); font-size: 0.62rem; letter-spacing: 0.04em; color: var(--text-primary); }
+  .warehouse-item-meta { font-family: var(--ff-heading); font-size: 0.44rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
+  .warehouse-item-qty { font-family: var(--ff-heading); font-size: 0.72rem; color: var(--gold); margin-left: auto; flex-shrink: 0; }
+  
+    .inventory-grid { display:grid;grid-template-columns:1fr 1fr;gap:0.6rem; }
   .inv-item { border:1px solid var(--border);padding:0.8rem 0.7rem;background:rgba(255,255,255,0.01);position:relative; }
   .inv-item-icon { font-size: 1.02rem;margin-bottom:0.3rem;display:block; }
   .inv-item-name { font-family:var(--ff-heading);font-size: 0.77rem;letter-spacing:0.06em;color:var(--bone);margin-bottom:0.15rem; }
@@ -2890,45 +2903,18 @@
     overflow: hidden;
   }
   .tarot-spread-area::before { display: none; }
-  .spread-title { 0.88rem; letter-spacing: 0.18em; margin-bottom: 1rem; }
-  .tarot-card {
-    width: 58px; height: 90px;
-    border: 1px solid var(--border-bright);
-    background: var(--deep);
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    transition: box-shadow 0.2s, border-color 0.2s !important;
-  }
-  .tarot-card.revealed { border-color: var(--gold); }
-  .tarot-card::before { inset: 4px; border: 1px solid rgba(201,168,76,0.07); }
-  /* Geometric card back — lattice pattern via SVG background */
+  .spread-title { font-size: 0.88rem; letter-spacing: 0.18em; margin-bottom: 1rem; }
   .tarot-card.face-down {
-    background-image: repeating-linear-gradient(
-      45deg,
-      rgba(201,168,76,0.04) 0px, rgba(201,168,76,0.04) 1px,
-      transparent 1px, transparent 8px
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      rgba(201,168,76,0.04) 0px, rgba(201,168,76,0.04) 1px,
-      transparent 1px, transparent 8px
-    );
+    background-image: repeating-linear-gradient(45deg, rgba(201,168,76,0.05) 0px, rgba(201,168,76,0.05) 1px, transparent 1px, transparent 8px),
+    repeating-linear-gradient(-45deg, rgba(201,168,76,0.05) 0px, rgba(201,168,76,0.05) 1px, transparent 1px, transparent 8px);
   }
-  .tarot-card.face-down::after { content: '✦'; font-size: 1.17rem; color: var(--gold-dim); opacity: 0.35; }
-  .tarot-card-symbol { font-size: 1.02rem; opacity: 0.8; font-family: serif; }
-  .tarot-card-name { 0.49rem; letter-spacing: 0.08em; color: var(--gold); padding: 0 0.2rem; line-height: 1.3; text-align: center; }
-  .tarot-card-num { 0.69rem; color: var(--text-secondary); }
+  .tarot-card.face-down::after { content: '✦'; font-size: 1.3rem; color: var(--gold-dim); opacity: 0.5; }
+  .tarot-card-symbol { font-size: 1.4rem; opacity: 0.85; font-family: serif; line-height: 1.2; }
+  .tarot-card-name { font-size: 0.52rem; letter-spacing: 0.08em; color: var(--gold); padding: 0 0.2rem; line-height: 1.3; text-align: center; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .tarot-card-num { font-size: 0.7rem; color: var(--text-secondary); font-family: var(--ff-heading); letter-spacing: 0.1em; }
   .effect-tag { padding: 0.35rem; border: 1px solid var(--border); background: transparent; }
-  .effect-name { 0.65rem; letter-spacing: 0.1em; }
-  .effect-val { 1.06rem; font-weight: 600; }
-
+  .effect-name { font-size: 0.62rem; letter-spacing: 0.1em; }
+  .effect-val { font-size: 1rem; font-weight: 600; }
   /* — BUTTONS — austere, typographic — */
   .btn-primary {
     font-size: 0.9rem;
@@ -4765,7 +4751,7 @@
       <span class="tab-icon">☽</span>
       <span class="tab-label">Arcana</span>
     </button>
-    <button class="tab" onclick="switchTab('codex')">
+    <button class="tab" onclick="switchTab('codex')" style="display:none;">
       <span class="tab-icon">∷</span>
       <span class="tab-label">Codex</span>
     </button>
@@ -4969,7 +4955,13 @@
         <div style="font-family:var(--ff-body);font-style:italic;font-size: 0.82rem;color:var(--text-secondary);padding:0.6rem 0;">
           No research underway.
         </div>
-      </div>    </div>
+      </div>
+
+      <!-- WAREHOUSE — crafted items and materials -->
+      <div class="section-label" id="warehouse-label" style="display:none;">Warehouse</div>
+      <div id="warehouse-grid" style="display:none;"></div>
+
+    </div>
 
     <!-- ARCANA PANEL -->
     <div id="panel-arcana" class="tab-panel">
@@ -6757,6 +6749,14 @@
   }
 
   function renderTarotSpread() {
+    // Update spread title
+    const title = document.querySelector('.spread-title');
+    if (title) {
+      const drawn = _currentSpread.filter(Boolean).length;
+      title.textContent = drawn === 0 ? 'No spread active · Draw cards to begin'
+        : drawn === 3 ? 'The Three Fates — spread complete'
+        : `Draw ${3 - drawn} more card${3 - drawn > 1 ? 's' : ''}…`;
+    }
     const row = document.getElementById('tarot-cards-row');
     if (!row) return;
     row.innerHTML = _currentSpread.map((s, i) => {
@@ -7357,6 +7357,40 @@
     panel.style.flexDirection = 'column';
     if (btn) btn.style.borderColor = visible ? 'rgba(201,168,76,0.3)' : 'var(--gold)';
   }
+
+  // ── Starting quest — shows intro event when a new character is created ──
+  async function triggerStartingQuest(classKey) {
+    try {
+      // Load the class to find startingQuest
+      const cls = await fbRead ? null : null; // use cached if possible
+      const classData = _cachedWorldSkills ? null : null;
+      // Load questlines to find the starting one
+      const res = await fetch(`${FB_URL}/world/questlines.json?cb=${Date.now()}`);
+      if (!res.ok) return;
+      const questlines = await res.json();
+      if (!questlines) return;
+      // Find the main quest or the one matching this class
+      const starting = Object.values(questlines).find(q =>
+        q.type === 'main' && (!q.assignedTo || q.assignedTo === '__all__')
+      );
+      if (!starting) return;
+      // Show it as an intro DM event modal
+      const evId = 'starting_quest_' + Date.now();
+      const ev = {
+        title: starting.title,
+        body:  starting.desc,
+        type:  'story',
+        btn1:  'Begin',
+        btn2:  'Not yet',
+        actionText: starting.rewards?.lore || 'The descent begins.',
+        grants: { always: { 'quest-started': 1 } },
+        _questlineKey: starting.key,
+        _evtId: evId,
+      };
+      showDmEventModal(evId, ev);
+    } catch(e) { console.error('triggerStartingQuest:', e); }
+  }
+
   function switchTab(tab) {
     // Block tab switching when combat is active — only 'combat' is allowed
     if (_CS && tab !== 'combat') {
@@ -7600,6 +7634,7 @@
     if (state.lair && Object.keys(state.lair.buildings || {}).length > 0) {
       _lairData = state.lair;
       renderLairBuildings(state.lair.buildings);
+      setTimeout(renderWarehouse, 100);
     } else {
       // Save exists but has no buildings — give starting defaults
       _lairData = { buildings: { 'alchemical-forge':1, 'altar':1, 'dormitorium':1, 'scriptorium':1 } };
@@ -8539,8 +8574,10 @@ async function refreshFieldEventCards() {
     document.getElementById('identity-modal').classList.remove('open');
     refreshCharacterBar();
     persistState().catch(()=>{});
-    toast('Welcome, ' + playerName + '.');
+    toast('Welcome, ' + playerName + '. The lair stirs.');
     publishPresence();
+    // Trigger starting quest intro after a short delay
+    setTimeout(() => { triggerStartingQuest(_ccData.classKey || 'seeker'); }, 1200);
   }
 
   // ══════════════════════════════════════════
@@ -8647,6 +8684,35 @@ async function refreshFieldEventCards() {
     renderForgeTab(currentForgeTab);
     document.querySelectorAll('.resource-pill .res-value').forEach((el,i) => { el.textContent = Math.floor(values[i]); });
     publishProfile();
+  }
+
+  function renderWarehouse() {
+    const grid  = document.getElementById('warehouse-grid');
+    const label = document.getElementById('warehouse-label');
+    if (!grid) return;
+    const items = Object.entries(inventory || {}).filter(([,qty]) => qty > 0);
+    if (!items.length) {
+      grid.style.display = 'none';
+      if (label) label.style.display = 'none';
+      return;
+    }
+    if (label) label.style.display = '';
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = '1fr';
+    grid.style.gap = '0.3rem';
+    grid.style.marginBottom = '1rem';
+    grid.innerHTML = items.map(([key, qty]) => {
+      const r = RECIPES.find(x => x.key === key);
+      if (!r) return '';
+      return `<div class="warehouse-item" onclick="openForge()">
+        <span class="warehouse-item-icon">${r.icon || '◇'}</span>
+        <div style="flex:1;">
+          <div class="warehouse-item-name">${r.name}</div>
+          <div class="warehouse-item-meta">${r.type || r.cat} · ${r.effect || ''}</div>
+        </div>
+        <span class="warehouse-item-qty">×${qty}</span>
+      </div>`;
+    }).filter(Boolean).join('');
   }
 
   function renderInventory(el) {
