@@ -320,29 +320,34 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
   <div class="sb-head"><div class="sb-title">The Lair Below</div><div class="sb-sub">Archivist's Console</div><div class="sb-rune">⋆ ✦ ⋆</div></div>
   <div class="nav-sec">Chronicle</div>
   <button class="nb active" onclick="nav('vigil')" data-page="vigil"><span class="ni">⬡</span> The Vigil</button>
+  <button class="nb" onclick="nav('broadcast')" data-page="broadcast"><span class="ni">✦</span> Proclamation</button>
+
   <div class="nav-sec">Seekers</div>
   <button class="nb" onclick="nav('resources')" data-page="resources"><span class="ni">☉</span> Essence Ledger</button>
   <button class="nb" onclick="nav('grimoires')" data-page="grimoires"><span class="ni">†</span> Grimoires</button>
   <button class="nb" onclick="nav('acolytes')" data-page="acolytes"><span class="ni">◈</span> Acolyte Rolls</button>
   <button class="nb" onclick="nav('characters')" data-page="characters"><span class="ni">✦</span> Characters &amp; Classes</button>
   <button class="nb" onclick="nav('traits')" data-page="traits"><span class="ni">◇</span> Traits</button>
+  <button class="nb" onclick="nav('reset')" data-page="reset"><span class="ni">↺</span> Reset &amp; Tools</button>
+
+  <div class="nav-sec">Story &amp; Quests</div>
   <button class="nb" onclick="nav('questlines')" data-page="questlines"><span class="ni">○</span> Questlines</button>
-  <button class="nb" onclick="nav('reset')" data-page="reset"><span class="ni">↺</span> Reset &amp; Class Pick</button>
+  <button class="nb" onclick="nav('events')" data-page="events"><span class="ni">⚠</span> Event Wizard</button>
+  <button class="nb" onclick="nav('worldmap')" data-page="worldmap"><span class="ni">⬡</span> World Map</button>
+  <button class="nb" onclick="nav('aoi')" data-page="aoi"><span class="ni">◎</span> Area Scanner</button>
+
   <div class="nav-sec">Combat</div>
-  <button class="nb" onclick="nav('combatsys')" data-page="combatsys"><span class="ni">†</span> Combat System</button>
-  <button class="nb" onclick="nav('skillbuilder')" data-page="skillbuilder"><span class="ni">✦</span> Skill &amp; Spell Builder</button>
-  <div class="nav-sec">The World</div>
-  <button class="nb" onclick="nav('events')" data-page="events"><span class="ni">⚠</span> Omens &amp; Events</button>
-  <button class="nb" onclick="nav('worldmap')" data-page="worldmap"><span class="ni">⬡</span> World Map Events</button>
-  <button class="nb" onclick="nav('aoi')" data-page="aoi"><span class="ni">◎</span> Area of Interest</button>
-  <button class="nb" onclick="nav('exchanges')" data-page="exchanges"><span class="ni">⟺</span> Exchange Ledger</button>
-  <button class="nb" onclick="nav('creatures')" data-page="creatures"><span class="ni">▽</span> Creatures &amp; Combat</button>
-  <div class="nav-sec">The Forge</div>
-  <button class="nb" onclick="nav('forge')" data-page="forge"><span class="ni">⚗</span> Recipes &amp; Craft</button>
-  <button class="nb" onclick="nav('buildings')" data-page="buildings"><span class="ni">⬡</span> Buildings &amp; Skills</button>
-  <div class="nav-sec">Rites</div>
+  <button class="nb" onclick="nav('combatsys')" data-page="combatsys"><span class="ni">⚔</span> Combat System</button>
+  <button class="nb" onclick="nav('skillbuilder')" data-page="skillbuilder"><span class="ni">✦</span> Skills &amp; Spells</button>
+  <button class="nb" onclick="nav('creatures')" data-page="creatures"><span class="ni">▽</span> Creatures</button>
+
+  <div class="nav-sec">The Lair</div>
+  <button class="nb" onclick="nav('buildings')" data-page="buildings"><span class="ni">⬡</span> Buildings</button>
+  <button class="nb" onclick="nav('forge')" data-page="forge"><span class="ni">⚗</span> Forge &amp; Materials</button>
+  <button class="nb" onclick="nav('exchanges')" data-page="exchanges"><span class="ni">⟺</span> Exchanges</button>
+
+  <div class="nav-sec">Arcane</div>
   <button class="nb" onclick="nav('trees');tbNavActivate()" data-page="trees"><span class="ni">✶</span> Tree Builder</button>
-<button class="nb" onclick="nav('broadcast')" data-page="broadcast"><span class="ni">✦</span> Proclamation</button>
   <button class="nb" onclick="nav('tarot')" data-page="tarot"><span class="ni">🜃</span> Tarot Arcana</button>
   <div class="sb-seekers"><div class="sb-seekers-lbl">Seekers</div><div id="sidebar-players"><span style="font-family:var(--ff-b);font-style:italic;font-size:0.79rem;color:var(--ash);">Consulting the ether…</span></div></div>
 </nav>
@@ -435,6 +440,7 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
   <div class="wiz-step" id="wstep-4" onclick="wizGo(4)">4 · Combat</div>
   <div class="wiz-step" id="wstep-5" onclick="wizGo(5)">5 · Reward</div>
   <div class="wiz-step" id="wstep-6" onclick="wizGo(6)">6 · Qualities</div>
+  <div class="wiz-step" id="wstep-7" onclick="wizGo(7)">7 · Send</div>
 </div>
 
 <!-- Step 1: Core narrative -->
@@ -614,17 +620,17 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
 <!-- Summary -->
 <div id="wiz-summary" class="panel" style="background:rgba(123,47,255,0.04);border-color:rgba(168,85,247,0.2);"></div>
 <div style="display:flex;gap:0.5rem;margin-top:0.6rem;">
-<button class="btn b-seal" onclick="wizGo(4)">← Back</button>
-<button class="btn b-rune" onclick="wizGo(6)">Next: Qualities →</button>
+<button class="btn b-seal" onclick="wizGo(6)">← Back</button>
+<button class="btn b-rune" style="flex:1;padding:0.85rem;" onclick="pushEvent()">✦ Send Omen to Seeker(s)</button>
 </div>
-</div>
-
 </div><!-- end wiz-panel-7 -->
 
 <!-- Active omens sidebar -->
 <div class="panel" style="margin-top:1.2rem;"><div class="ph">Active Omens <button class="btn b-seal" style="padding:0.18rem 0.5rem;font-size:0.49rem;float:right;" onclick="loadActiveEvents()">↻</button></div>
 <div id="active-events" style="min-height:60px;"><span style="font-family:var(--ff-b);font-style:italic;color:var(--mist);">None inscribed.</span></div>
 </div>
+</div>
+
 </div>
 
 <div id="page-worldmap" class="page">
@@ -678,18 +684,185 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
 </div>
 
 <div id="page-forge" class="page">
-<div class="pg-head"><div class="pg-title">Recipes &amp; Craft</div><div class="pg-desc">Everything the Forge can produce. Changes propagate to all seekers immediately.</div></div>
-<div style="display:flex;gap:0.5rem;margin-bottom:1rem;"><button class="btn b-rune" onclick="loadRecipes()">↻ Refresh</button><button class="btn b-seal" onclick="openRecEd()">+ New Recipe</button></div>
-<div id="recipes-list"></div>
-<div class="panel" id="rec-editor" style="display:none;margin-top:1rem;"><div class="ph" id="rec-ed-title">New Recipe</div><input type="hidden" id="rec-idx">
-<div class="g2"><div class="fld"><label>Name</label><input type="text" id="rec-name"></div><div class="fld"><label>Type</label><input type="text" id="rec-type" placeholder="Weapon — One-handed"></div></div>
-<div class="g2"><div class="fld"><label>Category</label><select id="rec-cat"><option value="weapons">Weapons</option><option value="armour">Armour</option><option value="consumables">Consumables</option><option value="sigils">Sigils</option></select></div><div class="fld"><label>Icon (emoji)</label><input type="text" id="rec-icon" placeholder="🔥"></div></div>
-<div class="fld"><label>Description</label><textarea id="rec-desc"></textarea></div>
-<div class="fld"><label>Effect Line</label><input type="text" id="rec-effect" placeholder="+4 Holy damage · Ignite on Blight"></div>
-<div class="fld"><label>Accent Colour (hex)</label><input type="text" id="rec-color" placeholder="#c9a84c"></div>
-<div class="ph" style="margin-top:0.5rem;">Costs</div><div id="rec-costs"></div>
-<button class="btn b-seal" style="margin-bottom:0.7rem;" onclick="addCostRow()">+ Add Cost</button><br>
-<button class="btn b-ward" onclick="saveRec()">✓ Seal Recipe</button><button class="btn b-seal" onclick="document.getElementById('rec-editor').style.display='none'">Cancel</button></div>
+<div class="pg-head"><div class="pg-title">Recipes &amp; Craft</div><div class="pg-desc">Define what players can craft, what resources they need, and where to find raw materials. Set up resource zones so players can gather from specific real-world area types.</div></div>
+
+<!-- Tabs -->
+<div style="display:flex;gap:0;border:1px solid var(--border);margin-bottom:1.2rem;">
+  <button class="btn" id="forge-tab-recipes" onclick="forgeTab('recipes',this)" style="flex:1;border:none;background:rgba(201,168,76,0.08);color:var(--gold);">⚗ Recipes</button>
+  <button class="btn" id="forge-tab-zones" onclick="forgeTab('zones',this)" style="flex:1;border:none;">◎ Resource Zones</button>
+  <button class="btn" id="forge-tab-materials" onclick="forgeTab('materials',this)" style="flex:1;border:none;">◇ Raw Materials</button>
+</div>
+
+<!-- RECIPES TAB -->
+<div id="forge-pane-recipes">
+  <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.8rem;">
+    <button class="btn b-rune" onclick="loadRecipes()">↻ Refresh</button>
+    <button class="btn b-seal" onclick="openRecEd()">+ New Recipe</button>
+    <select id="rec-filter-tier" onchange="filterRecipes()" style="background:var(--abyss);border:1px solid var(--stone);color:var(--bone);padding:0.3rem 0.5rem;font-family:var(--ff-b);">
+      <option value="">All tiers</option>
+      <option value="1">Tier 1 — Common</option>
+      <option value="2">Tier 2 — Uncommon</option>
+      <option value="3">Tier 3 — Rare</option>
+      <option value="4">Tier 4 — Exotic</option>
+    </select>
+    <select id="rec-filter-cat" onchange="filterRecipes()" style="background:var(--abyss);border:1px solid var(--stone);color:var(--bone);padding:0.3rem 0.5rem;font-family:var(--ff-b);">
+      <option value="">All categories</option>
+      <option value="weapons">Weapons</option>
+      <option value="armour">Armour</option>
+      <option value="consumables">Consumables</option>
+      <option value="sigils">Sigils</option>
+      <option value="materials">Materials</option>
+      <option value="tools">Tools</option>
+    </select>
+  </div>
+  <div id="recipes-list"></div>
+
+  <div class="panel" id="rec-editor" style="display:none;margin-top:1rem;">
+    <div class="ph" id="rec-ed-title">New Recipe</div>
+    <input type="hidden" id="rec-idx">
+    <div class="g2">
+      <div class="fld"><label>Name</label><input type="text" id="rec-name"></div>
+      <div class="fld"><label>Type / Subtype</label><input type="text" id="rec-type" placeholder="Weapon — One-handed"></div>
+    </div>
+    <div class="g2">
+      <div class="fld"><label>Category</label>
+        <select id="rec-cat">
+          <option value="weapons">Weapons</option>
+          <option value="armour">Armour</option>
+          <option value="consumables">Consumables</option>
+          <option value="sigils">Sigils</option>
+          <option value="materials">Processed Materials</option>
+          <option value="tools">Tools</option>
+        </select>
+      </div>
+      <div class="fld"><label>Tier</label>
+        <select id="rec-tier">
+          <option value="1">Tier 1 — Common</option>
+          <option value="2">Tier 2 — Uncommon</option>
+          <option value="3">Tier 3 — Rare</option>
+          <option value="4">Tier 4 — Exotic</option>
+        </select>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="fld"><label>Icon (emoji)</label><input type="text" id="rec-icon" placeholder="🔥"></div>
+      <div class="fld"><label>Accent Colour</label><input type="text" id="rec-color" placeholder="#c9a84c"></div>
+    </div>
+    <div class="fld"><label>Description</label><textarea id="rec-desc"></textarea></div>
+    <div class="fld"><label>Effect Line</label><input type="text" id="rec-effect" placeholder="+4 Holy damage · Ignite on Blight"></div>
+    <div class="g2">
+      <div class="fld"><label>Building Required</label>
+        <input type="text" id="rec-building" placeholder="alchemical-forge"></div>
+      <div class="fld"><label>Building Level Required</label>
+        <input type="number" id="rec-bld-level" value="1" min="1"></div>
+    </div>
+    <div class="fld"><label>Requires quality / condition</label>
+      <input type="text" id="rec-condition" placeholder="quality:forge-mastery >= 1"></div>
+    <div class="ph" style="margin-top:0.5rem;">Costs (essence + raw materials)</div>
+    <div id="rec-costs"></div>
+    <button class="btn b-seal" style="margin-bottom:0.7rem;" onclick="addCostRow()">+ Add Essence Cost</button>
+    <div class="fld"><label>Raw Material Costs (one per line: material-key × qty)</label>
+      <textarea id="rec-materials" rows="2" placeholder="iron-ore × 2&#10;lunar-resin × 1"></textarea></div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+      <button class="btn b-ward" onclick="saveRec()">✓ Seal Recipe</button>
+      <button class="btn b-seal" onclick="document.getElementById('rec-editor').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESOURCE ZONES TAB -->
+<div id="forge-pane-zones" style="display:none;">
+  <p style="font-family:var(--ff-b);font-style:italic;font-size:0.85rem;color:var(--mist);margin-bottom:0.9rem;line-height:1.6;">
+    Resource zones are real-world area types where players can gather raw materials. Define what each zone type yields — players gather when physically near such a location.
+  </p>
+  <div style="display:flex;gap:0.5rem;margin-bottom:0.8rem;">
+    <button class="btn b-rune" onclick="loadResourceZones()">↻ Refresh</button>
+    <button class="btn b-seal" onclick="openZoneEd()">+ New Zone Type</button>
+  </div>
+  <div id="zones-list"></div>
+  <div class="panel" id="zone-editor" style="display:none;margin-top:1rem;">
+    <div class="ph" id="zone-ed-title">New Resource Zone</div>
+    <input type="hidden" id="zone-key">
+    <div class="g2">
+      <div class="fld"><label>Zone Type Key</label>
+        <input type="text" id="zone-key-in" placeholder="sea, city, forest, mountain, worship, industrial…"></div>
+      <div class="fld"><label>Display Name</label>
+        <input type="text" id="zone-name" placeholder="The Sea"></div>
+    </div>
+    <div class="g2">
+      <div class="fld"><label>Icon</label><input type="text" id="zone-icon" placeholder="🌊"></div>
+      <div class="fld"><label>OSM Tag (for auto-detection)</label>
+        <input type="text" id="zone-osm" placeholder="natural=water, amenity=place_of_worship…"></div>
+    </div>
+    <div class="fld"><label>Description</label>
+      <textarea id="zone-desc" placeholder="Waters where tidal forces concentrate Lunar essence…"></textarea></div>
+    <div class="ph" style="margin-top:0.6rem;">Resources yielded (per gather action)</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.4rem;margin-bottom:0.5rem;">
+      <div class="fld"><label>☉ Solar</label><input type="number" id="zone-r0" value="0" min="0"></div>
+      <div class="fld"><label>☽ Lunar</label><input type="number" id="zone-r1" value="0" min="0"></div>
+      <div class="fld"><label>♃ Jovian</label><input type="number" id="zone-r2" value="0" min="0"></div>
+      <div class="fld"><label>♂ Martial</label><input type="number" id="zone-r3" value="0" min="0"></div>
+      <div class="fld"><label>♄ Saturnine</label><input type="number" id="zone-r4" value="0" min="0"></div>
+      <div class="fld"><label>♀ Venusian</label><input type="number" id="zone-r5" value="0" min="0"></div>
+      <div class="fld"><label>☿ Mercurial</label><input type="number" id="zone-r6" value="0" min="0"></div>
+    </div>
+    <div class="fld"><label>Raw materials dropped (one per line: key|name|qty_min-qty_max)</label>
+      <textarea id="zone-drops" rows="3" placeholder="iron-ore|Iron Ore|1-3&#10;salt-crystal|Salt Crystal|1-2"></textarea></div>
+    <div class="fld"><label>Required building to gather here</label>
+      <input type="text" id="zone-req-bld" placeholder="scrying-chamber (optional)"></div>
+    <div class="fld"><label>Bonus planetary hour (doubles yield)</label>
+      <select id="zone-planet">
+        <option value="">None</option>
+        <option value="sol">Sol</option><option value="luna">Luna</option>
+        <option value="mars">Mars</option><option value="mercury">Mercury</option>
+        <option value="jupiter">Jupiter</option><option value="venus">Venus</option>
+        <option value="saturn">Saturn</option>
+      </select></div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.8rem;">
+      <button class="btn b-ward" onclick="saveZone()">✓ Seal Zone</button>
+      <button class="btn b-seal" onclick="document.getElementById('zone-editor').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- RAW MATERIALS TAB -->
+<div id="forge-pane-materials" style="display:none;">
+  <p style="font-family:var(--ff-b);font-style:italic;font-size:0.85rem;color:var(--mist);margin-bottom:0.9rem;line-height:1.6;">
+    Raw materials are non-essence resources gathered from zones. They can be used as crafting costs and are stored in the player's inventory.
+  </p>
+  <div style="display:flex;gap:0.5rem;margin-bottom:0.8rem;">
+    <button class="btn b-rune" onclick="loadMaterials()">↻ Refresh</button>
+    <button class="btn b-seal" onclick="openMaterialEd()">+ New Material</button>
+  </div>
+  <div id="materials-list"></div>
+  <div class="panel" id="material-editor" style="display:none;margin-top:1rem;">
+    <div class="ph" id="mat-ed-title">New Raw Material</div>
+    <input type="hidden" id="mat-key">
+    <div class="g2">
+      <div class="fld"><label>Key</label><input type="text" id="mat-key-in" placeholder="iron-ore"></div>
+      <div class="fld"><label>Name</label><input type="text" id="mat-name" placeholder="Iron Ore"></div>
+    </div>
+    <div class="g2">
+      <div class="fld"><label>Icon</label><input type="text" id="mat-icon" placeholder="🪨"></div>
+      <div class="fld"><label>Tier</label>
+        <select id="mat-tier">
+          <option value="1">Tier 1 — Common</option>
+          <option value="2">Tier 2 — Uncommon</option>
+          <option value="3">Tier 3 — Rare</option>
+          <option value="4">Tier 4 — Exotic</option>
+        </select>
+      </div>
+    </div>
+    <div class="fld"><label>Found in zones (comma separated)</label>
+      <input type="text" id="mat-zones" placeholder="mountain, industrial, city"></div>
+    <div class="fld"><label>Description</label>
+      <textarea id="mat-desc" placeholder="Crude ore drawn from urban ruins and collapsed structures."></textarea></div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.8rem;">
+      <button class="btn b-ward" onclick="saveMaterial()">✓ Seal Material</button>
+      <button class="btn b-seal" onclick="document.getElementById('material-editor').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
 </div>
 
 <div id="page-buildings" class="page">
@@ -699,13 +872,52 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
 <div><div style="font-family:var(--ff-h);font-size:0.56rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:0.7rem;">Buildings</div><div id="bld-list"></div></div>
 <div><div style="font-family:var(--ff-h);font-size:0.56rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:0.7rem;">Skills</div><div id="skl-list"></div></div>
 </div>
-<div class="panel" id="bld-editor" style="display:none;margin-top:1rem;"><div class="ph" id="bld-ed-title">New Building</div><input type="hidden" id="bld-key">
-<div class="g2"><div class="fld"><label>Name</label><input type="text" id="bld-name"></div><div class="fld"><label>Icon</label><input type="text" id="bld-icon" placeholder="🕯"></div></div>
-<div class="fld"><label>Description</label><textarea id="bld-desc"></textarea></div>
-<div class="fld"><label>Max Level</label><input type="number" id="bld-maxlv" value="3" min="1"></div>
-<div class="fld"><label>Upgrade Cost (JSON array of 7 essence values)</label><input type="text" id="bld-cost" placeholder="[200,0,100,0,50,0,0]"></div>
-<div class="fld"><label>Effects per Level (one per line)</label><textarea id="bld-effects" placeholder="Lv1: +20% Research&#10;Lv2: +40%, unlock advanced codex"></textarea></div>
-<button class="btn b-ward" onclick="saveBld()">✓ Seal Building</button><button class="btn b-seal" onclick="document.getElementById('bld-editor').style.display='none'">Cancel</button></div>
+<div class="panel" id="bld-editor" style="display:none;margin-top:1rem;">
+  <div class="ph" id="bld-ed-title">New Building</div>
+  <input type="hidden" id="bld-key">
+  <div class="g2">
+    <div class="fld"><label>Name</label><input type="text" id="bld-name" placeholder="Alchemical Forge"></div>
+    <div class="fld"><label>Icon</label><input type="text" id="bld-icon" placeholder="⚗"></div>
+  </div>
+  <div class="fld"><label>Key (auto from name)</label><input type="text" id="bld-key-in" placeholder="alchemical-forge"></div>
+  <div class="fld"><label>Description</label><textarea id="bld-desc" placeholder="What this building is and does in lore terms."></textarea></div>
+  <div class="g2">
+    <div class="fld"><label>Max Level</label><input type="number" id="bld-maxlv" value="3" min="1"></div>
+    <div class="fld"><label>Tree Key (links to a building tree)</label><input type="text" id="bld-tree" placeholder="e.g. forge-upgrades"></div>
+  </div>
+  <div class="fld"><label>Upgrade Cost — 7 essences: Solar·Lunar·Jovian·Martial·Saturnine·Venusian·Mercurial</label>
+    <input type="text" id="bld-cost" placeholder="[200,0,100,0,50,0,0]"></div>
+  <div class="fld"><label>Effects per Level (one per line)</label>
+    <textarea id="bld-effects" placeholder="Lv1: Unlock basic recipes&#10;Lv2: Unlock tier-2 crafting&#10;Lv3: Unlock grand sigils"></textarea></div>
+
+  <div class="ph" style="margin-top:0.8rem;">Features this building unlocks</div>
+  <p style="font-family:var(--ff-b);font-style:italic;font-size:0.82rem;color:var(--mist);margin-bottom:0.7rem;line-height:1.5;">
+    Each level can unlock specific gameplay features. These are stored in the building definition and read by the client.
+  </p>
+  <div class="g2">
+    <div class="fld"><label>Scouting radius (m) at Lv1/Lv2/Lv3</label>
+      <input type="text" id="bld-scout" placeholder="500,1000,2000"></div>
+    <div class="fld"><label>Recipe categories unlocked (comma separated)</label>
+      <input type="text" id="bld-recipes" placeholder="consumables,weapons,armour"></div>
+  </div>
+  <div class="g2">
+    <div class="fld"><label>Resource cap bonus (%)</label>
+      <input type="text" id="bld-rescap" placeholder="0,10,25"></div>
+    <div class="fld"><label>Acolyte slots (+N per level)</label>
+      <input type="text" id="bld-acoslots" placeholder="0,1,2"></div>
+  </div>
+  <div class="fld"><label>Passive production (JSON: {"resource":rate} per hour per level)</label>
+    <input type="text" id="bld-produce" placeholder='{"solar":2,"lunar":1} per level'></div>
+  <div class="fld"><label>Special actions unlocked (one per line: LEVEL|label|description)</label>
+    <textarea id="bld-actions" rows="3" placeholder="1|Open Forge|Craft items from gathered essences&#10;2|Grand Forge|Craft tier-2 and above items&#10;3|Sigil Forge|Craft legendary sigils"></textarea></div>
+  <div class="fld"><label>Research slots (+N per level)</label>
+    <input type="text" id="bld-research" placeholder="1,2,3"></div>
+
+  <div style="display:flex;gap:0.5rem;margin-top:0.8rem;">
+    <button class="btn b-ward" onclick="saveBld()">✓ Seal Building</button>
+    <button class="btn b-seal" onclick="document.getElementById('bld-editor').style.display='none'">Cancel</button>
+  </div>
+</div>
 <div class="panel" id="skl-editor" style="display:none;margin-top:1rem;"><div class="ph" id="skl-ed-title">New Skill</div><input type="hidden" id="skl-key">
 <div class="g2"><div class="fld"><label>Name</label><input type="text" id="skl-name"></div><div class="fld"><label>Class Requirement</label><input type="text" id="skl-class" placeholder="Any"></div></div>
 <div class="fld"><label>Description</label><textarea id="skl-desc"></textarea></div>
@@ -1179,39 +1391,294 @@ textarea{resize:vertical;min-height:72px;line-height:1.6;}
 </div>
 
 
+
+
 <div id="page-questlines" class="page">
 <div class="pg-head">
   <div class="pg-title">Questlines</div>
-  <div class="pg-desc">Define multi-step story questlines with branching choices. Each node can have choices that lead to other nodes, apply rewards, trigger combat, or end the questline.</div>
+  <div class="pg-desc">Build complete questlines linking events, rewards, skill unlocks, and building requirements. Each questline is a tree saved to <code style="color:var(--dm-bright)">world/questlines/{key}</code> and playable from the Field tab.</div>
 </div>
-<div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+
+<div style="display:flex;gap:0.5rem;margin-bottom:1.2rem;flex-wrap:wrap;">
   <button class="btn b-rune" onclick="loadQuestlines()">↻ Refresh</button>
-  <button class="btn b-seal" onclick="openQuestEditor()">+ New Questline</button>
+  <button class="btn b-seal" onclick="openQuestWizard()">✦ New Questline Wizard</button>
 </div>
 <div id="questlines-list"></div>
 
-<div class="panel" id="quest-editor" style="display:none;margin-top:1rem;">
-  <div class="ph" id="quest-ed-title">New Questline</div>
-  <input type="hidden" id="quest-key">
-  <div class="g2">
-    <div class="fld"><label>Quest Key</label><input type="text" id="quest-key-in" placeholder="the-iron-testament"></div>
-    <div class="fld"><label>Title</label><input type="text" id="quest-title" placeholder="The Iron Testament"></div>
+<!-- ── QUESTLINE WIZARD ── -->
+<div id="quest-wizard" style="display:none;margin-top:1rem;">
+  <!-- Wizard header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+    <div style="font-family:var(--ff-h);font-size:0.8rem;letter-spacing:0.08em;color:var(--gold);" id="qw-title-bar">New Questline</div>
+    <button class="btn" onclick="document.getElementById('quest-wizard').style.display='none'" style="font-size:0.48rem;">✕ Close</button>
   </div>
-  <div class="fld"><label>Description</label><textarea id="quest-desc"></textarea></div>
-  <div class="fld"><label>Starting Node ID</label><input type="text" id="quest-start" value="start" placeholder="start"></div>
 
-  <div class="ph" style="margin-top:1rem;">Nodes <span style="font-size:0.85em;color:var(--ash);">(each node is a story beat)</span></div>
-  <div id="quest-nodes-list" style="margin-bottom:0.6rem;"></div>
-  <button class="btn b-rune" onclick="addQuestNode()">+ Add Node</button>
+  <!-- Step tabs -->
+  <div style="display:flex;gap:0;border:1px solid var(--border);margin-bottom:1rem;overflow-x:auto;">
+    <button class="btn qw-tab active" id="qwt-1" onclick="qwGo(1,this)" style="flex:1;border:none;white-space:nowrap;min-width:fit-content;">1 · Identity</button>
+    <button class="btn qw-tab" id="qwt-2" onclick="qwGo(2,this)" style="flex:1;border:none;white-space:nowrap;min-width:fit-content;">2 · Story Beats</button>
+    <button class="btn qw-tab" id="qwt-3" onclick="qwGo(3,this)" style="flex:1;border:none;white-space:nowrap;min-width:fit-content;">3 · Requirements</button>
+    <button class="btn qw-tab" id="qwt-4" onclick="qwGo(4,this)" style="flex:1;border:none;white-space:nowrap;min-width:fit-content;">4 · Rewards</button>
+    <button class="btn qw-tab" id="qwt-5" onclick="qwGo(5,this)" style="flex:1;border:none;white-space:nowrap;min-width:fit-content;">5 · Save</button>
+  </div>
 
-  <div style="display:flex;gap:0.5rem;margin-top:1rem;">
-    <button class="btn b-ward" onclick="saveQuestline()">✓ Save Questline</button>
-    <button class="btn b-seal" onclick="deleteQuestline(document.getElementById('quest-key').value)">✕ Delete</button>
-    <button class="btn" onclick="document.getElementById('quest-editor').style.display='none'">Cancel</button>
+  <!-- Step 1: Identity -->
+  <div id="qw-panel-1" class="qw-panel">
+    <div class="panel">
+      <div class="ph">Quest Identity</div>
+      <div class="g2">
+        <div class="fld"><label>Quest Key (Firebase ID)</label>
+          <input type="text" id="qw-key" placeholder="the-descent-below" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9-]/g,'-')"></div>
+        <div class="fld"><label>Title</label>
+          <input type="text" id="qw-title" placeholder="The Descent Below"></div>
+      </div>
+      <div class="fld"><label>Opening lore text</label>
+        <textarea id="qw-desc" rows="3" placeholder="The lair trembles. Something stirs beneath the second seal…"></textarea></div>
+      <div class="g2">
+        <div class="fld"><label>Quest type</label>
+          <select id="qw-type">
+            <option value="main">Main Story</option>
+            <option value="side">Side Quest</option>
+            <option value="faction">Faction</option>
+            <option value="personal">Personal</option>
+            <option value="repeatable">Repeatable</option>
+          </select></div>
+        <div class="fld"><label>Assigned to</label>
+          <select id="qw-target">
+            <option value="__all__">All Seekers</option>
+          </select></div>
+      </div>
+      <div class="fld"><label>Linked Tree Key (optional — if you built a tree in Tree Builder)</label>
+        <input type="text" id="qw-tree" placeholder="beginner-quest-chain"></div>
+    </div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.7rem;">
+      <button class="btn b-rune" onclick="qwGo(2)">Next: Story Beats →</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Story Beats (nodes) -->
+  <div id="qw-panel-2" class="qw-panel" style="display:none;">
+    <div class="panel">
+      <div class="ph">Story Beats</div>
+      <p style="font-family:var(--ff-b);font-style:italic;font-size:0.82rem;color:var(--mist);margin-bottom:0.8rem;line-height:1.5;">
+        Each beat is a moment in the questline. Beats can be linear or branch. Link an event, add player choices, define what happens on each outcome.
+      </p>
+      <div id="qw-beats-list"></div>
+      <button class="btn b-seal" onclick="qwAddBeat()" style="width:100%;margin-top:0.5rem;">+ Add Story Beat</button>
+    </div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.7rem;">
+      <button class="btn b-seal" onclick="qwGo(1)">← Back</button>
+      <button class="btn b-rune" onclick="qwGo(3)">Next: Requirements →</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Requirements -->
+  <div id="qw-panel-3" class="qw-panel" style="display:none;">
+    <div class="panel">
+      <div class="ph">Quest Requirements</div>
+      <p style="font-family:var(--ff-b);font-style:italic;font-size:0.82rem;color:var(--mist);margin-bottom:0.7rem;line-height:1.5;">
+        What must be true before a player can start this questline? Leave empty for no restrictions.
+      </p>
+      <div class="g2">
+        <div class="fld"><label>Minimum level</label><input type="number" id="qw-req-level" value="1" min="1"></div>
+        <div class="fld"><label>Required class (blank = any)</label><input type="text" id="qw-req-class" placeholder="seeker"></div>
+      </div>
+      <div class="fld"><label>Required buildings (comma separated: building-key)</label>
+        <input type="text" id="qw-req-buildings" placeholder="altar, scriptorium"></div>
+      <div class="fld"><label>Required qualities (one per line: quality-key >= N)</label>
+        <textarea id="qw-req-qualities" rows="3" placeholder="combat-won >= 1&#10;dungeon-explored >= 1"></textarea></div>
+      <div class="fld"><label>Required completed quests (comma separated: quest-key)</label>
+        <input type="text" id="qw-req-quests" placeholder="the-first-seal"></div>
+    </div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.7rem;">
+      <button class="btn b-seal" onclick="qwGo(2)">← Back</button>
+      <button class="btn b-rune" onclick="qwGo(4)">Next: Rewards →</button>
+    </div>
+  </div>
+
+  <!-- Step 4: Completion Rewards -->
+  <div id="qw-panel-4" class="qw-panel" style="display:none;">
+    <div class="panel">
+      <div class="ph">Completion Rewards</div>
+      <p style="font-family:var(--ff-b);font-style:italic;font-size:0.82rem;color:var(--mist);margin-bottom:0.7rem;line-height:1.5;">
+        What does the player gain when the full questline is completed?
+      </p>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.4rem;margin-bottom:0.6rem;">
+        <div class="fld"><label>☉ Solar</label><input type="number" id="qw-r0" value="0" min="0"></div>
+        <div class="fld"><label>☽ Lunar</label><input type="number" id="qw-r1" value="0" min="0"></div>
+        <div class="fld"><label>♃ Jovian</label><input type="number" id="qw-r2" value="0" min="0"></div>
+        <div class="fld"><label>♂ Martial</label><input type="number" id="qw-r3" value="0" min="0"></div>
+        <div class="fld"><label>♄ Saturnine</label><input type="number" id="qw-r4" value="0" min="0"></div>
+        <div class="fld"><label>♀ Venusian</label><input type="number" id="qw-r5" value="0" min="0"></div>
+        <div class="fld"><label>☿ Mercurial</label><input type="number" id="qw-r6" value="0" min="0"></div>
+        <div class="fld"><label>✦ XP</label><input type="number" id="qw-rxp" value="0" min="0"></div>
+      </div>
+      <div class="fld"><label>Skills unlocked on completion (comma separated: skill-key)</label>
+        <input type="text" id="qw-reward-skills" placeholder="ancient-rite, void-step"></div>
+      <div class="fld"><label>Buildings unlocked on completion (comma separated: building-key)</label>
+        <input type="text" id="qw-reward-buildings" placeholder="ossuary, scrying-chamber"></div>
+      <div class="fld"><label>Quality grants on completion (one per line: quality-key = N)</label>
+        <textarea id="qw-reward-qualities" rows="2" placeholder="descent-complete = 1&#10;seal-breaker = 1"></textarea></div>
+      <div class="fld"><label>Lore / flavour text shown on completion</label>
+        <textarea id="qw-reward-lore" rows="2" placeholder="The seal breaks. A new passage opens beneath the lair."></textarea></div>
+    </div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.7rem;">
+      <button class="btn b-seal" onclick="qwGo(3)">← Back</button>
+      <button class="btn b-rune" onclick="qwGo(5)">Review & Save →</button>
+    </div>
+  </div>
+
+  <!-- Step 5: Review & Save -->
+  <div id="qw-panel-5" class="qw-panel" style="display:none;">
+    <div class="panel" id="qw-summary" style="background:rgba(123,47,255,0.04);border-color:rgba(168,85,247,0.2);"></div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.7rem;">
+      <button class="btn b-seal" onclick="qwGo(4)">← Back</button>
+      <button class="btn b-ward" style="flex:1;padding:0.85rem;" onclick="qwSave()">✦ Seal Questline to Firebase</button>
+    </div>
   </div>
 </div>
 </div>
 
+
+<!-- ══ TREE BUILDER PAGE ══ -->
+<div id="page-trees" class="page">
+<div class="pg-head">
+  <div class="pg-title">Tree Builder</div>
+  <div class="pg-desc">Design progression trees for quest chains, buildings, skills, classes and prestige paths. Drag nodes to connect them. Save trees to Firebase under <code style="color:var(--gold-dim)">world/trees/{key}</code>.</div>
+</div>
+<div id="tb-toolbar">
+  <div id="tb-type-tabs">
+    <button class="tb-tab active" onclick="tbSetType('quest',this)">⬡ Quest Chains</button>
+    <button class="tb-tab" onclick="tbSetType('skill',this)">✦ Skill Trees</button>
+    <button class="tb-tab" onclick="tbSetType('class',this)">◈ Classes</button>
+    <button class="tb-tab" onclick="tbSetType('building',this)">⚗ Buildings</button>
+    <button class="tb-tab" onclick="tbSetType('custom',this)">◇ Custom</button>
+  </div>
+  <div id="tb-tree-controls">
+    <select id="tb-tree-sel" onchange="tbLoadTree(this.value)"><option value="">— new tree —</option></select>
+    <input id="tb-tree-name" type="text" placeholder="Tree name…" style="width:160px;">
+    <button class="btn b-seal" onclick="tbAddNode()">+ Node</button>
+    <button class="btn b-rune" onclick="tbSaveTree()">↑ Save</button>
+    <button class="btn" onclick="tbNewTree()" style="border-color:var(--ash);color:var(--pale);">✕ Clear</button>
+    <button class="btn" onclick="tbFitView()" style="font-size:0.48rem;">⊡ Fit</button>
+  </div>
+</div>
+<div id="tb-workspace">
+  <div id="tb-canvas"></div>
+  <svg id="tb-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div id="tb-empty-hint">
+    <div style="font-family:var(--ff-h);font-size:1.1rem;color:var(--stone);letter-spacing:0.1em;">Click <strong style="color:var(--gold)">+ Node</strong> to begin</div>
+    <div style="font-size:0.8rem;color:var(--ash);margin-top:0.5rem;">Drag nodes to reposition &nbsp;·&nbsp; Drag from ● to connect &nbsp;·&nbsp; Right-click for options</div>
+  </div>
+</div>
+<div id="tb-inspector" class="tb-inspector-closed">
+  <div id="tb-inspector-head">
+    <span id="tb-inspector-title">Node</span>
+    <button onclick="tbCloseInspector()" style="background:none;border:none;color:var(--mist);cursor:pointer;font-size:1.1rem;padding:0 0.3rem;">✕</button>
+  </div>
+  <div class="fld"><label>Label</label><input type="text" id="tbi-label" oninput="tbUpdateNode('label',this.value)" placeholder="Node name"></div>
+  <div class="fld"><label>Description</label><textarea id="tbi-desc" rows="2" oninput="tbUpdateNode('desc',this.value)" placeholder="What this unlocks or requires…"></textarea></div>
+  <div class="fld"><label>Type / Category</label><input type="text" id="tbi-cat" oninput="tbUpdateNode('cat',this.value)" placeholder="e.g. combat, story, prestige…"></div>
+  <div class="fld"><label>Cost / Requirement</label><input type="text" id="tbi-req" oninput="tbUpdateNode('req',this.value)" placeholder="e.g. 500 Solar, Level 3…"></div>
+  <div class="fld"><label>Firebase Key</label><input type="text" id="tbi-key" oninput="tbUpdateNode('key',this.value)" placeholder="auto-generated"></div>
+
+  <div style="border-top:1px solid var(--border);margin:0.7rem 0 0.5rem;padding-top:0.5rem;">
+    <div style="font-family:var(--ff-h);font-size:0.44rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--mist);margin-bottom:0.4rem;">Type-specific fields</div>
+  </div>
+
+  <!-- Building tree fields -->
+  <div class="fld" id="tbi-building-key-wrap">
+    <label>Building Key (for building trees)</label>
+    <input type="text" id="tbi-buildingKey" oninput="tbUpdateNode('buildingKey',this.value)" placeholder="e.g. alchemical-forge">
+  </div>
+  <div class="fld">
+    <label>Actions at this stage</label>
+    <input type="text" id="tbi-actions" oninput="tbUpdateNode('actions',this.value)" placeholder="e.g. Craft weapons, Brew potions">
+  </div>
+  <div class="fld">
+    <label>Produces (passive output)</label>
+    <input type="text" id="tbi-produces" oninput="tbUpdateNode('produces',this.value)" placeholder="e.g. +2 Solar/hour">
+  </div>
+
+  <!-- Quest tree fields -->
+  <div class="fld">
+    <label>Lat / Lng (quest map marker)</label>
+    <div style="display:flex;gap:0.4rem;">
+      <input type="text" id="tbi-lat" oninput="tbUpdateNode('lat',this.value)" placeholder="Latitude" style="flex:1;">
+      <input type="text" id="tbi-lng" oninput="tbUpdateNode('lng',this.value)" placeholder="Longitude" style="flex:1;">
+    </div>
+  </div>
+
+  <!-- Skill / class tree fields -->
+  <div class="fld">
+    <label>Skill Key (for skill trees)</label>
+    <input type="text" id="tbi-skillKey" oninput="tbUpdateNode('skillKey',this.value)" placeholder="e.g. annichilito-">
+  </div>
+  <div class="fld">
+    <label>XP Threshold (skill mastery)</label>
+    <input type="number" id="tbi-xpThreshold" oninput="tbUpdateNode('xpThreshold',this.value?+this.value:undefined)" placeholder="e.g. 10" min="0">
+  </div>
+  <div class="fld">
+    <label>Bonus on unlock (e.g. fortitude+2, skill:annichilito)</label>
+    <input type="text" id="tbi-bonus" oninput="tbUpdateNode('bonus',this.value)" placeholder="stat+N, skill:key, trait:key">
+  </div>
+
+  <div style="display:flex;gap:0.5rem;margin-top:0.8rem;">
+    <button class="btn b-rune" onclick="tbSetRoot()" style="flex:1;font-size:0.5rem;">⬡ Set Root</button>
+    <button class="btn" onclick="tbDeleteNode()" style="flex:1;border-color:var(--crimson-bright);color:var(--crimson-bright);font-size:0.5rem;">✕ Delete</button>
+  </div>
+  <div style="margin-top:0.8rem;border-top:1px solid var(--border);padding-top:0.7rem;">
+    <div style="font-family:var(--ff-h);font-size:0.48rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--mist);margin-bottom:0.4rem;">Connections</div>
+    <div id="tbi-connections" style="font-size:0.75rem;color:var(--pale);line-height:1.6;"></div>
+  </div>
+</div>
+<div id="tb-minimap"><canvas id="tb-minimap-canvas" width="160" height="100"></canvas></div>
+<div id="tb-ctx"></div>
+
+<!-- ── Edge condition modal ── -->
+<div id="tb-edge-modal">
+  <div id="tb-edge-modal-title" style="font-family:var(--ff-h);font-size:0.62rem;letter-spacing:0.1em;color:var(--gold);margin-bottom:0.6rem;text-transform:uppercase;">Branch Condition</div>
+  <div style="font-family:var(--ff-b);font-style:italic;font-size:0.72rem;color:var(--mist);margin-bottom:0.7rem;line-height:1.5;">Define when this branch is available. Leave empty for an open connection.</div>
+  <div style="font-family:var(--ff-h);font-size:0.42rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);margin-bottom:0.3rem;">Quick insert</div>
+  <div class="tb-cond-chips">
+    <span class="tb-cond-chip" onclick="tbCondInsert('Level >= ')">Level</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('Solar >= ')">Solar</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('Lunar >= ')">Lunar</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('Martial >= ')">Martial</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('has:')">Has Item</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('skill:')">Skill</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('trait:')">Trait</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('quest:')">Quest</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('xp >= ')">XP</span>
+    <span class="tb-cond-chip" onclick="tbCondInsert('stress < ')">Stress</span>
+  </div>
+  <div class="fld" style="margin-bottom:0.5rem;">
+    <label style="font-family:var(--ff-h);font-size:0.44rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);display:block;margin-bottom:0.25rem;">Condition</label>
+    <input type="text" id="tb-edge-cond" placeholder="e.g.  Level >= 3  |  Solar >= 500  |  quest:descent == resolved" 
+           style="width:100%;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.35rem 0.45rem;font-family:var(--ff-b);font-size:0.78rem;outline:none;"
+           oninput="tbEdgeCondChanged()">
+  </div>
+  <div class="fld" style="margin-bottom:0.5rem;">
+    <label style="font-family:var(--ff-h);font-size:0.44rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);display:block;margin-bottom:0.25rem;">Label on arrow (optional)</label>
+    <input type="text" id="tb-edge-label-txt" placeholder="Short label"
+           style="width:100%;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.35rem 0.45rem;font-family:var(--ff-b);font-size:0.78rem;outline:none;">
+  </div>
+  <div class="fld" style="margin-bottom:0.8rem;">
+    <label style="font-family:var(--ff-h);font-size:0.44rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);display:block;margin-bottom:0.25rem;">Logic</label>
+    <select id="tb-edge-logic" style="width:100%;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.3rem 0.4rem;font-family:var(--ff-b);font-size:0.78rem;outline:none;">
+      <option value="AND">AND — all must be true</option>
+      <option value="OR">OR — any one is enough</option>
+    </select>
+  </div>
+  <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+    <button class="btn b-seal" onclick="tbEdgeCondSave()" style="flex:1;">✓ Apply</button>
+    <button class="btn" onclick="tbEdgeCondClear()" style="border-color:var(--ash);color:var(--mist);">✕ Clear</button>
+    <button class="btn" onclick="tbCloseEdgeModal()" style="border-color:var(--stone);color:var(--ash);font-size:0.48rem;">Cancel</button>
+  </div>
+  <button class="btn" onclick="tbDeleteEdge()" style="width:100%;border-color:var(--crimson-bright);color:var(--crimson-bright);font-size:0.48rem;">✕ Remove this connection</button>
+</div>
+
+</div>
 </main>
 </div>
 <div id="dm-console"><div class="con-bar"><span class="con-lbl">Arcane Log</span><button class="con-clr" onclick="document.getElementById('dm-log').innerHTML=''">clear</button></div><div id="dm-log"></div></div>
@@ -2146,9 +2613,56 @@ async function delRec(i){if(!confirm('Delete recipe?'))return;editingRecipes.spl
 
 // BUILDINGS & SKILLS
 async function loadBldSkl(){try{const[bd,sk]=await Promise.all([fbGet('world/buildings'),fbGet('world/skills')]);const bc=document.getElementById('bld-list');if(!bd){bc.innerHTML='<p style="color:var(--mist);font-style:italic;">No buildings.</p>';}else{bc.innerHTML=Object.entries(bd).map(([k,b])=>`<div class="entity-card"><div style="display:flex;align-items:flex-start;gap:0.5rem;"><div style="flex:1;"><div class="entity-name">${b.icon||''} ${b.name||k}</div><div class="entity-sub">Max Lv.${b.maxLevel||'?'}</div>${b.desc?`<div style="font-family:var(--ff-b);font-style:italic;font-size:0.9rem;color:var(--mist);margin-top:0.2rem;">${b.desc}</div>`:''}</div><div style="display:flex;gap:0.3rem;"><button class="btn b-seal" style="padding:0.22rem 0.45rem;font-size:0.45rem;" onclick="editBld('${k}')">Edit</button><button class="btn b-breach" style="padding:0.22rem 0.45rem;font-size:0.45rem;" onclick="delBld('${k}')">✗</button></div></div></div>`).join('');}const sc=document.getElementById('skl-list');if(!sk){sc.innerHTML='<p style="color:var(--mist);font-style:italic;">No skills.</p>';}else{sc.innerHTML=Object.entries(sk).map(([k,s])=>`<div class="entity-card"><div style="display:flex;align-items:flex-start;gap:0.5rem;"><div style="flex:1;"><div class="entity-name">${s.name||k}</div><div class="entity-sub">${s.classReq||'Any'}</div>${s.desc?`<div style="font-family:var(--ff-b);font-style:italic;font-size:0.9rem;color:var(--mist);margin-top:0.2rem;">${s.desc}</div>`:''}</div><div style="display:flex;gap:0.3rem;"><button class="btn b-seal" style="padding:0.22rem 0.45rem;font-size:0.45rem;" onclick="editSkl('${k}')">Edit</button><button class="btn b-breach" style="padding:0.22rem 0.45rem;font-size:0.45rem;" onclick="delSkl('${k}')">✗</button></div></div></div>`).join('');}}catch(e){log('Error: '+e.message,'err');}}
-function openBldEd(){document.getElementById('bld-editor').style.display='block';document.getElementById('bld-ed-title').textContent='New Building';document.getElementById('bld-key').value='';['bld-name','bld-icon','bld-desc','bld-cost','bld-effects'].forEach(id=>document.getElementById(id).value='');document.getElementById('bld-maxlv').value=3;}
+function openBldEd(){document.getElementById('bld-editor').style.display='block';document.getElementById('bld-ed-title').textContent='New Building';document.getElementById('bld-key').value='';['bld-name','bld-icon','bld-desc','bld-cost','bld-effects'].forEach(id=>document.getElementById(id).value='');document.getElementById('bld-maxlv').value=3;
+  // New fields
+  ['bld-key-in','bld-tree','bld-scout','bld-recipes','bld-rescap',
+   'bld-acoslots','bld-produce','bld-actions','bld-research'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+}
 async function editBld(key){try{const d=await fbGet('world/buildings/'+key);document.getElementById('bld-editor').style.display='block';document.getElementById('bld-ed-title').textContent='Edit: '+d.name;document.getElementById('bld-key').value=key;document.getElementById('bld-name').value=d.name||'';document.getElementById('bld-icon').value=d.icon||'';document.getElementById('bld-desc').value=d.desc||'';document.getElementById('bld-maxlv').value=d.maxLevel||3;document.getElementById('bld-cost').value=JSON.stringify(d.upgradeCost||[]);document.getElementById('bld-effects').value=(d.effects||[]).join('\n');}catch(e){log('Error: '+e.message,'err');}}
-async function saveBld(){const key=document.getElementById('bld-key').value||(document.getElementById('bld-name').value.toLowerCase().replace(/\s+/g,'-'));let cost=[];try{cost=JSON.parse(document.getElementById('bld-cost').value||'[]');}catch(e){}const d={name:document.getElementById('bld-name').value,icon:document.getElementById('bld-icon').value,desc:document.getElementById('bld-desc').value,maxLevel:parseInt(document.getElementById('bld-maxlv').value)||3,upgradeCost:cost,effects:document.getElementById('bld-effects').value.split('\n').map(s=>s.trim()).filter(Boolean)};try{await fbPut('world/buildings/'+key,d);log('Building sealed: '+d.name,'ok');toast('✦ '+d.name+' sealed.');loadBldSkl();}catch(e){log('Error: '+e.message,'err');}}
+async function saveBld(){
+  const nameVal = document.getElementById('bld-name').value;
+  const keyIn   = document.getElementById('bld-key-in').value.trim();
+  const key     = document.getElementById('bld-key').value ||
+                  keyIn || nameVal.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+  if (!key) { toast('Enter a building name or key.'); return; }
+  let cost = [];
+  try { cost = JSON.parse(document.getElementById('bld-cost').value||'[]'); } catch(e) {}
+  // Parse actions: "LEVEL|label|description" per line
+  const actionsRaw = document.getElementById('bld-actions').value;
+  const actions = actionsRaw.split('\n').map(l => {
+    const [lv, label, desc] = l.split('|').map(s=>s.trim());
+    return lv&&label ? { level:parseInt(lv)||1, label, desc:desc||'' } : null;
+  }).filter(Boolean);
+  // Parse passive production
+  let produce = null;
+  try { produce = JSON.parse(document.getElementById('bld-produce').value||'null'); } catch(e) {}
+  const d = {
+    name:        nameVal,
+    icon:        document.getElementById('bld-icon').value,
+    desc:        document.getElementById('bld-desc').value,
+    maxLevel:    parseInt(document.getElementById('bld-maxlv').value)||3,
+    treeKey:     document.getElementById('bld-tree').value.trim()||undefined,
+    upgradeCost: cost,
+    effects:     document.getElementById('bld-effects').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    scoutRadius: document.getElementById('bld-scout').value.split(',').map(n=>parseInt(n.trim())||0),
+    recipeCategories: document.getElementById('bld-recipes').value.split(',').map(s=>s.trim()).filter(Boolean),
+    resourceCapBonus: document.getElementById('bld-rescap').value.split(',').map(n=>parseFloat(n.trim())||0),
+    acolyteSlots: document.getElementById('bld-acoslots').value.split(',').map(n=>parseInt(n.trim())||0),
+    researchSlots: document.getElementById('bld-research').value.split(',').map(n=>parseInt(n.trim())||0),
+    passiveProduction: produce,
+    actions: actions.length ? actions : undefined,
+  };
+  // Remove undefined keys
+  Object.keys(d).forEach(k => d[k]===undefined && delete d[k]);
+  try {
+    await fbPut('world/buildings/'+key, d);
+    log('Building sealed: '+d.name,'ok'); toast('✦ '+d.name+' sealed.');
+    loadBldSkl();
+    document.getElementById('bld-editor').style.display='none';
+  } catch(e) { log('Error: '+e.message,'err'); }
+}
 async function delBld(key){if(!confirm('Delete '+key+'?'))return;try{await fbDel('world/buildings/'+key);log('Deleted.','warn');loadBldSkl();}catch(e){log('Error: '+e.message,'err');}}
 function openSklEd(){document.getElementById('skl-editor').style.display='block';document.getElementById('skl-ed-title').textContent='New Skill';document.getElementById('skl-key').value='';['skl-name','skl-class','skl-desc','skl-cost','skl-unlock'].forEach(id=>document.getElementById(id).value='');}
 async function editSkl(key){try{const d=await fbGet('world/skills/'+key);document.getElementById('skl-editor').style.display='block';document.getElementById('skl-ed-title').textContent='Edit: '+d.name;document.getElementById('skl-key').value=key;document.getElementById('skl-name').value=d.name||'';document.getElementById('skl-class').value=d.classReq||'';document.getElementById('skl-desc').value=d.desc||'';document.getElementById('skl-cost').value=JSON.stringify(d.cost||[]);document.getElementById('skl-unlock').value=d.unlockCondition||'';}catch(e){log('Error: '+e.message,'err');}}
@@ -4652,146 +5166,456 @@ function _collectMapGrants() {
   return hasAny ? result : undefined;
 }
 
+
+// ══════════════════════════════════════════════════════════════════════
+// FORGE — Resource Zones, Materials, Recipe tiers
+// ══════════════════════════════════════════════════════════════════════
+function forgeTab(tab, el) {
+  ['recipes','zones','materials'].forEach(t => {
+    document.getElementById('forge-pane-'+t).style.display = t===tab ? '' : 'none';
+    document.getElementById('forge-tab-'+t).style.background = t===tab ? 'rgba(201,168,76,0.08)' : '';
+    document.getElementById('forge-tab-'+t).style.color      = t===tab ? 'var(--gold)' : '';
+  });
+  if (tab==='zones')     loadResourceZones();
+  if (tab==='materials') loadMaterials();
+}
+
+// Resource zones
+async function loadResourceZones() {
+  try {
+    const data = await fbGet('world/resourceZones') || {};
+    const list = document.getElementById('zones-list');
+    if (!list) return;
+    const zones = Object.entries(data);
+    if (!zones.length) {
+      list.innerHTML = '<div class="panel" style="font-family:var(--ff-b);font-style:italic;color:var(--mist);">No zones defined. Create zone types like: sea, city, forest, mountain, worship, industrial.</div>';
+      return;
+    }
+    list.innerHTML = zones.map(([k,z]) => `
+      <div class="panel" style="margin-bottom:0.5rem;display:flex;align-items:center;gap:0.7rem;cursor:pointer;" onclick="editZone('${k}')">
+        <span style="font-size:1.2rem;">${z.icon||'◎'}</span>
+        <div style="flex:1;">
+          <div style="font-family:var(--ff-h);font-size:0.72rem;color:var(--gold);">${z.name||k}</div>
+          <div style="font-family:var(--ff-b);font-style:italic;font-size:0.78rem;color:var(--mist);">${z.desc||''}</div>
+        </div>
+        <div style="font-family:var(--ff-h);font-size:0.48rem;color:var(--text-secondary);">
+          ${[z.yields||[]].flat().map((r,i)=>r>0?`${RS[i]}${r}`:'').filter(Boolean).join(' ')}
+        </div>
+        <button class="btn" onclick="event.stopPropagation();deleteZone('${k}')" style="font-size:0.44rem;border-color:var(--crimson-bright);color:var(--crimson-bright);padding:0.2rem 0.45rem;">✕</button>
+      </div>`).join('');
+  } catch(e) { log('Zone load error: '+e.message,'err'); }
+}
+
+function openZoneEd() {
+  ['zone-key-in','zone-name','zone-icon','zone-osm','zone-desc','zone-req-bld','zone-drops'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('zone-key').value = '';
+  for(let i=0;i<7;i++) document.getElementById('zone-r'+i).value=0;
+  document.getElementById('zone-planet').value='';
+  document.getElementById('zone-editor').style.display='block';
+  document.getElementById('zone-ed-title').textContent='New Resource Zone';
+}
+
+async function editZone(key) {
+  try {
+    const z = await fbGet('world/resourceZones/'+key);
+    if (!z) return;
+    document.getElementById('zone-key').value    = key;
+    document.getElementById('zone-key-in').value = key;
+    document.getElementById('zone-name').value   = z.name||'';
+    document.getElementById('zone-icon').value   = z.icon||'';
+    document.getElementById('zone-osm').value    = z.osm||'';
+    document.getElementById('zone-desc').value   = z.desc||'';
+    document.getElementById('zone-req-bld').value= z.requiredBuilding||'';
+    document.getElementById('zone-planet').value = z.bonusPlanet||'';
+    (z.yields||[]).forEach((v,i)=>{ const el=document.getElementById('zone-r'+i); if(el) el.value=v||0; });
+    document.getElementById('zone-drops').value  = (z.drops||[]).map(d=>`${d.key}|${d.name}|${d.min}-${d.max}`).join('\n');
+    document.getElementById('zone-editor').style.display='block';
+    document.getElementById('zone-ed-title').textContent='Edit Zone: '+z.name;
+  } catch(e) { log('Edit zone error: '+e.message,'err'); }
+}
+
+async function saveZone() {
+  const key = document.getElementById('zone-key').value || document.getElementById('zone-key-in').value.trim().toLowerCase().replace(/\s+/g,'-');
+  if (!key) { toast('Enter a zone key.'); return; }
+  const yields = [];
+  for(let i=0;i<7;i++) yields.push(parseInt(document.getElementById('zone-r'+i).value)||0);
+  const dropsRaw = document.getElementById('zone-drops').value;
+  const drops = dropsRaw.split('\n').map(l=>{
+    const [k,n,rng]=(l+'||').split('|').map(s=>s.trim());
+    if(!k) return null;
+    const [mn,mx]=(rng||'1-1').split('-').map(n=>parseInt(n)||1);
+    return {key:k, name:n||k, min:mn, max:mx};
+  }).filter(Boolean);
+  const z = {
+    name:     document.getElementById('zone-name').value,
+    icon:     document.getElementById('zone-icon').value,
+    osm:      document.getElementById('zone-osm').value,
+    desc:     document.getElementById('zone-desc').value,
+    yields,   drops,
+    bonusPlanet:      document.getElementById('zone-planet').value || undefined,
+    requiredBuilding: document.getElementById('zone-req-bld').value || undefined,
+  };
+  Object.keys(z).forEach(k=>z[k]===undefined&&delete z[k]);
+  try {
+    await fbPut('world/resourceZones/'+key, z);
+    toast('✓ Zone sealed: '+z.name); log('Zone sealed: '+z.name,'ok');
+    document.getElementById('zone-editor').style.display='none';
+    loadResourceZones();
+  } catch(e) { log('Zone save error: '+e.message,'err'); }
+}
+
+async function deleteZone(key) {
+  if (!confirm('Delete zone type "'+key+'"?')) return;
+  await fbDel('world/resourceZones/'+key);
+  loadResourceZones();
+}
+
+// Raw materials
+async function loadMaterials() {
+  try {
+    const data = await fbGet('world/materials') || {};
+    const list = document.getElementById('materials-list');
+    if (!list) return;
+    const mats = Object.entries(data);
+    const TIER_COLORS = {1:'var(--bone)',2:'var(--viridian-bright)',3:'var(--indigo-bright)',4:'var(--dm-bright)'};
+    const TIER_NAMES  = {1:'Common',2:'Uncommon',3:'Rare',4:'Exotic'};
+    if (!mats.length) {
+      list.innerHTML = '<div class="panel" style="font-family:var(--ff-b);font-style:italic;color:var(--mist);">No materials defined.</div>';
+      return;
+    }
+    list.innerHTML = mats.map(([k,m]) => {
+      const tc = TIER_COLORS[m.tier||1];
+      return `<div class="panel" style="margin-bottom:0.4rem;display:flex;align-items:center;gap:0.6rem;cursor:pointer;" onclick="editMaterial('${k}')">
+        <span style="font-size:1.1rem;">${m.icon||'◇'}</span>
+        <div style="flex:1;">
+          <div style="font-family:var(--ff-h);font-size:0.7rem;color:${tc};">${m.name||k} <span style="font-size:0.44rem;color:var(--mist);">[T${m.tier||1}]</span></div>
+          <div style="font-family:var(--ff-h);font-size:0.44rem;color:var(--text-secondary);">${(m.zones||[]).join(' · ')}</div>
+        </div>
+        <button class="btn" onclick="event.stopPropagation();deleteMaterial('${k}')" style="font-size:0.44rem;border-color:var(--crimson-bright);color:var(--crimson-bright);padding:0.2rem 0.45rem;">✕</button>
+      </div>`;
+    }).join('');
+  } catch(e) { log('Materials load error: '+e.message,'err'); }
+}
+
+function openMaterialEd() {
+  ['mat-key-in','mat-name','mat-icon','mat-zones','mat-desc'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('mat-key').value='';
+  document.getElementById('mat-tier').value='1';
+  document.getElementById('material-editor').style.display='block';
+  document.getElementById('mat-ed-title').textContent='New Material';
+}
+
+async function editMaterial(key) {
+  try {
+    const m = await fbGet('world/materials/'+key); if(!m) return;
+    document.getElementById('mat-key').value    = key;
+    document.getElementById('mat-key-in').value = key;
+    document.getElementById('mat-name').value   = m.name||'';
+    document.getElementById('mat-icon').value   = m.icon||'';
+    document.getElementById('mat-tier').value   = m.tier||1;
+    document.getElementById('mat-zones').value  = (m.zones||[]).join(', ');
+    document.getElementById('mat-desc').value   = m.desc||'';
+    document.getElementById('material-editor').style.display='block';
+    document.getElementById('mat-ed-title').textContent='Edit: '+m.name;
+  } catch(e) {}
+}
+
+async function saveMaterial() {
+  const key = document.getElementById('mat-key').value || document.getElementById('mat-key-in').value.trim().toLowerCase().replace(/\s+/g,'-');
+  if (!key) { toast('Enter a material key.'); return; }
+  const m = {
+    name:  document.getElementById('mat-name').value,
+    icon:  document.getElementById('mat-icon').value,
+    tier:  parseInt(document.getElementById('mat-tier').value)||1,
+    zones: document.getElementById('mat-zones').value.split(',').map(s=>s.trim()).filter(Boolean),
+    desc:  document.getElementById('mat-desc').value,
+  };
+  try {
+    await fbPut('world/materials/'+key, m);
+    toast('✓ Material sealed: '+m.name);
+    document.getElementById('material-editor').style.display='none';
+    loadMaterials();
+  } catch(e) { log('Material save error: '+e.message,'err'); }
+}
+
+async function deleteMaterial(key) {
+  if (!confirm('Delete material "'+key+'"?')) return;
+  await fbDel('world/materials/'+key);
+  loadMaterials();
+}
+
+// Recipe filter
+function filterRecipes() {
+  const tier = document.getElementById('rec-filter-tier')?.value;
+  const cat  = document.getElementById('rec-filter-cat')?.value;
+  document.querySelectorAll('#recipes-list .recipe-card').forEach(el => {
+    const t = el.dataset.tier||'';
+    const c = el.dataset.cat||'';
+    const show = (!tier||t===tier) && (!cat||c===cat);
+    el.style.display = show ? '' : 'none';
+  });
+}
+
+// Update saveRec to include tier, building requirement, materials
+async function saveRec() {
+  // Collect extra fields
+  const tier    = parseInt(document.getElementById('rec-tier')?.value)||1;
+  const bldReq  = document.getElementById('rec-building')?.value.trim()||undefined;
+  const bldLv   = parseInt(document.getElementById('rec-bld-level')?.value)||1;
+  const cond    = document.getElementById('rec-condition')?.value.trim()||undefined;
+  const matsRaw = document.getElementById('rec-materials')?.value||'';
+  const mats    = matsRaw.split('\n').map(l=>{
+    const m = l.match(/^(.+?)\s*[×x]\s*(\d+)$/);
+    return m ? {key:m[1].trim(), qty:parseInt(m[2])} : null;
+  }).filter(Boolean);
+  // Direct save with all fields (replaces original saveRec)
+  const idx = document.getElementById('rec-idx').value;
+  const name = document.getElementById('rec-name').value;
+  if (!name) { toast('Enter a recipe name.'); return; }
+  const key = idx || name.toLowerCase().replace(/\s+/g,'-');
+  let costs = {};
+  document.querySelectorAll('#rec-costs .cost-row').forEach(row => {
+    const ri = parseInt(row.querySelector('.cost-res')?.value);
+    const amt = parseInt(row.querySelector('.cost-amt')?.value)||0;
+    if (!isNaN(ri) && amt) costs[ri] = amt;
+  });
+  const d = {
+    name, key,
+    type:     document.getElementById('rec-type').value,
+    cat:      document.getElementById('rec-cat').value,
+    tier,
+    icon:     document.getElementById('rec-icon').value,
+    desc:     document.getElementById('rec-desc').value,
+    effect:   document.getElementById('rec-effect').value,
+    color:    document.getElementById('rec-color').value,
+    costs,
+    materialCosts: mats.length ? mats : undefined,
+    requiredBuilding: bldReq,
+    requiredBuildingLevel: bldReq ? bldLv : undefined,
+    requiredCondition: cond,
+  };
+  Object.keys(d).forEach(k=>d[k]===undefined&&delete d[k]);
+  try {
+    const recs = await fbGet('world/recipes') || [];
+    const arr = Array.isArray(recs) ? [...recs] : Object.values(recs);
+    const existIdx = arr.findIndex(r=>r&&r.key===key);
+    if (existIdx>=0) arr[existIdx]=d; else arr.push(d);
+    await fbPut('world/recipes', arr);
+    toast('✓ Recipe sealed: '+d.name); log('Recipe: '+d.name,'ok');
+    document.getElementById('rec-editor').style.display='none';
+    loadRecipes();
+  } catch(e) { log('Recipe error: '+e.message,'err'); }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// QUESTLINE WIZARD
+// ══════════════════════════════════════════════════════════════════════
+let _qwBeats = [];
+
+function qwGo(step, el) {
+  document.querySelectorAll('.qw-panel').forEach((p,i)=>p.style.display=i+1===step?'':'none');
+  document.querySelectorAll('.qw-tab').forEach((t,i)=>{
+    t.style.background = i+1===step?'rgba(201,168,76,0.08)':'';
+    t.style.color      = i+1===step?'var(--gold)':'';
+  });
+  if (step===5) qwBuildSummary();
+}
+
+function openQuestWizard() {
+  _qwBeats = [];
+  ['qw-key','qw-title','qw-desc','qw-tree','qw-req-class','qw-req-buildings',
+   'qw-req-quests','qw-req-qualities','qw-reward-skills','qw-reward-buildings',
+   'qw-reward-qualities','qw-reward-lore'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('qw-type').value='main';
+  document.getElementById('qw-req-level').value='1';
+  for(let i=0;i<7;i++) document.getElementById('qw-r'+i).value=0;
+  document.getElementById('qw-rxp').value=0;
+  document.getElementById('qw-beats-list').innerHTML='';
+  qwRefreshTargets();
+  document.getElementById('quest-wizard').style.display='block';
+  document.getElementById('qw-title-bar').textContent='New Questline';
+  qwGo(1);
+}
+
+function qwRefreshTargets() {
+  const sel = document.getElementById('qw-target'); if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML='<option value="__all__">All Seekers</option>';
+  Object.keys(allPlayers||{}).forEach(id=>{
+    const nm=allPlayers[id]?.presence?.name||allPlayers[id]?.save?.character?.name||id.slice(0,8);
+    sel.innerHTML+=`<option value="${id}">${nm}</option>`;
+  });
+  if(cur) sel.value=cur;
+}
+
+function qwAddBeat() {
+  const beatId = 'beat_'+Date.now();
+  _qwBeats.push({
+    id: beatId, title:'', text:'', type:'story',
+    eventKey:'', location:{lat:'',lng:''}, choices:[],
+    grants:{win:{},lose:{},always:{}}
+  });
+  renderQwBeats();
+}
+
+function renderQwBeats() {
+  const list = document.getElementById('qw-beats-list'); if(!list) return;
+  list.innerHTML = _qwBeats.map((beat,idx) => `
+    <div class="panel" style="margin-bottom:0.8rem;border-left:2px solid var(--gold-dim);">
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem;">
+        <span style="font-family:var(--ff-h);font-size:0.62rem;color:var(--gold);">Beat ${idx+1}</span>
+        <input type="text" placeholder="Beat title / node ID" value="${beat.title}"
+          oninput="_qwBeats[${idx}].title=this.value"
+          style="flex:1;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.28rem 0.4rem;font-family:var(--ff-b);font-size:0.78rem;outline:none;">
+        <select oninput="_qwBeats[${idx}].type=this.value"
+          style="background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.28rem 0.4rem;font-size:0.74rem;font-family:var(--ff-b);">
+          <option value="story"${beat.type==='story'?' selected':''}>Story</option>
+          <option value="combat"${beat.type==='combat'?' selected':''}>Combat</option>
+          <option value="gather"${beat.type==='gather'?' selected':''}>Gather</option>
+          <option value="choice"${beat.type==='choice'?' selected':''}>Player Choice</option>
+          <option value="skill_check"${beat.type==='skill_check'?' selected':''}>Skill Check</option>
+        </select>
+        <button onclick="_qwBeats.splice(${idx},1);renderQwBeats()"
+          style="background:none;border:none;color:var(--crimson-bright);cursor:pointer;font-size:0.9rem;">✕</button>
+      </div>
+      <textarea placeholder="Narrative text for this beat…" rows="2"
+        oninput="_qwBeats[${idx}].text=this.value"
+        style="width:100%;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.3rem 0.4rem;font-family:var(--ff-b);font-style:italic;font-size:0.78rem;outline:none;resize:vertical;margin-bottom:0.4rem;">${beat.text}</textarea>
+      <div style="display:flex;gap:0.4rem;">
+        <input type="text" placeholder="Linked event key (optional)" value="${beat.eventKey||''}"
+          oninput="_qwBeats[${idx}].eventKey=this.value"
+          style="flex:1;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.26rem 0.4rem;font-family:var(--ff-b);font-size:0.74rem;outline:none;">
+        <input type="text" placeholder="Quality grant on beat (key=N)"
+          oninput="const[k,v]=this.value.split('=');if(k&&v)_qwBeats[${idx}].grants.win[k.trim()]=parseInt(v)||1"
+          style="flex:1;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.26rem 0.4rem;font-family:var(--ff-b);font-size:0.74rem;outline:none;">
+      </div>
+      <div style="display:flex;gap:0.4rem;margin-top:0.3rem;">
+        <input type="text" placeholder="Lat (map marker)" value="${beat.location?.lat||''}"
+          oninput="_qwBeats[${idx}].location={..._qwBeats[${idx}].location,lat:this.value}"
+          style="flex:1;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.26rem 0.4rem;font-family:var(--ff-b);font-size:0.74rem;outline:none;">
+        <input type="text" placeholder="Lng" value="${beat.location?.lng||''}"
+          oninput="_qwBeats[${idx}].location={..._qwBeats[${idx}].location,lng:this.value}"
+          style="flex:1;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.26rem 0.4rem;font-family:var(--ff-b);font-size:0.74rem;outline:none;">
+      </div>
+    </div>`).join('');
+}
+
+function qwBuildSummary() {
+  const s = document.getElementById('qw-summary'); if(!s) return;
+  const title = document.getElementById('qw-title').value||'Untitled';
+  const key   = document.getElementById('qw-key').value||'quest-key';
+  const rewardRes = [];
+  for(let i=0;i<7;i++) rewardRes.push(parseInt(document.getElementById('qw-r'+i).value)||0);
+  s.innerHTML = `<div class="ph">Summary — ${title}</div>
+    <div style="font-family:var(--ff-h);font-size:0.52rem;letter-spacing:0.1em;color:var(--mist);">Key: <span style="color:var(--gold-dim);">${key}</span></div>
+    <div style="margin-top:0.5rem;font-family:var(--ff-h);font-size:0.52rem;color:var(--text-secondary);">
+      ${_qwBeats.length} beats · Lv${document.getElementById('qw-req-level').value}+ · ${document.getElementById('qw-type').value}
+    </div>
+    <div style="margin-top:0.4rem;font-family:var(--ff-h);font-size:0.52rem;color:var(--viridian-bright);">
+      Rewards: ${rewardRes.map((v,i)=>v?RS[i]+'+'+v:'').filter(Boolean).join(' ')||'None'}
+      ${document.getElementById('qw-rxp').value>0?'  ✦+'+document.getElementById('qw-rxp').value+' XP':''}
+    </div>`;
+}
+
+async function qwSave() {
+  const key   = document.getElementById('qw-key').value.trim()||('quest-'+Date.now());
+  const title = document.getElementById('qw-title').value.trim();
+  if (!title) { toast('Enter a quest title.'); qwGo(1); return; }
+  const rewardRes = [];
+  for(let i=0;i<7;i++) rewardRes.push(parseInt(document.getElementById('qw-r'+i).value)||0);
+  const qualityGrants = {};
+  document.getElementById('qw-reward-qualities').value.split('\n').forEach(l=>{
+    const m=l.match(/^([\w-]+)\s*=\s*(\d+)$/);
+    if(m) qualityGrants[m[1]]=parseInt(m[2]);
+  });
+  const reqQualities = {};
+  document.getElementById('qw-req-qualities').value.split('\n').forEach(l=>{
+    const m=l.match(/^([\w-]+)\s*(>=?|<=?|==?)\s*(\d+)$/);
+    if(m) reqQualities[m[1]]={op:m[2],val:parseInt(m[3])};
+  });
+  const q = {
+    title, key,
+    desc:        document.getElementById('qw-desc').value,
+    type:        document.getElementById('qw-type').value,
+    linkedTree:  document.getElementById('qw-tree').value.trim()||undefined,
+    assignedTo:  document.getElementById('qw-target').value||'__all__',
+    requirements: {
+      level:     parseInt(document.getElementById('qw-req-level').value)||1,
+      classKey:  document.getElementById('qw-req-class').value.trim()||undefined,
+      buildings: document.getElementById('qw-req-buildings').value.split(',').map(s=>s.trim()).filter(Boolean),
+      quests:    document.getElementById('qw-req-quests').value.split(',').map(s=>s.trim()).filter(Boolean),
+      qualities: reqQualities,
+    },
+    beats: _qwBeats,
+    rewards: {
+      resources: rewardRes,
+      xp:        parseInt(document.getElementById('qw-rxp').value)||0,
+      skills:    document.getElementById('qw-reward-skills').value.split(',').map(s=>s.trim()).filter(Boolean),
+      buildings: document.getElementById('qw-reward-buildings').value.split(',').map(s=>s.trim()).filter(Boolean),
+      qualities: qualityGrants,
+      lore:      document.getElementById('qw-reward-lore').value,
+    },
+    createdAt: new Date().toISOString(),
+  };
+  // Clean undefined
+  Object.keys(q).forEach(k=>q[k]===undefined&&delete q[k]);
+  Object.keys(q.requirements||{}).forEach(k=>!q.requirements[k]||q.requirements[k]===0&&delete q.requirements[k]);
+  try {
+    await fbPut('world/questlines/'+key, q);
+    toast('✦ Questline sealed: '+title);
+    log('Questline saved: '+key,'ok');
+    document.getElementById('quest-wizard').style.display='none';
+    loadQuestlines();
+  } catch(e) { log('Questline save error: '+e.message,'err'); toast('✗ '+e.message); }
+}
+
+async function loadQuestlines() {
+  try {
+    const data = await fbGet('world/questlines') || {};
+    const list = document.getElementById('questlines-list');
+    if (!list) return;
+    const qs = Object.entries(data);
+    if (!qs.length) {
+      list.innerHTML = '<div class="panel" style="font-family:var(--ff-b);font-style:italic;color:var(--mist);">No questlines defined. Use the wizard to create your first.</div>';
+      return;
+    }
+    const TYPE_COLORS = {main:'var(--gold)',side:'var(--viridian-bright)',faction:'var(--dm-bright)',personal:'var(--indigo-bright)',repeatable:'var(--amber-bright)'};
+    list.innerHTML = qs.map(([k,q]) => `
+      <div class="panel" style="margin-bottom:0.6rem;">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.3rem;">
+          <span style="font-family:var(--ff-h);font-size:0.44rem;letter-spacing:0.1em;text-transform:uppercase;color:${TYPE_COLORS[q.type||'side']||'var(--gold)'};border:1px solid currentColor;padding:0.06rem 0.3rem;">${q.type||'quest'}</span>
+          <div style="font-family:var(--ff-h);font-size:0.78rem;color:var(--bone);flex:1;">${q.title||k}</div>
+          <span style="font-family:var(--ff-h);font-size:0.44rem;color:var(--text-secondary);">${(q.beats||[]).length} beats</span>
+          <button class="btn b-seal" onclick="deleteQuestline('${k}')" style="font-size:0.44rem;padding:0.2rem 0.5rem;border-color:var(--crimson-bright);color:var(--crimson-bright);">✕</button>
+        </div>
+        <div style="font-family:var(--ff-b);font-style:italic;font-size:0.78rem;color:var(--mist);">${q.desc||''}</div>
+        <div style="margin-top:0.3rem;font-family:var(--ff-h);font-size:0.42rem;color:var(--text-secondary);">
+          Lv${q.requirements?.level||1}+ · ${q.assignedTo==='__all__'?'All Seekers':q.assignedTo?.slice(0,8)}
+          ${q.linkedTree?'· Tree: '+q.linkedTree:''}
+        </div>
+      </div>`).join('');
+  } catch(e) { log('Questlines load error: '+e.message,'err'); }
+}
+
+async function deleteQuestline(key) {
+  if (!key || !confirm('Delete questline "'+key+'"?')) return;
+  await fbDel('world/questlines/'+key);
+  toast('Questline deleted.'); loadQuestlines();
+}
+
+// CSS for questline wizard tab
+const _qwStyle = document.createElement('style');
+_qwStyle.textContent = `.qw-tab.active,.qw-tab:focus{background:rgba(201,168,76,0.08)!important;color:var(--gold)!important;}`;
+document.head.appendChild(_qwStyle);
+
 </script>
 
-<!-- ══ TREE BUILDER PAGE ══ -->
-<div id="page-trees" class="page">
-<div class="pg-head">
-  <div class="pg-title">Tree Builder</div>
-  <div class="pg-desc">Design progression trees for quest chains, buildings, skills, classes and prestige paths. Drag nodes to connect them. Save trees to Firebase under <code style="color:var(--gold-dim)">world/trees/{key}</code>.</div>
-</div>
-<div id="tb-toolbar">
-  <div id="tb-type-tabs">
-    <button class="tb-tab active" onclick="tbSetType('quest',this)">⬡ Quest Chains</button>
-    <button class="tb-tab" onclick="tbSetType('skill',this)">✦ Skill Trees</button>
-    <button class="tb-tab" onclick="tbSetType('class',this)">◈ Classes</button>
-    <button class="tb-tab" onclick="tbSetType('building',this)">⚗ Buildings</button>
-    <button class="tb-tab" onclick="tbSetType('custom',this)">◇ Custom</button>
-  </div>
-  <div id="tb-tree-controls">
-    <select id="tb-tree-sel" onchange="tbLoadTree(this.value)"><option value="">— new tree —</option></select>
-    <input id="tb-tree-name" type="text" placeholder="Tree name…" style="width:160px;">
-    <button class="btn b-seal" onclick="tbAddNode()">+ Node</button>
-    <button class="btn b-rune" onclick="tbSaveTree()">↑ Save</button>
-    <button class="btn" onclick="tbNewTree()" style="border-color:var(--ash);color:var(--pale);">✕ Clear</button>
-    <button class="btn" onclick="tbFitView()" style="font-size:0.48rem;">⊡ Fit</button>
-  </div>
-</div>
-<div id="tb-workspace">
-  <div id="tb-canvas"></div>
-  <svg id="tb-svg" xmlns="http://www.w3.org/2000/svg"></svg>
-  <div id="tb-empty-hint">
-    <div style="font-family:var(--ff-h);font-size:1.1rem;color:var(--stone);letter-spacing:0.1em;">Click <strong style="color:var(--gold)">+ Node</strong> to begin</div>
-    <div style="font-size:0.8rem;color:var(--ash);margin-top:0.5rem;">Drag nodes to reposition &nbsp;·&nbsp; Drag from ● to connect &nbsp;·&nbsp; Right-click for options</div>
-  </div>
-</div>
-<div id="tb-inspector" class="tb-inspector-closed">
-  <div id="tb-inspector-head">
-    <span id="tb-inspector-title">Node</span>
-    <button onclick="tbCloseInspector()" style="background:none;border:none;color:var(--mist);cursor:pointer;font-size:1.1rem;padding:0 0.3rem;">✕</button>
-  </div>
-  <div class="fld"><label>Label</label><input type="text" id="tbi-label" oninput="tbUpdateNode('label',this.value)" placeholder="Node name"></div>
-  <div class="fld"><label>Description</label><textarea id="tbi-desc" rows="2" oninput="tbUpdateNode('desc',this.value)" placeholder="What this unlocks or requires…"></textarea></div>
-  <div class="fld"><label>Type / Category</label><input type="text" id="tbi-cat" oninput="tbUpdateNode('cat',this.value)" placeholder="e.g. combat, story, prestige…"></div>
-  <div class="fld"><label>Cost / Requirement</label><input type="text" id="tbi-req" oninput="tbUpdateNode('req',this.value)" placeholder="e.g. 500 Solar, Level 3…"></div>
-  <div class="fld"><label>Firebase Key</label><input type="text" id="tbi-key" oninput="tbUpdateNode('key',this.value)" placeholder="auto-generated"></div>
 
-  <div style="border-top:1px solid var(--border);margin:0.7rem 0 0.5rem;padding-top:0.5rem;">
-    <div style="font-family:var(--ff-h);font-size:0.44rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--mist);margin-bottom:0.4rem;">Type-specific fields</div>
-  </div>
-
-  <!-- Building tree fields -->
-  <div class="fld" id="tbi-building-key-wrap">
-    <label>Building Key (for building trees)</label>
-    <input type="text" id="tbi-buildingKey" oninput="tbUpdateNode('buildingKey',this.value)" placeholder="e.g. alchemical-forge">
-  </div>
-  <div class="fld">
-    <label>Actions at this stage</label>
-    <input type="text" id="tbi-actions" oninput="tbUpdateNode('actions',this.value)" placeholder="e.g. Craft weapons, Brew potions">
-  </div>
-  <div class="fld">
-    <label>Produces (passive output)</label>
-    <input type="text" id="tbi-produces" oninput="tbUpdateNode('produces',this.value)" placeholder="e.g. +2 Solar/hour">
-  </div>
-
-  <!-- Quest tree fields -->
-  <div class="fld">
-    <label>Lat / Lng (quest map marker)</label>
-    <div style="display:flex;gap:0.4rem;">
-      <input type="text" id="tbi-lat" oninput="tbUpdateNode('lat',this.value)" placeholder="Latitude" style="flex:1;">
-      <input type="text" id="tbi-lng" oninput="tbUpdateNode('lng',this.value)" placeholder="Longitude" style="flex:1;">
-    </div>
-  </div>
-
-  <!-- Skill / class tree fields -->
-  <div class="fld">
-    <label>Skill Key (for skill trees)</label>
-    <input type="text" id="tbi-skillKey" oninput="tbUpdateNode('skillKey',this.value)" placeholder="e.g. annichilito-">
-  </div>
-  <div class="fld">
-    <label>XP Threshold (skill mastery)</label>
-    <input type="number" id="tbi-xpThreshold" oninput="tbUpdateNode('xpThreshold',this.value?+this.value:undefined)" placeholder="e.g. 10" min="0">
-  </div>
-  <div class="fld">
-    <label>Bonus on unlock (e.g. fortitude+2, skill:annichilito)</label>
-    <input type="text" id="tbi-bonus" oninput="tbUpdateNode('bonus',this.value)" placeholder="stat+N, skill:key, trait:key">
-  </div>
-
-  <div style="display:flex;gap:0.5rem;margin-top:0.8rem;">
-    <button class="btn b-rune" onclick="tbSetRoot()" style="flex:1;font-size:0.5rem;">⬡ Set Root</button>
-    <button class="btn" onclick="tbDeleteNode()" style="flex:1;border-color:var(--crimson-bright);color:var(--crimson-bright);font-size:0.5rem;">✕ Delete</button>
-  </div>
-  <div style="margin-top:0.8rem;border-top:1px solid var(--border);padding-top:0.7rem;">
-    <div style="font-family:var(--ff-h);font-size:0.48rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--mist);margin-bottom:0.4rem;">Connections</div>
-    <div id="tbi-connections" style="font-size:0.75rem;color:var(--pale);line-height:1.6;"></div>
-  </div>
-</div>
-<div id="tb-minimap"><canvas id="tb-minimap-canvas" width="160" height="100"></canvas></div>
-<div id="tb-ctx"></div>
-
-<!-- ── Edge condition modal ── -->
-<div id="tb-edge-modal">
-  <div id="tb-edge-modal-title" style="font-family:var(--ff-h);font-size:0.62rem;letter-spacing:0.1em;color:var(--gold);margin-bottom:0.6rem;text-transform:uppercase;">Branch Condition</div>
-  <div style="font-family:var(--ff-b);font-style:italic;font-size:0.72rem;color:var(--mist);margin-bottom:0.7rem;line-height:1.5;">Define when this branch is available. Leave empty for an open connection.</div>
-  <div style="font-family:var(--ff-h);font-size:0.42rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);margin-bottom:0.3rem;">Quick insert</div>
-  <div class="tb-cond-chips">
-    <span class="tb-cond-chip" onclick="tbCondInsert('Level >= ')">Level</span>
-    <span class="tb-cond-chip" onclick="tbCondInsert('Solar >= ')">Solar</span>
-    <span class="tb-cond-chip" onclick="tbCondInsert('Lunar >= ')">Lunar</span>
-    <span class="tb-cond-chip" onclick="tbCondInsert('Martial >= ')">Martial</span>
-    <span class="tb-cond-chip" onclick="tbCondInsert('has:')">Has Item</span>
-    <span class="tb-cond-chip" onclick="tbCondInsert('skill:')">Skill</span>
-    <span class="tb-cond-chip" onclick="tbCondInsert('trait:')">Trait</span>
-    <span class="tb-cond-chip" onclick="tbCondInsert('quest:')">Quest</span>
-    <span class="tb-cond-chip" onclick="tbCondInsert('xp >= ')">XP</span>
-    <span class="tb-cond-chip" onclick="tbCondInsert('stress < ')">Stress</span>
-  </div>
-  <div class="fld" style="margin-bottom:0.5rem;">
-    <label style="font-family:var(--ff-h);font-size:0.44rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);display:block;margin-bottom:0.25rem;">Condition</label>
-    <input type="text" id="tb-edge-cond" placeholder="e.g.  Level >= 3  |  Solar >= 500  |  quest:descent == resolved" 
-           style="width:100%;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.35rem 0.45rem;font-family:var(--ff-b);font-size:0.78rem;outline:none;"
-           oninput="tbEdgeCondChanged()">
-  </div>
-  <div class="fld" style="margin-bottom:0.5rem;">
-    <label style="font-family:var(--ff-h);font-size:0.44rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);display:block;margin-bottom:0.25rem;">Label on arrow (optional)</label>
-    <input type="text" id="tb-edge-label-txt" placeholder="Short label"
-           style="width:100%;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.35rem 0.45rem;font-family:var(--ff-b);font-size:0.78rem;outline:none;">
-  </div>
-  <div class="fld" style="margin-bottom:0.8rem;">
-    <label style="font-family:var(--ff-h);font-size:0.44rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);display:block;margin-bottom:0.25rem;">Logic</label>
-    <select id="tb-edge-logic" style="width:100%;background:var(--shadow);border:1px solid var(--stone);color:var(--bone);padding:0.3rem 0.4rem;font-family:var(--ff-b);font-size:0.78rem;outline:none;">
-      <option value="AND">AND — all must be true</option>
-      <option value="OR">OR — any one is enough</option>
-    </select>
-  </div>
-  <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
-    <button class="btn b-seal" onclick="tbEdgeCondSave()" style="flex:1;">✓ Apply</button>
-    <button class="btn" onclick="tbEdgeCondClear()" style="border-color:var(--ash);color:var(--mist);">✕ Clear</button>
-    <button class="btn" onclick="tbCloseEdgeModal()" style="border-color:var(--stone);color:var(--ash);font-size:0.48rem;">Cancel</button>
-  </div>
-  <button class="btn" onclick="tbDeleteEdge()" style="width:100%;border-color:var(--crimson-bright);color:var(--crimson-bright);font-size:0.48rem;">✕ Remove this connection</button>
-</div>
-
-</div>
 
 </body>
